@@ -1,0 +1,495 @@
+{
+ "celdas": [
+  {
+   "capacity": 10,
+   "n_prototypes": 1,
+   "r": 0.1,
+   "n_common": 20,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.6050912555483968,
+   "eta2_write_ci": [
+    0.5727011118291359,
+    0.6366877274417803
+   ],
+   "eta2_evict": 0.12817562530485566,
+   "eta2_evict_ci": [
+    0.11483940464186704,
+    0.14183830968654482
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 10,
+   "n_prototypes": 2,
+   "r": 0.2,
+   "n_common": 40,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.6475033892534455,
+   "eta2_write_ci": [
+    0.6146949684892656,
+    0.6842505432386459
+   ],
+   "eta2_evict": 0.12155132026237694,
+   "eta2_evict_ci": [
+    0.10758330922232481,
+    0.1364818062758355
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 10,
+   "n_prototypes": 5,
+   "r": 0.5,
+   "n_common": 100,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.7709440644427434,
+   "eta2_write_ci": [
+    0.7663082712046947,
+    0.7767839491868311
+   ],
+   "eta2_evict": 0.06870128189912487,
+   "eta2_evict_ci": [
+    0.06774015040699943,
+    0.06945573507516678
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 10,
+   "n_prototypes": 8,
+   "r": 0.8,
+   "n_common": 160,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.34748077761131607,
+   "eta2_write_ci": [
+    0.3117459524830222,
+    0.3690916134717742
+   ],
+   "eta2_evict": 0.18544464692258655,
+   "eta2_evict_ci": [
+    0.14706719328271908,
+    0.22382210056245397
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 10,
+   "n_prototypes": 10,
+   "r": 1.0,
+   "n_common": 200,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.010226344154951227,
+   "eta2_write_ci": [
+    0.003899485982383124,
+    0.017050433619268404
+   ],
+   "eta2_evict": 0.199340507441122,
+   "eta2_evict_ci": [
+    0.18618246539745412,
+    0.21250402718681266
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 10,
+   "n_prototypes": 15,
+   "r": 1.5,
+   "n_common": 300,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.024453134489360095,
+   "eta2_write_ci": [
+    0.015271935107648307,
+    0.03371094397441471
+   ],
+   "eta2_evict": 0.1615456034621076,
+   "eta2_evict_ci": [
+    0.12883298882678446,
+    0.2091820266767265
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 10,
+   "n_prototypes": 20,
+   "r": 2.0,
+   "n_common": 400,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.017862530003971745,
+   "eta2_write_ci": [
+    0.0129221239694586,
+    0.025444441671373875
+   ],
+   "eta2_evict": 0.16136614305936345,
+   "eta2_evict_ci": [
+    0.12124889070993491,
+    0.21382398313396092
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 10,
+   "n_prototypes": 40,
+   "r": 4.0,
+   "n_common": 800,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.013941696381597937,
+   "eta2_write_ci": [
+    0.00742970108255916,
+    0.020226075975377757
+   ],
+   "eta2_evict": 0.13198556065933367,
+   "eta2_evict_ci": [
+    0.10777587514290196,
+    0.15619524617576538
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 20,
+   "n_prototypes": 2,
+   "r": 0.1,
+   "n_common": 40,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.6348147863837252,
+   "eta2_write_ci": [
+    0.5885597138154777,
+    0.6695422659085914
+   ],
+   "eta2_evict": 0.12025242149587582,
+   "eta2_evict_ci": [
+    0.11019440967380878,
+    0.1369253909204627
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 20,
+   "n_prototypes": 5,
+   "r": 0.25,
+   "n_common": 100,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.7547130984488233,
+   "eta2_write_ci": [
+    0.7466291226685726,
+    0.7624572967279822
+   ],
+   "eta2_evict": 0.07585757009863928,
+   "eta2_evict_ci": [
+    0.06983997715698911,
+    0.08180508160724917
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 20,
+   "n_prototypes": 10,
+   "r": 0.5,
+   "n_common": 200,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.8141105065712806,
+   "eta2_write_ci": [
+    0.8067954346780828,
+    0.8202441390350597
+   ],
+   "eta2_evict": 0.04669032567847244,
+   "eta2_evict_ci": [
+    0.04120990347403223,
+    0.050206379282176715
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 20,
+   "n_prototypes": 15,
+   "r": 0.75,
+   "n_common": 300,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.5903068106767554,
+   "eta2_write_ci": [
+    0.5758494779807837,
+    0.6043393288191796
+   ],
+   "eta2_evict": 0.07771819954169559,
+   "eta2_evict_ci": [
+    0.07104063929387779,
+    0.08439575978951339
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 20,
+   "n_prototypes": 20,
+   "r": 1.0,
+   "n_common": 400,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.021558726169315902,
+   "eta2_write_ci": [
+    0.005510393124886121,
+    0.03760705921374568
+   ],
+   "eta2_evict": 0.2198652694314535,
+   "eta2_evict_ci": [
+    0.17724382925415227,
+    0.260333443007469
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 20,
+   "n_prototypes": 30,
+   "r": 1.5,
+   "n_common": 600,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.01623128909702163,
+   "eta2_write_ci": [
+    0.003612308739932804,
+    0.029052132222541865
+   ],
+   "eta2_evict": 0.17678245008968896,
+   "eta2_evict_ci": [
+    0.13826848524845514,
+    0.22248242122419642
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 20,
+   "n_prototypes": 40,
+   "r": 2.0,
+   "n_common": 800,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.01264959274171867,
+   "eta2_write_ci": [
+    0.004047563409359011,
+    0.021019050735051455
+   ],
+   "eta2_evict": 0.24378229876827007,
+   "eta2_evict_ci": [
+    0.13702600062971618,
+    0.3904656218882822
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 20,
+   "n_prototypes": 80,
+   "r": 4.0,
+   "n_common": 1600,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.012579608819726149,
+   "eta2_write_ci": [
+    0.011359523098359733,
+    0.013799694541092566
+   ],
+   "eta2_evict": 0.10487514478030742,
+   "eta2_evict_ci": [
+    0.0716747583404533,
+    0.15601953039907007
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 40,
+   "n_prototypes": 4,
+   "r": 0.1,
+   "n_common": 80,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.6708427140861717,
+   "eta2_write_ci": [
+    0.6326969192303437,
+    0.7056225086714218
+   ],
+   "eta2_evict": 0.09952680486477752,
+   "eta2_evict_ci": [
+    0.08305162334519389,
+    0.11878328030484206
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 40,
+   "n_prototypes": 10,
+   "r": 0.25,
+   "n_common": 200,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.801283793524199,
+   "eta2_write_ci": [
+    0.7982086311780958,
+    0.8051253680668113
+   ],
+   "eta2_evict": 0.05141672135202498,
+   "eta2_evict_ci": [
+    0.0485003331021244,
+    0.05489455400940263
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 40,
+   "n_prototypes": 20,
+   "r": 0.5,
+   "n_common": 400,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.8720626620296887,
+   "eta2_write_ci": [
+    0.8656405400857918,
+    0.8782757814949704
+   ],
+   "eta2_evict": 0.02589202268867129,
+   "eta2_evict_ci": [
+    0.021755819629372886,
+    0.030486752913896586
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 40,
+   "n_prototypes": 30,
+   "r": 0.75,
+   "n_common": 600,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.6335707124382058,
+   "eta2_write_ci": [
+    0.6164929697298343,
+    0.6601181869508044
+   ],
+   "eta2_evict": 0.05570899432345903,
+   "eta2_evict_ci": [
+    0.042922358514117784,
+    0.06733487457284829
+   ],
+   "dominante": "write"
+  },
+  {
+   "capacity": 40,
+   "n_prototypes": 40,
+   "r": 1.0,
+   "n_common": 800,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.03390526810862524,
+   "eta2_write_ci": [
+    0.023659008084886753,
+    0.04208727913865163
+   ],
+   "eta2_evict": 0.19826403520119312,
+   "eta2_evict_ci": [
+    0.13727131599315995,
+    0.25925675440922624
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 40,
+   "n_prototypes": 60,
+   "r": 1.5,
+   "n_common": 1200,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.0060515040616423025,
+   "eta2_write_ci": [
+    0.0014194774104913325,
+    0.010999209982119456
+   ],
+   "eta2_evict": 0.12909742425863463,
+   "eta2_evict_ci": [
+    0.10362695994114182,
+    0.15372358602439803
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 40,
+   "n_prototypes": 80,
+   "r": 2.0,
+   "n_common": 1600,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.011510483527065952,
+   "eta2_write_ci": [
+    0.0027812655168816557,
+    0.027169037289043147
+   ],
+   "eta2_evict": 0.14167857290027489,
+   "eta2_evict_ci": [
+    0.11024237371849273,
+    0.17955135579428136
+   ],
+   "dominante": "evict"
+  },
+  {
+   "capacity": 40,
+   "n_prototypes": 160,
+   "r": 4.0,
+   "n_common": 3200,
+   "visitas_por_prototipo": 20,
+   "eta2_write": 0.009458800512048931,
+   "eta2_write_ci": [
+    0.00552632993148895,
+    0.012386542792116378
+   ],
+   "eta2_evict": 0.08690788204372782,
+   "eta2_evict_ci": [
+    0.058982522294049634,
+    0.12155072972600989
+   ],
+   "dominante": "evict"
+  }
+ ],
+ "capacidades": [
+  10,
+  20,
+  40
+ ],
+ "ratios": [
+  0.1,
+  0.25,
+  0.5,
+  0.75,
+  1.0,
+  1.5,
+  2.0,
+  4.0
+ ],
+ "regimenes": {
+  "compresion (r <= 0.5)": {
+   "n_celdas": 9,
+   "eta2_write": 0.7301518078098304,
+   "eta2_evict": 0.08200712151609098
+  },
+  "transicion (0.5 < r < 1)": {
+   "n_celdas": 3,
+   "eta2_write": 0.5237861002420924,
+   "eta2_evict": 0.10629061359591373
+  },
+  "seleccion (r >= 1)": {
+   "n_celdas": 12,
+   "eta2_write": 0.015869081505587152,
+   "eta2_evict": 0.16295757434128977
+  }
+ },
+ "umbrales": [
+  {
+   "capacity": 10,
+   "r_below": 0.8,
+   "r_above": 1.0,
+   "r_cruce": 0.8944271909999159
+  },
+  {
+   "capacity": 20,
+   "r_below": 0.75,
+   "r_above": 1.0,
+   "r_cruce": 0.8660254037844386
+  },
+  {
+   "capacity": 40,
+   "r_below": 0.75,
+   "r_above": 1.0,
+   "r_cruce": 0.8660254037844386
+  }
+ ],
+ "r_umbral_medio": 0.8754926661895978,
+ "r_umbral_ci": [
+  0.8660254037844387,
+  0.8944271909999159
+ ],
+ "umbral_en_1_para_toda_capacidad": true,
+ "figura": "paper/figures/fig1_threshold.pdf"
+}

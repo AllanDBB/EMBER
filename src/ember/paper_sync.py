@@ -211,9 +211,15 @@ def tabla_efectos_principales(datos: dict[str, Any]) -> str:
 
 def tabla_regimenes(datos: dict[str, Any]) -> str:
     """Varianza explicada por régimen del ratio."""
+    etiquetas = {
+        "compression": "Compresión",
+        "transition": "Transición",
+        "selection": "Selección",
+    }
     filas = [
         [
-            nombre.replace("_", "\\_"),
+            etiquetas.get(nombre, nombre.replace("_", "\\_")),
+            f"${d.get('rango', '')}$".replace("<=", "\\leq ").replace(">=", "\\geq "),
             str(d["n_celdas"]),
             f"{100 * d['eta2_write']:.1f}\\,\\%",
             f"{100 * d['eta2_evict']:.1f}\\,\\%",
@@ -222,9 +228,9 @@ def tabla_regimenes(datos: dict[str, Any]) -> str:
         if d["eta2_write"] is not None
     ]
     return _tabular(
-        ["Régimen", "Celdas", "$\\eta^2$ escritura", "$\\eta^2$ desalojo"],
+        ["Régimen", "Rango", "Celdas", "$\\eta^2$ escritura", "$\\eta^2$ desalojo"],
         filas,
-        "lrrr",
+        "llrrr",
         "Transición de régimen según el cociente prototipos-a-capacidad $r = K_{proto}/C$.",
         "tab:regimes",
     )

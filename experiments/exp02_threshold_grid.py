@@ -129,27 +129,34 @@ def main() -> int:
         run.record("ratios", list(RATIOS))
 
         # ── resumen por régimen ─────────────────────────────────────────────
+        # Las claves son identificadores sin puntos a propósito: son la ruta que
+        # usa el macro \result del paper, y un punto dentro del nombre chocaría
+        # con el separador de ruta. El rango legible va en su propio campo.
         regimenes = {
-            "compresion (r <= 0.5)": [c for c in celdas if c["r"] <= 0.5],
-            "transicion (0.5 < r < 1)": [c for c in celdas if 0.5 < c["r"] < 1.0],
-            "seleccion (r >= 1)": [c for c in celdas if c["r"] >= 1.0],
+            "compression": ("r <= 0.5", [c for c in celdas if c["r"] <= 0.5]),
+            "transition": ("0.5 < r < 1", [c for c in celdas if 0.5 < c["r"] < 1.0]),
+            "selection": ("r >= 1", [c for c in celdas if c["r"] >= 1.0]),
         }
         resumen = {
             nombre: {
+                "rango": rango,
                 "n_celdas": len(cs),
                 "eta2_write": float(np.mean([c["eta2_write"] for c in cs])) if cs else None,
                 "eta2_evict": float(np.mean([c["eta2_evict"] for c in cs])) if cs else None,
             }
-            for nombre, cs in regimenes.items()
+            for nombre, (rango, cs) in regimenes.items()
         }
         run.record("regimenes", resumen)
 
-        print(f"\n{'régimen':<28}{'η² escritura':>14}{'η² desalojo':>14}")
-        print("-" * 58)
+        print(f"\n{'régimen':<16}{'rango':<16}{'η² escritura':>14}{'η² desalojo':>14}")
+        print("-" * 62)
         for nombre, datos in resumen.items():
             if datos["eta2_write"] is None:
                 continue
-            print(f"{nombre:<28}{datos['eta2_write']:>14.3f}{datos['eta2_evict']:>14.3f}")
+            print(
+                f"{nombre:<16}{datos['rango']:<16}"
+                f"{datos['eta2_write']:>14.3f}{datos['eta2_evict']:>14.3f}"
+            )
 
         # ── dónde cae el cruce en cada capacidad ────────────────────────────
         umbrales = [u for c in CAPACIDADES if (u := localizar_umbral(celdas, c))]
