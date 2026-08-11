@@ -1,6 +1,10 @@
 line-length = 100
 target-version = "py312"
 
+# Los notebooks son el registro de las PoC-1 a PoC-4 tal como se corrieron.
+# Reformatearlos rompería la correspondencia con lo que reporta el paper.
+exclude = ["notebooks", "docs/borradores"]
+
 [lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "NPY"]
 ignore = ["E501"]

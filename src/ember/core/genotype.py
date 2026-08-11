@@ -11,11 +11,11 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from ember.core.policies import (
+    FIFO,
     Append,
     Constant,
     DecayPolicy,
     EvictPolicy,
-    FIFO,
     NearestNeighbour,
     NoDecay,
     ReadPolicy,

@@ -6,13 +6,13 @@ Depende únicamente de numpy. Es el código que va al robot.
 from ember.core.genotype import FIFO_GENOTYPE, Genotype
 from ember.core.memory import PolicyMemory, make_memory
 from ember.core.policies import (
+    FIFO,
     Append,
     BothGated,
     Constant,
     DecayPolicy,
     EvictPolicy,
     ExponentialDecay,
-    FIFO,
     Merge,
     MinStrength,
     MinUtility,
