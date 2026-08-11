@@ -1,0 +1,116 @@
+"""Figuras del paper, generadas desde los resultados de los experimentos.
+
+matplotlib se importa dentro de cada función: este módulo se puede importar
+desde cualquier lado sin arrastrar el stack de laboratorio.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+# Paleta sobria y con contraste suficiente en escala de grises, por si el
+# artículo se imprime en blanco y negro.
+COLORES = ("#1B4965", "#C76B2C", "#5B8C5A", "#8B5A8C")
+GRIS = "#5B6470"
+
+
+def _preparar(destino: str | Path) -> Path:
+    ruta = Path(destino)
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    return ruta
+
+
+def figura_umbral(celdas: list[dict[str, Any]], destino: str | Path) -> Path:
+    """Figura 1: la transición de régimen en r = K_proto / C.
+
+    Un panel por eje (escritura y desalojo), una serie por capacidad, bandas de
+    intervalo de confianza, y la línea vertical en r = 1. Si la ley se sostiene,
+    las curvas de capacidades distintas tienen que superponerse al graficarlas
+    contra r — que es la afirmación de que la variable de control es el ratio y
+    no la redundancia del flujo.
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    ruta = _preparar(destino)
+    capacidades = sorted({c["capacity"] for c in celdas})
+
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharey=True)
+    for ax, eje, titulo in (
+        (axes[0], "write", "Modo de escritura (consolidación por fusión)"),
+        (axes[1], "evict", "Política de desalojo (olvido selectivo)"),
+    ):
+        for i, cap in enumerate(capacidades):
+            de_esta = sorted((c for c in celdas if c["capacity"] == cap), key=lambda c: c["r"])
+            r = [c["r"] for c in de_esta]
+            y = [c[f"eta2_{eje}"] for c in de_esta]
+            lo = [c[f"eta2_{eje}_ci"][0] for c in de_esta]
+            hi = [c[f"eta2_{eje}_ci"][1] for c in de_esta]
+
+            color = COLORES[i % len(COLORES)]
+            ax.plot(r, y, "o-", color=color, label=f"C = {cap}", linewidth=1.6, markersize=4)
+            ax.fill_between(r, lo, hi, color=color, alpha=0.15, linewidth=0)
+
+        ax.axvline(1.0, color=GRIS, linestyle="--", linewidth=1.2)
+        ax.text(1.05, 0.94, "r = 1", color=GRIS, fontsize=9, transform=ax.get_xaxis_transform())
+        ax.set_xscale("log")
+        ax.set_xlabel("prototipos por ranura de memoria,  $r = K_{proto}/C$")
+        ax.set_title(titulo, fontsize=10)
+        ax.grid(alpha=0.25)
+
+    axes[0].set_ylabel("varianza explicada del puntaje  ($\\eta^2$)")
+    axes[0].legend(fontsize=8, frameon=False)
+    fig.tight_layout()
+    fig.savefig(ruta, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    return ruta
+
+
+def figura_comparacion_dominios(
+    sintetico: list[dict[str, Any]], real: list[dict[str, Any]], destino: str | Path
+) -> Path:
+    """Figura 2: la ley del umbral en dominio sintético contra embeddings reales.
+
+    Si el umbral se mueve al pasar a datos con estructura correlacionada y
+    densidad no uniforme, la ley es una propiedad del generador sintético y no
+    de la memoria. Es la objeción que el paper deja abierta en limitaciones.
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    ruta = _preparar(destino)
+    fig, ax = plt.subplots(figsize=(6.4, 4.2))
+
+    for celdas, etiqueta, color, marcador in (
+        (sintetico, "sintético (gaussiano estructurado)", COLORES[0], "o"),
+        (real, "CIFAR-100 (ResNet-18)", COLORES[1], "s"),
+    ):
+        de_estas = sorted(celdas, key=lambda c: c["r"])
+        ax.plot(
+            [c["r"] for c in de_estas],
+            [c["eta2_write"] - c["eta2_evict"] for c in de_estas],
+            marcador + "-",
+            color=color,
+            label=etiqueta,
+            linewidth=1.6,
+            markersize=5,
+        )
+
+    ax.axhline(0.0, color=GRIS, linewidth=1.0)
+    ax.axvline(1.0, color=GRIS, linestyle="--", linewidth=1.2)
+    ax.set_xscale("log")
+    ax.set_xlabel("$r = \\hat{K}_{proto}/C$")
+    ax.set_ylabel("$\\eta^2$ escritura $-$ $\\eta^2$ desalojo")
+    ax.set_title("Dónde cae la transición de régimen en cada dominio", fontsize=10)
+    ax.legend(fontsize=8, frameon=False)
+    ax.grid(alpha=0.25)
+
+    fig.tight_layout()
+    fig.savefig(ruta, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    return ruta

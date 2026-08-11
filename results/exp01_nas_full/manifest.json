@@ -1,0 +1,22 @@
+{
+ "experiment": "exp01_nas_full",
+ "ember_version": "0.1.0",
+ "git_sha": "d6b01da40420a641bac37777590dd9d29991b6a1",
+ "git_branch": "feat/ember-foundation",
+ "git_dirty": true,
+ "timestamp_utc": "2026-08-11T20:52:43.356767+00:00",
+ "duration_s": 15.95,
+ "python": "3.12.13",
+ "platform": "Linux-7.1.6-1-cachyos-x86_64-with-glibc2.44",
+ "packages": {
+  "numpy": "2.5.2"
+ },
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "notes": [
+  "El rango del incumbente es un intervalo de 54 puestos por empate. Reportar el extremo optimista como si fuera la posici\u00f3n ser\u00eda el error del piloto."
+ ]
+}

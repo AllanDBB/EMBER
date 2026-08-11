@@ -1,0 +1,14 @@
+{
+ "liveness": {
+  "read": 0.11944444444444458,
+  "write": 0.5833333333333334,
+  "strength": 0.711111111111111,
+  "decay": 0.6453703703703703,
+  "evict": 0.7277777777777777,
+  "reinforce": 0.2055555555555555
+ },
+ "alcance": "espacio completo",
+ "n_genotipos": 576,
+ "tolerancia": 1e-09,
+ "ejes_muertos": []
+}
