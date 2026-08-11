@@ -138,6 +138,36 @@ recurrencia, y el ratio queda confundido con ella.
 (`ember.data.prototypes`). Si la silueta es baja, no hay estructura de
 prototipos y `r` simplemente no está definido para ese flujo.
 
+### La precondición: prototipos efectivos, no nominales
+
+Descubierta al instrumentar `exp05` (2026-08-11). **Afecta cómo se enuncia la
+ley**, así que hay que conocerla antes de escribir sobre el tema.
+
+`K_proto` es cuántos prototipos tiene el flujo. `K_efectivo` es **cuántas trazas
+ocupa la experiencia rutinaria después de consolidar**, y no son lo mismo: si la
+dispersión intra-prototipo deja parte de las visitas por debajo del umbral de
+fusión, cada prototipo se fragmenta en varias trazas.
+
+| Dominio | K nominal | K efectivo | r efectivo | η² escritura |
+|---|---|---|---|---|
+| sintético (ruido 0.05) | 10 | 10 | 0.50 | **0.818** |
+| embeddings (variación real) | 10 | **35** | **1.75** | 0.004 |
+
+Diez clases se vuelven 35 trazas, la rutina llena la memoria igual que sin
+fusionar, y no queda lugar para lo raro. **La ley predice ese 0.004
+correctamente** — sobre `r` efectivo, que es 1.75.
+
+Enunciado corregido: *la variable de control del régimen es el número de
+prototipos efectivo tras consolidar*. Sobre flujos sintéticos con dispersión baja
+los dos coinciden, que es por qué la distinción no aparecía.
+
+Se mide con `experiments.exp05_real_embeddings.prototipos_efectivos`, o
+directamente con `PolicyMemory.n_merges / n_writes` más el conteo final de
+trazas sin presión de capacidad.
+
+**Queda abierta la decisión** de si el paper se reescribe sobre `r_efectivo` o si
+la precondición se reporta como calificación de la ley nominal.
+
 ## Genotipo y espacio de diseño
 
 Un **genotipo** es una arquitectura de memoria descrita por seis ejes:
