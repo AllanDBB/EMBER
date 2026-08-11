@@ -24,11 +24,26 @@ from ember.nas.engine import run_search
 from ember.nas.stats import bootstrap_ci, eta_squared
 from experiments._common import EvalConfig, RareRetentionEvaluator
 
-CAPACIDADES = (10, 20, 40, 80)
+CAPACIDADES = (10, 20, 40)
 RATIOS = (0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 4.0)
 """Ratios objetivo. Los prototipos de cada celda salen de r × capacidad."""
 
 SEMILLAS = (0, 1, 2, 3, 4)
+
+VISITAS_POR_PROTOTIPO = 20
+"""Cuántas veces se repite en promedio cada prototipo del flujo.
+
+Es la variable que hay que **mantener constante** al barrer el ratio, y no se
+puede dejar librada al largo del flujo. Con un `n_common` fijo, subir el número
+de prototipos baja automáticamente cuántas veces se ve cada uno, así que el
+ratio quedaría confundido con la recurrencia: en el extremo (más prototipos que
+experiencias) cada prototipo aparecería una sola vez y no habría nada que
+fusionar, con lo cual la caída de la dominancia de la escritura no diría nada
+sobre el umbral sino sobre que el flujo dejó de ser recurrente.
+
+Fijando las visitas por prototipo, el largo del flujo crece con `K` y lo único
+que varía entre celdas es `r`.
+"""
 
 
 def _eta_por_semilla(capacity: int, n_prototypes: int, seed: int) -> tuple[float, float]:
@@ -37,8 +52,8 @@ def _eta_por_semilla(capacity: int, n_prototypes: int, seed: int) -> tuple[float
         capacity=capacity,
         n_prototypes=n_prototypes,
         seeds=(seed,),
-        n_common=300,
-        n_rare=20,
+        n_common=VISITAS_POR_PROTOTIPO * n_prototypes,
+        n_rare=max(5, capacity // 2),
     )
     r = run_search(RareRetentionEvaluator(config), n_jobs=-1, progress=False)
     return (
@@ -67,6 +82,8 @@ def barrer_grilla(
                 "capacity": capacity,
                 "n_prototypes": n_prototypes,
                 "r": n_prototypes / capacity,
+                "n_common": VISITAS_POR_PROTOTIPO * n_prototypes,
+                "visitas_por_prototipo": VISITAS_POR_PROTOTIPO,
                 "eta2_write": float(np.mean(escritura)),
                 "eta2_write_ci": list(bootstrap_ci(escritura, seed=0)),
                 "eta2_evict": float(np.mean(desalojo)),
