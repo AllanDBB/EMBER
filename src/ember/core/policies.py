@@ -171,20 +171,33 @@ class TopK:
 
 @dataclass(frozen=True, slots=True)
 class Radius:
-    """Todas las trazas dentro de un radio de similitud contribuyen.
+    """El círculo de activación de Kanerva: todo lo suficientemente cercano contribuye.
 
-    Es el círculo de activación de Kanerva: la reconstrucción es una
-    superposición ponderada, no una consulta a un solo lugar. En el código
-    piloto este modo devolvía el vecino más cercano igual que los otros dos, lo
-    que lo hacía indistinguible; la superposición real la aplica
-    `PolicyMemory.read` sobre la selección que devuelve esta política.
+    La reconstrucción es una superposición ponderada de varias trazas, no una
+    consulta a un solo lugar. `PolicyMemory.read` aplica la superposición sobre
+    la selección que devuelve esta política.
+
+    El radio es **relativo al mejor match**, no absoluto. Un umbral absoluto no
+    es transportable entre dominios: en R^32 dos vectores gaussianos aleatorios
+    tienen coseno ~0.18, así que cualquier umbral por encima de eso hace que el
+    círculo contenga siempre exactamente una traza y el modo degenere en vecino
+    más cercano — que es precisamente el fallo que hacía inobservable a este eje.
+
+    Kanerva elige el radio de Hamming para que active una fracción conocida de
+    las hard locations, aprovechando que en el espacio binario la distancia
+    esperada se conoce de antemano. Sobre vectores continuos esa distancia
+    depende de los datos, así que el análogo correcto es un radio que se adapte:
+    entran las trazas cuya similitud llega al `fraction` de la mejor.
     """
 
-    threshold: float = 0.70
+    fraction: float = 0.70
     label: str = "radius"
 
     def select(self, sims: NDArray) -> NDArray[np.intp]:
-        sel = np.where(sims >= self.threshold)[0]
+        mejor = float(sims.max())
+        if mejor <= 0.0:
+            return np.array([int(sims.argmax())], dtype=np.intp)
+        sel = np.where(sims >= self.fraction * mejor)[0]
         if sel.size == 0:
             return np.array([int(sims.argmax())], dtype=np.intp)
         return sel.astype(np.intp)

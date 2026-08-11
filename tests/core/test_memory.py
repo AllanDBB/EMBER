@@ -181,12 +181,12 @@ def test_la_lectura_por_radio_hace_superposicion_no_vecino_mas_cercano():
     base = rng.standard_normal(dim).astype(np.float32)
     base /= np.linalg.norm(base)
 
-    # Un racimo de trazas casi idénticas más una traza aislada. La superposición
-    # del racimo tiene que dominar la reconstrucción aunque la consulta esté algo
-    # más cerca de una traza individual del racimo que del promedio.
+    # Un racimo de trazas parecidas entre sí. Ahí la reconstrucción por
+    # superposición se acerca al centroide del racimo, y puede ganar una traza
+    # distinta de la más parecida a la consulta.
     claves = []
-    for _ in range(5):
-        v = base + rng.standard_normal(dim).astype(np.float32) * 0.25
+    for _ in range(6):
+        v = base + rng.standard_normal(dim).astype(np.float32) * 0.35
         claves.append(v / np.linalg.norm(v))
 
     def leer(read_policy, consulta):
@@ -203,14 +203,14 @@ def test_la_lectura_por_radio_hace_superposicion_no_vecino_mas_cercano():
             mem.write(k, i, pred_error=0.5)
         return mem.read(consulta)
 
-    consulta = claves[0] * 0.6 + claves[1] * 0.4
-    consulta /= np.linalg.norm(consulta)
+    desacuerdos = 0
+    for _ in range(40):
+        q = base + rng.standard_normal(dim).astype(np.float32) * 0.5
+        q /= np.linalg.norm(q)
+        if leer(NearestNeighbour(), q).value != leer(Radius(fraction=0.85), q).value:
+            desacuerdos += 1
 
-    nn = leer(NearestNeighbour(), consulta)
-    radio = leer(Radius(threshold=0.3), consulta)
-    assert nn.index is not None and radio.index is not None
-    # Ambas devuelven algo válido; la de radio consultó más de una traza.
-    assert radio.similarity <= 1.0
+    assert desacuerdos > 0, "el eje de lectura volvió a ser inobservable"
 
 
 def test_la_consolidacion_no_dispara_desalojos():

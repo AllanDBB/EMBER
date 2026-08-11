@@ -78,13 +78,22 @@ class TestLectura:
     def test_topk_no_falla_si_hay_menos_trazas_que_k(self):
         assert TopK(k=3).select(np.array([0.4], dtype=np.float32)).tolist() == [0]
 
-    def test_radius_devuelve_todos_los_que_superan_el_umbral(self):
+    def test_radius_toma_todo_lo_que_llega_a_la_fraccion_del_mejor(self):
+        # mejor = 0.9; el corte queda en 0.63, así que entran 0.9, 0.75 y 0.8.
         sims = np.array([0.1, 0.9, 0.75, 0.8], dtype=np.float32)
-        assert sorted(Radius(threshold=0.70).select(sims).tolist()) == [1, 2, 3]
+        assert sorted(Radius(fraction=0.70).select(sims).tolist()) == [1, 2, 3]
 
-    def test_radius_cae_al_mas_cercano_si_ninguno_supera_el_umbral(self):
-        sims = np.array([0.1, 0.3, 0.2], dtype=np.float32)
-        assert Radius(threshold=0.70).select(sims).tolist() == [1]
+    def test_el_radio_es_relativo_y_no_degenera_en_dominios_poco_similares(self):
+        """Con similitudes bajas un umbral absoluto colapsaría a vecino más cercano."""
+        sims = np.array([0.10, 0.30, 0.25], dtype=np.float32)
+        assert sorted(Radius(fraction=0.70).select(sims).tolist()) == [1, 2]
+
+    def test_radius_cae_al_mas_cercano_si_el_mejor_no_es_positivo(self):
+        sims = np.array([-0.4, -0.1, -0.9], dtype=np.float32)
+        assert Radius(fraction=0.70).select(sims).tolist() == [1]
+
+    def test_un_solo_candidato_devuelve_ese(self):
+        assert Radius(fraction=0.70).select(np.array([0.5], dtype=np.float32)).tolist() == [0]
 
 
 class TestDesalojo:
