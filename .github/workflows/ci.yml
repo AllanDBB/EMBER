@@ -30,3 +30,33 @@ jobs:
       - run: uv pip install -e ".[dev]"
       - name: Ningún eje del espacio de búsqueda puede ser inobservable
         run: uv run python -m experiments.exp03_axis_liveness
+
+  paper-sincronizado:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv venv --python 3.12
+      - run: uv pip install -e ".[dev]"
+      - name: Ningún número publicado puede diferir de lo medido
+        run: |
+          uv run python -c "
+          import sys
+          from pathlib import Path
+          from ember.paper_sync import verify_paper
+
+          tex = Path('paper/main.tex')
+          if not tex.exists():
+              print('todavía no hay paper'); sys.exit(0)
+
+          d = verify_paper(tex)
+          # Un experimento que no se corrió en CI no es una desincronización:
+          # los resultados se versionan, pero puede faltar alguno mientras se
+          # produce la evidencia.
+          reales = [x for x in d if 'no fue corrido' not in x.motivo]
+          for x in d:
+              print(x)
+          sys.exit(1 if reales else 0)
+          "

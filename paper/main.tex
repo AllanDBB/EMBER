@@ -1,0 +1,110 @@
+% EMBER — BIP 2026
+%
+% Todo número medido va con \result{clave}{valor}: el macro imprime el valor y
+% `ember.paper_sync.verify_paper` comprueba que coincida con results/. Un número
+% escrito a mano es un número que nadie está verificando.
+%
+%   uv run python -c "from ember.paper_sync import render_tables; render_tables()"
+%   uv run python -c "from ember.paper_sync import verify_paper; print(verify_paper('paper/main.tex'))"
+
+\documentclass[conference]{IEEEtran}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+
+\input{tables/result_macro}
+
+\title{Dos regímenes de memoria bioinspirada:\\una perspectiva desde la búsqueda de arquitecturas}
+\author{\IEEEauthorblockN{Anónimo --- revisión doble ciego}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Presentamos EMBER, un programa de investigación sobre memoria episódica de largo
+plazo para robots cognitivos, y reportamos dos contribuciones empíricas.
+Primero, aplicamos búsqueda exhaustiva de arquitecturas sobre un espacio
+discreto de \result{exp03_axis_liveness:n_genotipos|int}{576} mecanismos de
+memoria bioinspirada derivados de Sparse Distributed Memory, consolidación de
+engramas y teoría del decaimiento de trazas. La búsqueda revela una ley de
+umbral: cuando el cociente entre prototipos de experiencia recurrentes y
+capacidad de memoria ($r = K_{proto}/C$) cae por debajo de 1, la consolidación
+por fusión explica el
+\result{exp02_threshold_grid:regimenes.compresion (r <= 0.5).eta2_write|pct}{74.3}\,\%
+de la varianza de desempeño; por encima de ese umbral esa cifra cae al
+\result{exp02_threshold_grid:regimenes.seleccion (r >= 1).eta2_write|pct}{1.8}\,\%
+y domina el olvido por mínima fuerza. Segundo, evaluamos cuatro arquitecturas
+individuales sobre un banco de dos fases que separa la fidelidad de
+reconstrucción de la retención bajo presión de capacidad: la SDM con compuerta
+de error de predicción alcanza retención perfecta de eventos raros
+(\result{exp04_arch_benchmark:architectures.SDM.battery.per_task.rare_retention}{1.000}),
+mientras el buffer FIFO de la arquitectura desplegada e-MDB obtiene
+\result{exp04_arch_benchmark:architectures.FIFO.battery.per_task.rare_retention}{0.038}.
+\end{abstract}
+
+\begin{IEEEkeywords}
+memoria bioinspirada, búsqueda de arquitecturas neuronales, Sparse Distributed
+Memory, consolidación de engramas, memoria episódica, aprendizaje de por vida
+\end{IEEEkeywords}
+
+% ═══════════════════════════════════════════════════════════════════════
+\section{Introducción}
+% TODO: reescribir desde el draft, incorporando los cambios de docs/notas/.
+
+% ═══════════════════════════════════════════════════════════════════════
+\section{Trabajo relacionado}
+% TODO
+
+% ═══════════════════════════════════════════════════════════════════════
+\section{Búsqueda sobre un espacio de diseño bioinspirado}
+
+\subsection{Espacio de diseño y codificación del genotipo}
+% TODO: la tabla de ejes con su raíz biológica.
+
+\subsection{Observabilidad de los ejes}
+
+Un eje de diseño que no cambia el resultado en ningún punto del espacio no está
+midiendo nada, y cualquier conclusión sobre la irrelevancia de ese mecanismo es
+en realidad una conclusión sobre el instrumento. Antes de reportar efectos,
+verificamos que los seis ejes sean observables: para cada uno medimos la máxima
+diferencia de desempeño entre genotipos que difieren únicamente en ese eje.
+
+\input{tables/tab_main_effects}
+
+\subsection{La transición de régimen}
+
+\input{tables/tab_regimes}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig1_threshold.pdf}
+  \caption{Varianza explicada por el modo de escritura y por la política de
+  desalojo en función del cociente prototipos-a-capacidad $r = K_{proto}/C$. Las
+  curvas de capacidades distintas se superponen al graficarse contra $r$, que es
+  la afirmación de que la variable de control es el ratio y no la redundancia
+  del flujo. Bandas: intervalo de confianza bootstrap sobre semillas.}
+  \label{fig:threshold}
+\end{figure*}
+
+% ═══════════════════════════════════════════════════════════════════════
+\section{Evaluación comparativa de arquitecturas}
+
+\input{tables/tab_benchmark}
+
+% ═══════════════════════════════════════════════════════════════════════
+\section{Discusión}
+% TODO
+
+% ═══════════════════════════════════════════════════════════════════════
+\section{Limitaciones y trabajo futuro}
+% TODO
+
+% ═══════════════════════════════════════════════════════════════════════
+\section{Conclusión}
+% TODO
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

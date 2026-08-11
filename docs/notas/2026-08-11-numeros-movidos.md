@@ -122,12 +122,65 @@ Las tres interacciones más grandes involucran a `evict`, que es la lectura
 correcta: es la única política que lee la señal de fuerza, así que compuerta a
 todo lo demás.
 
-## 3. Qué falta comprobar
+## 3. El benchmark de arquitecturas (`exp04`)
+
+Corrido con los contadores arreglados. **La afirmación del draft sobre
+arquitecturas sí sobrevive**, a diferencia de la afirmación sobre el espacio de
+genotipos.
+
+### Fase 1 · gate de reconstrucción
+
+| Arq. | Draft | Ahora | Gate |
+|---|---|---|---|
+| SDM | 0.908 | 0.859 | ✓ |
+| ENN | 0.902 | 0.907 | ✓ |
+| Spiking-SDM | 0.623 | 0.619 | ✓ |
+| FIFO | 0.902 | 0.907 | ✓ |
+| Spiking (LIF+STDP) | 0.483 | **0.459** | ✗ |
+
+El circuito spiking puro **sigue sin pasar el gate**. La motivación de la PoC-5
+—que la brecha es el puente de vectores continuos a ensambles neuronales
+consistentes, no el mecanismo de engrama en sí— se mantiene intacta.
+
+### Fase 2 · batería bajo presión
+
+| Arq. | T1 raros (draft) | T1 raros (ahora) | T3 interf. (draft) | T3 interf. (ahora) |
+|---|---|---|---|---|
+| SDM | 1.000 | **1.000** | 0.000 | **0.875** |
+| ENN | 0.167 | **0.750** | 0.000 | **0.375** |
+| Spiking-SDM | 0.167 | 0.675 | 0.000 | 0.719 |
+| FIFO | 0.067 | **0.038** | 0.000 | **0.000** |
+
+Tres cosas que vale la pena mirar:
+
+**El 1.000 de SDM sobrevive.** Estaba medido sobre contadores contaminados por
+~195 residuos de trazas desalojadas, y aun así el número era correcto: la
+compuerta de error de predicción más el desalojo por mínima fuerza retienen los
+20 eventos raros con contadores limpios igual que con contadores sucios. El
+titular del draft aguanta.
+
+**T3 reproduce la predicción del draft casi exactamente.** El draft dice que la
+versión con señal diferenciada "da SDM = 0.875, ENN = 0.375, FIFO = 0.000, que
+es la comparación pretendida". Medido: **0.875, 0.375, 0.000**. Coincidencia
+exacta en los tres. Es la confirmación más limpia que salió de todo el
+rediseño.
+
+**El FIFO es el piso entre arquitecturas.** 0.038 de retención de eventos raros,
+el mínimo de las cuatro admitidas. Es decir: la afirmación "el incumbente está
+en el piso" **es cierta entre arquitecturas y falsa dentro del espacio de
+genotipos**. Son dos afirmaciones distintas y el draft las mezcla. Hay que
+separarlas en la reescritura.
+
+**ENN mejoró mucho** (0.167 → 0.750). El modo de falla que el draft documenta
+—la fusión acumula fuerza y ahoga la señal de saliencia— sigue existiendo y
+tiene su test, pero es menos severo con los flujos nuevos, donde la variación
+intra-prototipo hace que el umbral de fusión se dispare menos seguido.
+
+## 4. Qué falta comprobar
 
 - [ ] `exp02`: si el cruce de régimen sigue cayendo en r=1 en todas las
-      capacidades. El script lo verifica y anota si no.
-- [ ] `exp04`: si el 1.000 de retención de SDM y el 0.908 de fidelidad
-      sobreviven con los contadores no contaminados.
+      capacidades. Al 2026-08-11 va confirmado en C=10, C=20 y C=40, siempre
+      entre r=0.75 y r=1.00.
 - [ ] `exp05`: si el umbral se mueve al pasar a embeddings de CIFAR-100.
 - [ ] Caracterizar las 107 arquitecturas que puntúan peor que el FIFO, para
       poder decir si son combinaciones degeneradas o no.

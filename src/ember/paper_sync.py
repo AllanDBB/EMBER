@@ -99,13 +99,37 @@ def resolver(clave: str, results_dir: Path | str = "results") -> tuple[float, st
     return float(valor), formato
 
 
+def _sin_comentarios(texto: str) -> str:
+    """Blanquea los comentarios de LaTeX conservando el número de línea.
+
+    Un `\\result` de ejemplo dentro de un comentario no es un número publicado, y
+    verificarlo daría un falso positivo. Se reemplaza por espacios en vez de
+    borrarse para que los offsets —y por tanto las líneas que se reportan— no se
+    corran.
+    """
+    salida = []
+    for linea in texto.split("\n"):
+        corte, i, escapado = len(linea), 0, False
+        while i < len(linea):
+            if escapado:
+                escapado = False
+            elif linea[i] == "\\":
+                escapado = True
+            elif linea[i] == "%":
+                corte = i
+                break
+            i += 1
+        salida.append(linea[:corte] + " " * (len(linea) - corte))
+    return "\n".join(salida)
+
+
 def verify_paper(tex_path: Path | str, results_dir: Path | str = "results") -> list[Discrepancia]:
     """Compara cada `\\result` del LaTeX contra el JSON del experimento.
 
     Devuelve la lista de discrepancias; vacía significa que todo número
     publicado coincide con lo que el código produce hoy.
     """
-    texto = Path(tex_path).read_text(encoding="utf-8")
+    texto = _sin_comentarios(Path(tex_path).read_text(encoding="utf-8"))
     discrepancias: list[Discrepancia] = []
 
     for m in MACRO.finditer(texto):

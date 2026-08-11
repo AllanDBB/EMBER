@@ -114,3 +114,30 @@ class TestGeneracionDeTablas:
         render_tables(resultados, tmp_path / "tex")
         macro = (tmp_path / "tex" / "result_macro.tex").read_text()
         assert "\\newcommand{\\result}[2]{#2}" in macro
+
+
+class TestComentariosDeLatex:
+    def test_un_result_dentro_de_un_comentario_no_se_verifica(self, resultados, tmp_path):
+        """Un ejemplo en un comentario no es un número publicado."""
+        tex = tmp_path / "main.tex"
+        tex.write_text(
+            "% Ejemplo de uso: \\result{exp99_inexistente:nada}{1.0}\n"
+            r"\result{exp01_nas_full:incumbent.score}{0.106}"
+        )
+        assert verify_paper(tex, resultados) == []
+
+    def test_un_porcentaje_escapado_no_corta_la_linea(self, resultados, tmp_path):
+        tex = tmp_path / "main.tex"
+        tex.write_text(
+            r"Explica \result{exp01_nas_full:main_effects.0.eta2|pct}{56.6}\% y luego "
+            r"\result{exp01_nas_full:incumbent.score}{0.106}"
+        )
+        assert verify_paper(tex, resultados) == []
+
+    def test_el_comentario_no_corre_los_numeros_de_linea(self, resultados, tmp_path):
+        tex = tmp_path / "main.tex"
+        tex.write_text(
+            "% comentario largo que ocupa espacio\n"
+            "otra linea\n" + r"\result{exp01_nas_full:incumbent.score}{9.99}"
+        )
+        assert verify_paper(tex, resultados)[0].linea == 3

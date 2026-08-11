@@ -1,0 +1,432 @@
+{
+ "architectures": {
+  "SDM": {
+   "gate": {
+    "name": "SDM",
+    "per_task": {
+     "pattern_completion": 0.6723287579913935,
+     "noise_robustness": 0.7875000000000001,
+     "ab_interference": 0.9999999985098839,
+     "capacity_profile": 0.9777777777777779
+    },
+    "mean": 0.8594016335697638,
+    "detail": {
+     "seeds": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "pattern_completion": {
+      "n_patterns": 10,
+      "cue_fracs": [
+       0.3,
+       0.5,
+       0.7
+      ]
+     },
+     "noise_robustness": {
+      "por_nivel": {
+       "0.1": 1.0,
+       "0.2": 0.8666666666666667,
+       "0.3": 0.8,
+       "0.4": 0.6666666666666666
+      }
+     },
+     "ab_interference": {
+      "n_pairs": 10
+     },
+     "capacity_profile": {
+      "curva": {
+       "2": 1.0,
+       "5": 1.0,
+       "10": 1.0,
+       "15": 1.0,
+       "20": 1.0,
+       "30": 0.9
+      }
+     }
+    },
+    "threshold": 0.5,
+    "passes": true
+   },
+   "gate_s": 0.1,
+   "battery": {
+    "name": "SDM",
+    "per_task": {
+     "rare_retention": 1.0,
+     "noise_under_pressure": 0.3645833333333333,
+     "sequential_interference": 0.875
+    },
+    "mean": 0.7465277777777778,
+    "detail": {
+     "seeds": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "capacity": 20,
+     "rare_retention": {
+      "n_rare": 20,
+      "r": 0.25,
+      "read_every": 5,
+      "evictions": 300
+     },
+     "noise_under_pressure": {
+      "n_items": 60,
+      "capacity": 20,
+      "ceiling": 0.3333333333333333,
+      "evictions": 40
+     },
+     "sequential_interference": {
+      "pe_first": 0.9,
+      "pe_rest": 0.1,
+      "senal_diferenciada": true,
+      "evictions": 76
+     }
+    }
+   },
+   "battery_s": 0.8
+  },
+  "ENN": {
+   "gate": {
+    "name": "ENN",
+    "per_task": {
+     "pattern_completion": 0.691296537220478,
+     "noise_robustness": 0.9375,
+     "ab_interference": 0.9999999985098839,
+     "capacity_profile": 1.0
+    },
+    "mean": 0.9071991339325904,
+    "detail": {
+     "seeds": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "pattern_completion": {
+      "n_patterns": 10,
+      "cue_fracs": [
+       0.3,
+       0.5,
+       0.7
+      ]
+     },
+     "noise_robustness": {
+      "por_nivel": {
+       "0.1": 1.0,
+       "0.2": 1.0,
+       "0.3": 0.9333333333333333,
+       "0.4": 0.9333333333333333
+      }
+     },
+     "ab_interference": {
+      "n_pairs": 10
+     },
+     "capacity_profile": {
+      "curva": {
+       "2": 1.0,
+       "5": 1.0,
+       "10": 1.0,
+       "15": 1.0,
+       "20": 1.0,
+       "30": 1.0
+      }
+     }
+    },
+    "threshold": 0.5,
+    "passes": true
+   },
+   "gate_s": 0.1,
+   "battery": {
+    "name": "ENN",
+    "per_task": {
+     "rare_retention": 0.75,
+     "noise_under_pressure": 0.34375,
+     "sequential_interference": 0.375
+    },
+    "mean": 0.4895833333333333,
+    "detail": {
+     "seeds": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "capacity": 20,
+     "rare_retention": {
+      "n_rare": 20,
+      "r": 0.25,
+      "read_every": 5,
+      "evictions": 5
+     },
+     "noise_under_pressure": {
+      "n_items": 60,
+      "capacity": 20,
+      "ceiling": 0.3333333333333333,
+      "evictions": 40
+     },
+     "sequential_interference": {
+      "pe_first": 0.9,
+      "pe_rest": 0.1,
+      "senal_diferenciada": true,
+      "evictions": 14
+     }
+    }
+   },
+   "battery_s": 0.3
+  },
+  "Spiking": {
+   "gate": {
+    "name": "Spiking",
+    "per_task": {
+     "pattern_completion": 0.19037697811921436,
+     "noise_robustness": 0.14583333333333334,
+     "ab_interference": 0.9999999985098839,
+     "capacity_profile": 0.49861111111111117
+    },
+    "mean": 0.4587053552683857,
+    "detail": {
+     "seeds": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "pattern_completion": {
+      "n_patterns": 10,
+      "cue_fracs": [
+       0.3,
+       0.5,
+       0.7
+      ]
+     },
+     "noise_robustness": {
+      "por_nivel": {
+       "0.1": 0.2,
+       "0.2": 0.06666666666666667,
+       "0.3": 0.13333333333333333,
+       "0.4": 0.13333333333333333
+      }
+     },
+     "ab_interference": {
+      "n_pairs": 10
+     },
+     "capacity_profile": {
+      "curva": {
+       "2": 1.0,
+       "5": 0.8,
+       "10": 0.6,
+       "15": 0.26666666666666666,
+       "20": 0.2,
+       "30": 0.6
+      }
+     }
+    },
+    "threshold": 0.5,
+    "passes": false
+   },
+   "gate_s": 363.9
+  },
+  "SpikingSDM": {
+   "gate": {
+    "name": "SpikingSDM",
+    "per_task": {
+     "pattern_completion": 0.5065308275322119,
+     "noise_robustness": 0.43333333333333335,
+     "ab_interference": 0.9499999985098839,
+     "capacity_profile": 0.5875
+    },
+    "mean": 0.6193410398438572,
+    "detail": {
+     "seeds": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "pattern_completion": {
+      "n_patterns": 10,
+      "cue_fracs": [
+       0.3,
+       0.5,
+       0.7
+      ]
+     },
+     "noise_robustness": {
+      "por_nivel": {
+       "0.1": 0.7333333333333333,
+       "0.2": 0.4,
+       "0.3": 0.2,
+       "0.4": 0.2
+      }
+     },
+     "ab_interference": {
+      "n_pairs": 10
+     },
+     "capacity_profile": {
+      "curva": {
+       "2": 0.5,
+       "5": 0.4,
+       "10": 0.7,
+       "15": 0.6666666666666666,
+       "20": 0.4,
+       "30": 0.5666666666666667
+      }
+     }
+    },
+    "threshold": 0.5,
+    "passes": true
+   },
+   "gate_s": 1.3,
+   "battery": {
+    "name": "SpikingSDM",
+    "per_task": {
+     "rare_retention": 0.675,
+     "noise_under_pressure": 0.15833333333333333,
+     "sequential_interference": 0.71875
+    },
+    "mean": 0.5173611111111112,
+    "detail": {
+     "seeds": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "capacity": 20,
+     "rare_retention": {
+      "n_rare": 20,
+      "r": 0.25,
+      "read_every": 5,
+      "evictions": 300
+     },
+     "noise_under_pressure": {
+      "n_items": 60,
+      "capacity": 20,
+      "ceiling": 0.3333333333333333,
+      "evictions": 40
+     },
+     "sequential_interference": {
+      "pe_first": 0.9,
+      "pe_rest": 0.1,
+      "senal_diferenciada": true,
+      "evictions": 76
+     }
+    }
+   },
+   "battery_s": 1.7
+  },
+  "FIFO": {
+   "gate": {
+    "name": "FIFO",
+    "per_task": {
+     "pattern_completion": 0.691296537220478,
+     "noise_robustness": 0.9375,
+     "ab_interference": 0.9999999985098839,
+     "capacity_profile": 1.0
+    },
+    "mean": 0.9071991339325904,
+    "detail": {
+     "seeds": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "pattern_completion": {
+      "n_patterns": 10,
+      "cue_fracs": [
+       0.3,
+       0.5,
+       0.7
+      ]
+     },
+     "noise_robustness": {
+      "por_nivel": {
+       "0.1": 1.0,
+       "0.2": 1.0,
+       "0.3": 0.9333333333333333,
+       "0.4": 0.9333333333333333
+      }
+     },
+     "ab_interference": {
+      "n_pairs": 10
+     },
+     "capacity_profile": {
+      "curva": {
+       "2": 1.0,
+       "5": 1.0,
+       "10": 1.0,
+       "15": 1.0,
+       "20": 1.0,
+       "30": 1.0
+      }
+     }
+    },
+    "threshold": 0.5,
+    "passes": true
+   },
+   "gate_s": 0.1,
+   "battery": {
+    "name": "FIFO",
+    "per_task": {
+     "rare_retention": 0.037500000000000006,
+     "noise_under_pressure": 0.25416666666666665,
+     "sequential_interference": 0.0
+    },
+    "mean": 0.09722222222222221,
+    "detail": {
+     "seeds": [
+      0,
+      1,
+      2,
+      3
+     ],
+     "capacity": 20,
+     "rare_retention": {
+      "n_rare": 20,
+      "r": 0.25,
+      "read_every": 5,
+      "evictions": 300
+     },
+     "noise_under_pressure": {
+      "n_items": 60,
+      "capacity": 20,
+      "ceiling": 0.3333333333333333,
+      "evictions": 40
+     },
+     "sequential_interference": {
+      "pe_first": 0.9,
+      "pe_rest": 0.1,
+      "senal_diferenciada": true,
+      "evictions": 76
+     }
+    }
+   },
+   "battery_s": 0.4
+  }
+ },
+ "gate_threshold": 0.5,
+ "capacity": 20,
+ "admitidas": [
+  "ENN",
+  "FIFO",
+  "SDM",
+  "SpikingSDM"
+ ],
+ "rechazadas": [
+  "Spiking"
+ ],
+ "mejor_retencion_raros": {
+  "arch": "SDM",
+  "score": 1.0
+ },
+ "peor_retencion_raros": {
+  "arch": "FIFO",
+  "score": 0.037500000000000006
+ },
+ "fifo_en_el_piso": true
+}
