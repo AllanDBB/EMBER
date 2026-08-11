@@ -449,17 +449,20 @@
   4.0
  ],
  "regimenes": {
-  "compresion (r <= 0.5)": {
+  "compression": {
+   "rango": "r <= 0.5",
    "n_celdas": 9,
    "eta2_write": 0.7301518078098304,
    "eta2_evict": 0.08200712151609098
   },
-  "transicion (0.5 < r < 1)": {
+  "transition": {
+   "rango": "0.5 < r < 1",
    "n_celdas": 3,
    "eta2_write": 0.5237861002420924,
    "eta2_evict": 0.10629061359591373
   },
-  "seleccion (r >= 1)": {
+  "selection": {
+   "rango": "r >= 1",
    "n_celdas": 12,
    "eta2_write": 0.015869081505587152,
    "eta2_evict": 0.16295757434128977

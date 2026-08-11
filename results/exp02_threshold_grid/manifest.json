@@ -1,11 +1,11 @@
 {
  "experiment": "exp02_threshold_grid",
  "ember_version": "0.1.0",
- "git_sha": "ebae0ed84329683498c2ef1f5958ac02433ecdda",
+ "git_sha": "b71f6e9f6becd799bab35b57e426ce782b362756",
  "git_branch": "feat/ember-foundation",
  "git_dirty": true,
- "timestamp_utc": "2026-08-11T23:12:08.407937+00:00",
- "duration_s": 1229.82,
+ "timestamp_utc": "2026-08-11T23:27:55.126089+00:00",
+ "duration_s": 868.28,
  "python": "3.12.13",
  "platform": "Linux-7.1.6-1-cachyos-x86_64-with-glibc2.44",
  "packages": {
