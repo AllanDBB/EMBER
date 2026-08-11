@@ -84,10 +84,41 @@ ratio queda confundido con ella.
   está en el piso" es cierto entre arquitecturas y falso dentro del espacio de
   genotipos. Hay que separar las dos afirmaciones al reescribir.
 
+### `exp05` — la ley tiene una precondición que el borrador no enuncia
+
+**Es el hallazgo que más afecta cómo se escribe el paper.** Salió al instrumentar
+el experimento, antes incluso de tener los datos reales.
+
+Sobre un flujo con varianza intra-prototipo realista, el eje de escritura explica
+~0 % de la varianza **incluso con r = 0.5**, donde la ley predice que debería
+dominar. La causa no es que la fusión no se dispare (lo hace en el 50 % de las
+escrituras) sino que **la consolidación parcial deja varias trazas por
+prototipo**:
+
+| Dominio | K nominal | K efectivo | r efectivo | η² escritura |
+|---|---|---|---|---|
+| sintético | 10 | 10 | 0.50 | **0.818** |
+| embeddings | 10 | **35** | **1.75** | 0.004 |
+
+La ley no se rompe: se estaba aplicando a la variable equivocada. Con r efectivo
+de 1.75, un η² de escritura de 0.004 es **exactamente** lo que la ley predice.
+
+Enunciado corregido: *la variable de control del régimen es el número de
+prototipos efectivo tras consolidar, no el nominal.* Sobre flujos sintéticos con
+dispersión baja los dos coinciden, que es por qué la distinción no aparecía.
+
+Es un enunciado mejor: le da al robot una cantidad medible en línea (contar
+trazas), y convierte la sección de limitaciones en un resultado. **Queda abierta
+la decisión de si el paper se reescribe sobre `r_efectivo` o si la precondición
+se reporta como calificación de la ley nominal.** `exp05` localiza el cruce
+contra ambas variables.
+
 ## Lo siguiente
 
-1. **Terminar `exp05`** — la ley sobre embeddings de CIFAR-100 con `K` estimado.
-   El banco se extrae con `extract_cifar100_embeddings(Path('data/cache'))`.
+1. **Correr `exp05` con CIFAR-100 real.** El código está probado contra un banco
+   sintético; falta el banco real, que se extrae con
+   `extract_cifar100_embeddings(Path('data/cache'))` — la descarga desde
+   `cs.toronto.edu` es lenta (~1 h).
 2. **Escribir el texto del paper.** El esqueleto, las tablas generadas y las
    figuras están; falta la prosa. Todo número medido va con `\result{}`.
 3. **Caracterizar las 107 arquitecturas que puntúan peor que el FIFO** — hace
