@@ -18,15 +18,16 @@ Retomar leyendo, en este orden:
 | 12–13 · Tareas R1–R4 y T1–T3 (`ember.tasks`) | listo |
 | 14–16 · NAS y `ExperimentRun` | listo |
 | 17 · `exp01` y `exp03` | **corridos** |
-| 18 · `exp02` grilla del umbral | **corriendo la última celda** |
+| 18 · `exp02` grilla del umbral | **corrido**, Figura 1 generada |
 | 19 · `exp04` benchmark de arquitecturas | **corrido** |
-| 20 · `exp05` embeddings reales | escrito; bajando CIFAR-100 |
+| 20 · `exp05` embeddings reales | código probado; falta el banco de CIFAR-100 |
 | 21 · `ember.envs` (MiniGrid) | listo y verificado contra el entorno real |
 | 22 · `CLAUDE.md`, skills, README | listo |
 | 23 · `paper/` y `paper_sync` | listo (el texto del paper falta) |
 
-239 tests pasan. `ruff` limpio. CI tiene tres jobs: tests, auditoría de ejes y
-verificación de sincronía del paper.
+**259 tests pasan** (1 salteado: necesita el banco real de CIFAR). `ruff` limpio.
+CI tiene tres jobs: tests, auditoría de ejes y verificación de sincronía del
+paper. `verify_paper` no reporta discrepancias.
 
 ## Los cuatro defectos del piloto: arreglados y fijados con tests
 
@@ -56,17 +57,22 @@ metodológica que vende la sección de método del paper ya es verificable.
 - **El FIFO ya no está en el piso del espacio de genotipos**: 107 arquitecturas
   puntúan estrictamente peor. Rango #416–#469 de 576.
 
-### `exp02` — la ley del umbral
+### `exp02` — la ley del umbral, confirmada (~15 min)
 
-Confirmada en las tres capacidades probadas. El cruce de dominancia cae **entre
-r = 0.75 y r = 1.00** en C=10, C=20 y C=40, independientemente de la capacidad —
-que es exactamente la predicción falsable.
+24 celdas × 5 semillas × 576 genotipos, con IC bootstrap.
 
-| C | η² escritura en r≤0.5 | η² escritura en r≥1 |
-|---|---|---|
-| 10 | 0.61–0.77 | 0.01–0.02 |
-| 20 | 0.64–0.81 | 0.01–0.02 |
-| 40 | 0.67–0.87 | 0.01–0.03 |
+| Régimen | Rango | η² escritura | η² desalojo |
+|---|---|---|---|
+| Compresión | r ≤ 0.5 | **73.0 %** | 8.2 % |
+| Transición | 0.5 < r < 1 | 52.4 % | 10.6 % |
+| Selección | r ≥ 1 | **1.6 %** | 16.3 % |
+
+El draft reportaba **72.9 %** y **1.6 %** sobre 14 celdas sin intervalos. La
+réplica es casi exacta con un motor completamente reescrito.
+
+El cruce de dominancia cae **entre r = 0.75 y r = 1.00 en las tres capacidades**
+(C=10, 20, 40), independientemente de la capacidad — que es exactamente la
+predicción falsable.
 
 **Diseño importante**: hay que mantener constantes las **visitas por prototipo**
 al barrer el ratio. Con un largo de flujo fijo, subir K baja la recurrencia y el
