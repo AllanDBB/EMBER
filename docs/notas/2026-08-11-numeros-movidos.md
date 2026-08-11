@@ -81,10 +81,39 @@ fuerte hacen peor que simplemente descartar lo más viejo.
 **Qué se puede afirmar en su lugar**, y sigue siendo fuerte:
 - El FIFO está en el **cuartil inferior** del espacio (#416–#469 de 576).
 - Su puntaje es 0.106 contra 0.818 de la frontera: **un factor de 7.7**.
-- Ninguna de las 107 que puntúan peor es una arquitectura que alguien
-  propondría: todas combinan mecanismos que se anulan entre sí.
 
-Esa última observación hay que verificarla antes de escribirla.
+### Qué son esas 107 arquitecturas
+
+Verificado sobre `results/exp01_nas_full/data.json`. La conjetura inicial —que
+todas eran combinaciones degeneradas que nadie propondría— **es falsa**, y lo que
+aparece en su lugar es más interesante.
+
+| Eje | Composición de las 107 |
+|---|---|
+| `write` | **append en las 107**. Ninguna usa fusión. |
+| `evict` | min_utility 72, fifo 24, min_strength 11. Cero con random. |
+| `read` | topk3 54, radius 27, nn 26 |
+
+Tres lecturas:
+
+1. **Ninguna arquitectura que consolide por fusión es peor que el FIFO.** Las 107
+   usan `append`. Fusionar nunca empeora respecto de no tener criterio alguno.
+
+2. **El desalojo por mínima utilidad es el culpable principal**: la mitad de
+   todas las arquitecturas que lo usan quedan por debajo del FIFO. Con lecturas
+   esparcidas la mayoría de las trazas tiene utilidad cero, así que la política
+   protege *lo que se consultó por casualidad* en vez de lo que importa — es
+   peor que descartar lo más viejo, porque introduce un sesgo arbitrario donde
+   el FIFO al menos es neutral. Es un resultado sobre el mecanismo, no un
+   artefacto.
+
+3. **24 arquitecturas comparten la política de desalojo del FIFO y aun así
+   puntúan peor**, por el modo de lectura: `topk3` agrega tres trazas y con
+   memoria comprimida eso mete ruido en vez de robustez.
+
+Esto **es material publicable**: dice qué mecanismos bioinspirados son peores que
+no tener ninguno, que es una pregunta que el borrador no se hacía porque su
+espacio no tenía resolución en la cola inferior.
 
 ### El 63.5 % de la escritura bajó a 56.6 %
 
