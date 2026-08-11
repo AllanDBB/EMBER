@@ -55,9 +55,9 @@ mismas piezas. El FIFO es un genotipo, no una clase aparte.
 `architectures.py:108` y `architectures.py:491`, en el desalojo:
 
 ```python
-self.V[idx] += strength * k     # al escribir
+self.V[idx] += strength * k  # al escribir
 ...
-self.V[di] -= dk                # al desalojar  ← resta 1×, no strength×
+self.V[di] -= dk  # al desalojar  ← resta 1×, no strength×
 ```
 
 Con `strength = 1 + 2·pred_error`, un evento raro (pe≈0.9) suma 2.8·k y resta
@@ -145,20 +145,24 @@ Esto se convierte en un workspace multi-paquete (`ember-core` / `ember-lab` /
 mínima. Son la única implementación de cada mecanismo en todo el repo.
 
 ```python
-class StrengthPolicy(Protocol):     # fuerza inicial de una traza nueva
+class StrengthPolicy(Protocol):  # fuerza inicial de una traza nueva
     def initial(self, pred_error: float, novelty: float) -> float: ...
 
-class WritePolicy(Protocol):        # crear traza nueva o consolidar en una existente
+
+class WritePolicy(Protocol):  # crear traza nueva o consolidar en una existente
     def route(self, store: TraceStore, key: NDArray) -> WriteTarget: ...
 
-class ReadPolicy(Protocol):         # qué trazas participan en la reconstrucción
+
+class ReadPolicy(Protocol):  # qué trazas participan en la reconstrucción
     def select(self, sims: NDArray) -> NDArray: ...
     def reconstruct(self, store, sel, sims) -> tuple[Any, float]: ...
 
-class EvictPolicy(Protocol):        # a quién se descarta cuando no cabe
+
+class EvictPolicy(Protocol):  # a quién se descarta cuando no cabe
     def victim(self, store: TraceStore, rng: Generator) -> int: ...
 
-class DecayPolicy(Protocol):        # erosión de fuerza sin refuerzo
+
+class DecayPolicy(Protocol):  # erosión de fuerza sin refuerzo
     def step(self, strength: NDArray) -> None: ...
 ```
 
@@ -171,8 +175,12 @@ El genotipo del NAS es una tupla de políticas. El `EpisodicBuffer` de e-MDB es:
 
 ```python
 FIFO_GENOTYPE = Genotype(
-    read=NearestNeighbour(), write=Append(), strength=Constant(),
-    decay=NoDecay(), evict=FIFO(), reinforce=0.0,
+    read=NearestNeighbour(),
+    write=Append(),
+    strength=Constant(),
+    decay=NoDecay(),
+    evict=FIFO(),
+    reinforce=0.0,
 )
 ```
 

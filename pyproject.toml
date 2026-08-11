@@ -1,0 +1,31 @@
+[project]
+name = "ember"
+version = "0.1.0"
+description = "Emergent Memory-Based Encoding and Reactivation — memoria episódica bioinspirada para robots cognitivos"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+dependencies = ["numpy>=2.0"]
+
+[project.optional-dependencies]
+lab = [
+    "torch>=2.4",
+    "torchvision>=0.19",
+    "scipy>=1.14",
+    "matplotlib>=3.9",
+    "pandas>=2.2",
+]
+envs = ["gymnasium>=0.29", "minigrid>=2.3"]
+dev = ["pytest>=8.0", "pytest-xdist>=3.6", "ruff>=0.6", "mypy>=1.11"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ember"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: pruebas que tardan más de 5 s"]
+filterwarnings = ["ignore::DeprecationWarning"]

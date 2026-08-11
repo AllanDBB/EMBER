@@ -302,9 +302,21 @@ import numpy as np
 import pytest
 
 from ember.core.policies import (
-    Append, BothGated, Constant, ExponentialDecay, FIFO, Merge, MinStrength,
-    MinUtility, NearestNeighbour, NoDecay, NoveltyGated, PredErrorGated,
-    Radius, Random, TopK,
+    Append,
+    BothGated,
+    Constant,
+    ExponentialDecay,
+    FIFO,
+    Merge,
+    MinStrength,
+    MinUtility,
+    NearestNeighbour,
+    NoDecay,
+    NoveltyGated,
+    PredErrorGated,
+    Radius,
+    Random,
+    TopK,
 )
 from ember.core.store import TraceStore
 
@@ -477,8 +489,14 @@ import pytest
 from ember.core.genotype import FIFO_GENOTYPE, Genotype
 from ember.core.memory import PolicyMemory
 from ember.core.policies import (
-    Append, Constant, ExponentialDecay, FIFO, MinStrength, NearestNeighbour,
-    NoDecay, PredErrorGated,
+    Append,
+    Constant,
+    ExponentialDecay,
+    FIFO,
+    MinStrength,
+    NearestNeighbour,
+    NoDecay,
+    PredErrorGated,
 )
 
 
@@ -525,8 +543,12 @@ def test_fifo_conserva_los_mas_recientes():
 def test_min_strength_con_gating_conserva_lo_sorpresivo():
     """El resultado central del paper: la fuerza solo importa si el desalojo la lee."""
     g = Genotype(
-        read=NearestNeighbour(), write=Append(), strength=PredErrorGated(),
-        decay=NoDecay(), evict=MinStrength(), reinforce=0.0,
+        read=NearestNeighbour(),
+        write=Append(),
+        strength=PredErrorGated(),
+        decay=NoDecay(),
+        evict=MinStrength(),
+        reinforce=0.0,
     )
     mem = _memoria(g, capacity=3)
     claves = _claves(10)
@@ -548,22 +570,30 @@ def test_el_mismo_stream_con_fifo_pierde_lo_sorpresivo():
 def test_reinforce_en_lectura_protege_del_desalojo():
     """Cierra el eje que el addendum declaró inobservable: lecturas intercaladas."""
     g = Genotype(
-        read=NearestNeighbour(), write=Append(), strength=Constant(),
-        decay=NoDecay(), evict=MinStrength(), reinforce=5.0,
+        read=NearestNeighbour(),
+        write=Append(),
+        strength=Constant(),
+        decay=NoDecay(),
+        evict=MinStrength(),
+        reinforce=5.0,
     )
     mem = _memoria(g, capacity=3)
     claves = _claves(8)
     mem.write(claves[0], "consultado", pred_error=0.5)
     for i, k in enumerate(claves[1:], start=1):
         mem.write(k, f"otro{i}", pred_error=0.5)
-        mem.read(claves[0])          # se refuerza en cada paso
+        mem.read(claves[0])  # se refuerza en cada paso
     assert mem.read(claves[0]).value == "consultado"
 
 
 def test_decaimiento_erosiona_la_fuerza_no_reforzada():
     g = Genotype(
-        read=NearestNeighbour(), write=Append(), strength=Constant(),
-        decay=ExponentialDecay(rate=0.5), evict=FIFO(), reinforce=0.0,
+        read=NearestNeighbour(),
+        write=Append(),
+        strength=Constant(),
+        decay=ExponentialDecay(rate=0.5),
+        evict=FIFO(),
+        reinforce=0.0,
     )
     mem = _memoria(g, capacity=10)
     claves = _claves(3)
@@ -576,8 +606,11 @@ def test_decaimiento_erosiona_la_fuerza_no_reforzada():
 
 def test_misma_semilla_produce_resultados_identicos():
     g = Genotype(
-        read=NearestNeighbour(), write=Append(), strength=Constant(),
-        decay=NoDecay(), evict=__import__("ember.core.policies", fromlist=["Random"]).Random(),
+        read=NearestNeighbour(),
+        write=Append(),
+        strength=Constant(),
+        decay=NoDecay(),
+        evict=__import__("ember.core.policies", fromlist=["Random"]).Random(),
         reinforce=0.0,
     )
     claves = _claves(20)
@@ -592,8 +625,12 @@ def test_misma_semilla_produce_resultados_identicos():
 
 def test_el_genotipo_fifo_es_el_episodic_buffer_de_emdb():
     assert FIFO_GENOTYPE.as_dict() == {
-        "read": "nn", "write": "append", "strength": "constant",
-        "decay": "1.0", "evict": "fifo", "reinforce": "0.0",
+        "read": "nn",
+        "write": "append",
+        "strength": "constant",
+        "decay": "1.0",
+        "evict": "fifo",
+        "reinforce": "0.0",
     }
 ```
 
@@ -685,7 +722,8 @@ def test_degradacion_suave_ante_ruido():
         mem.read(
             (k + rng.standard_normal(32).astype(np.float32) * 0.2)
             / np.linalg.norm(k + rng.standard_normal(32).astype(np.float32) * 0.2)
-        ).value == i
+        ).value
+        == i
         for i, k in enumerate(claves)
     )
     assert aciertos >= 7
@@ -1094,17 +1132,20 @@ def test_las_claves_son_unitarias_float32():
 def test_la_misma_semilla_reproduce_el_stream():
     a = clustered_stream(n_prototypes=5, capacity=20, seed=3)
     b = clustered_stream(n_prototypes=5, capacity=20, seed=3)
-    assert np.array_equal(
-        np.stack([it.key for it in a]), np.stack([it.key for it in b])
-    )
+    assert np.array_equal(np.stack([it.key for it in a]), np.stack([it.key for it in b]))
 
 
 def test_correlation_reduce_la_ortogonalidad_media():
     """El gaussiano i.i.d. es casi ortogonal; con correlación deja de serlo."""
+
     def coseno_medio(correlation):
         s = clustered_stream(
-            n_prototypes=40, capacity=20, n_common=200, n_rare=0,
-            correlation=correlation, seed=0,
+            n_prototypes=40,
+            capacity=20,
+            n_common=200,
+            n_rare=0,
+            correlation=correlation,
+            seed=0,
         )
         K = np.stack([it.key for it in s])
         G = np.abs(K @ K.T)
@@ -1116,8 +1157,12 @@ def test_correlation_reduce_la_ortogonalidad_media():
 def test_density_skew_desbalancea_las_visitas_por_prototipo():
     def maxima_proporcion(skew):
         s = clustered_stream(
-            n_prototypes=10, capacity=20, n_common=500, n_rare=0,
-            density_skew=skew, seed=0,
+            n_prototypes=10,
+            capacity=20,
+            n_common=500,
+            n_rare=0,
+            density_skew=skew,
+            seed=0,
         )
         _, cuentas = np.unique([it.value for it in s], return_counts=True)
         return cuentas.max() / cuentas.sum()
@@ -1126,9 +1171,7 @@ def test_density_skew_desbalancea_las_visitas_por_prototipo():
 
 
 def test_drift_aleja_las_claves_tardias_de_las_tempranas():
-    s = clustered_stream(
-        n_prototypes=3, capacity=20, n_common=300, n_rare=0, drift=1.0, seed=0
-    )
+    s = clustered_stream(n_prototypes=3, capacity=20, n_common=300, n_rare=0, drift=1.0, seed=0)
     K = np.stack([it.key for it in s])
     assert float(K[:20] @ K[-20:].T.mean(axis=1)).mean() < 0.9
 ```
@@ -1195,9 +1238,7 @@ def test_el_intervalo_de_confianza_contiene_la_estimacion_puntual():
 
 
 def test_es_determinista_bajo_la_misma_semilla():
-    keys = np.stack(
-        [it.key for it in clustered_stream(n_prototypes=5, capacity=20, seed=0)]
-    )
+    keys = np.stack([it.key for it in clustered_stream(n_prototypes=5, capacity=20, seed=0)])
     a = estimate_n_prototypes(keys, k_max=16, seed=1)
     b = estimate_n_prototypes(keys, k_max=16, seed=1)
     assert a.k_hat == b.k_hat and a.ci_low == b.ci_low
@@ -1306,9 +1347,7 @@ def test_los_embeddings_reales_son_menos_ortogonales_que_el_gaussiano(banco):
 def test_es_reproducible(banco):
     a = embedding_stream(banco, n_prototypes=5, capacity=20, seed=2)
     b = embedding_stream(banco, n_prototypes=5, capacity=20, seed=2)
-    assert np.array_equal(
-        np.stack([it.key for it in a]), np.stack([it.key for it in b])
-    )
+    assert np.array_equal(np.stack([it.key for it in a]), np.stack([it.key for it in b]))
 ```
 
 - [ ] **Step 2: Correr y verificar que falla.** Run: `uv run pytest tests/data/test_embeddings.py -v`
@@ -1368,8 +1407,11 @@ from ember.core.genotype import FIFO_GENOTYPE
 from ember.core.memory import PolicyMemory
 from ember.memories import ARCHITECTURES
 from ember.tasks.reconstruction import (
-    r1_pattern_completion, r2_noise_robustness, r3_ab_interference,
-    r4_capacity_profile, reconstruction_gate,
+    r1_pattern_completion,
+    r2_noise_robustness,
+    r3_ab_interference,
+    r4_capacity_profile,
+    reconstruction_gate,
 )
 
 DIM = 32
@@ -1404,7 +1446,10 @@ def test_el_gate_admite_al_fifo_porque_sin_presion_es_busqueda_por_similitud():
 def test_el_gate_reporta_las_cuatro_subtareas():
     g = reconstruction_gate(fifo_factory, seeds=(0,))
     assert set(g.per_task) == {
-        "pattern_completion", "noise_robustness", "ab_interference", "capacity_profile"
+        "pattern_completion",
+        "noise_robustness",
+        "ab_interference",
+        "capacity_profile",
     }
 
 
@@ -1462,10 +1507,19 @@ import pytest
 from ember.core.genotype import FIFO_GENOTYPE, Genotype
 from ember.core.memory import PolicyMemory
 from ember.core.policies import (
-    Append, Constant, MinStrength, NearestNeighbour, NoDecay, PredErrorGated,
+    Append,
+    Constant,
+    MinStrength,
+    NearestNeighbour,
+    NoDecay,
+    PredErrorGated,
 )
 from ember.data.synthetic import clustered_stream
-from ember.tasks.battery import t1_rare_retention, t2_noise_under_pressure, t3_sequential_interference
+from ember.tasks.battery import (
+    t1_rare_retention,
+    t2_noise_under_pressure,
+    t3_sequential_interference,
+)
 
 DIM = 32
 
@@ -1473,12 +1527,17 @@ DIM = 32
 def _fab(genotype, capacity_por_defecto=20):
     def factory(capacity, seed):
         return PolicyMemory(dim=DIM, capacity=capacity, genotype=genotype, seed=seed)
+
     return factory
 
 
 FRONTERA = Genotype(
-    read=NearestNeighbour(), write=Append(), strength=PredErrorGated(),
-    decay=NoDecay(), evict=MinStrength(), reinforce=0.0,
+    read=NearestNeighbour(),
+    write=Append(),
+    strength=PredErrorGated(),
+    decay=NoDecay(),
+    evict=MinStrength(),
+    reinforce=0.0,
 )
 
 
@@ -1607,6 +1666,7 @@ def test_los_seis_ejes_estan_presentes():
 
 def test_el_producto_de_las_cardinalidades_da_576():
     import math
+
     assert math.prod(len(v) for v in SEARCH_SPACE.values()) == 576
 ```
 
@@ -1622,6 +1682,7 @@ from ember.nas.space import enumerate_space
 def _evaluador_falso(genotype):
     """Puntaje sintético: depende solo del desalojo, para tener empates masivos."""
     from ember.core.policies import MinStrength
+
     return {"t1": 1.0 if isinstance(genotype.evict, MinStrength) else 0.0}
 
 
@@ -1648,6 +1709,7 @@ def test_rank_of_devuelve_un_rango_no_un_entero_cuando_hay_empates():
 
 def test_el_rango_es_ancho_cuando_todos_empatan():
     from ember.core.policies import MinStrength
+
     genos = [g for g in enumerate_space() if not isinstance(g.evict, MinStrength)][:40]
     r = run_search(_evaluador_falso, genotypes=genos, n_jobs=1, progress=False)
     optimista, pesimista = r.rank_of(genos[0])
@@ -1715,12 +1777,14 @@ def _registros(fn):
 
 def test_eta2_es_1_cuando_un_solo_eje_explica_todo():
     from ember.core.policies import MinStrength
+
     recs = _registros(lambda g: 1.0 if isinstance(g.evict, MinStrength) else 0.0)
     assert eta_squared(recs, "evict") == pytest.approx(1.0)
 
 
 def test_eta2_es_0_cuando_el_eje_no_influye():
     from ember.core.policies import MinStrength
+
     recs = _registros(lambda g: 1.0 if isinstance(g.evict, MinStrength) else 0.0)
     assert eta_squared(recs, "read") == pytest.approx(0.0, abs=1e-9)
 
@@ -1728,6 +1792,7 @@ def test_eta2_es_0_cuando_el_eje_no_influye():
 def test_axis_liveness_detecta_un_eje_muerto():
     """Reproduce el hallazgo del addendum: diferencia máxima exactamente 0.000."""
     from ember.core.policies import MinStrength
+
     recs = _registros(lambda g: 1.0 if isinstance(g.evict, MinStrength) else 0.0)
     assert axis_liveness(recs, "read") == pytest.approx(0.0)
     assert axis_liveness(recs, "reinforce") == pytest.approx(0.0)
@@ -1735,6 +1800,7 @@ def test_axis_liveness_detecta_un_eje_muerto():
 
 def test_axis_liveness_detecta_un_eje_vivo():
     from ember.core.policies import MinStrength
+
     recs = _registros(lambda g: 1.0 if isinstance(g.evict, MinStrength) else 0.0)
     assert axis_liveness(recs, "evict") == pytest.approx(1.0)
 
@@ -1745,11 +1811,11 @@ def test_el_efecto_condicional_revela_lo_que_el_efecto_principal_esconde():
 
     def puntaje(g):
         if not isinstance(g.evict, MinStrength):
-            return 0.5                                   # la fuerza nunca se lee
+            return 0.5  # la fuerza nunca se lee
         return 0.0 if isinstance(g.strength, Constant) else 1.0
 
     recs = _registros(puntaje)
-    assert eta_squared(recs, "strength") < 0.30          # efecto principal chico
+    assert eta_squared(recs, "strength") < 0.30  # efecto principal chico
     cond = conditional_effect(recs, "strength", given={"evict": "min_strength"}, metric="mean")
     assert max(cond.values()) - min(cond.values()) == pytest.approx(1.0)
 
@@ -1812,8 +1878,15 @@ def test_el_manifiesto_registra_la_procedencia(tmp_path):
     with ExperimentRun("prueba", results_dir=tmp_path) as run:
         run.record("x", 1)
     man = json.loads((tmp_path / "prueba" / "manifest.json").read_text())
-    for campo in ("git_sha", "git_dirty", "timestamp_utc", "python", "packages",
-                  "duration_s", "ember_version"):
+    for campo in (
+        "git_sha",
+        "git_dirty",
+        "timestamp_utc",
+        "python",
+        "packages",
+        "duration_s",
+        "ember_version",
+    ):
         assert campo in man, campo
     assert man["packages"]["numpy"]
 
@@ -1944,9 +2017,7 @@ def test_cada_celda_reporta_ratio_e_intervalos():
 @pytest.mark.slow
 def test_la_transicion_de_regimen_ocurre_en_r_igual_a_1():
     """El claim central: bajo r=1 domina la fusión, sobre r=1 domina el desalojo."""
-    celdas = barrer_grilla(
-        capacities=(20,), prototypes=(4, 10, 40, 80), seeds=(0, 1, 2), n_jobs=-1
-    )
+    celdas = barrer_grilla(capacities=(20,), prototypes=(4, 10, 40, 80), seeds=(0, 1, 2), n_jobs=-1)
     bajo = [c for c in celdas if c["r"] <= 0.5]
     alto = [c for c in celdas if c["r"] >= 1.0]
     assert min(c["eta2_write"] for c in bajo) > max(c["eta2_write"] for c in alto)
@@ -1956,9 +2027,7 @@ def test_la_transicion_de_regimen_ocurre_en_r_igual_a_1():
 @pytest.mark.slow
 def test_el_umbral_no_se_mueve_con_la_capacidad():
     """La variable de control es el ratio, no la redundancia del stream."""
-    celdas = barrer_grilla(
-        capacities=(10, 40), prototypes=(5, 20, 80), seeds=(0, 1), n_jobs=-1
-    )
+    celdas = barrer_grilla(capacities=(10, 40), prototypes=(5, 20, 80), seeds=(0, 1), n_jobs=-1)
     for cap in (10, 40):
         de_esta = sorted((c for c in celdas if c["capacity"] == cap), key=lambda c: c["r"])
         dominios = ["write" if c["eta2_write"] > c["eta2_evict"] else "evict" for c in de_esta]
@@ -2293,9 +2362,7 @@ from ember.paper_sync import render_tables, verify_paper
 def test_genera_un_tex_por_tabla(tmp_path):
     resultados = tmp_path / "results" / "exp01_nas_full"
     resultados.mkdir(parents=True)
-    (resultados / "data.json").write_text(
-        json.dumps({"eta2": {"write": 0.635, "evict": 0.099}})
-    )
+    (resultados / "data.json").write_text(json.dumps({"eta2": {"write": 0.635, "evict": 0.099}}))
     salidas = render_tables(tmp_path / "results", tmp_path / "tex")
     assert salidas and all(p.suffix == ".tex" and p.exists() for p in salidas)
 
