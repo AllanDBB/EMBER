@@ -34,6 +34,14 @@ class PolicyMemory:
         self.store = TraceStore(dim=dim, capacity=capacity)
         self.rng = np.random.default_rng(seed)
         self.n_evictions = 0
+        self.n_writes = 0
+        self.n_merges = 0
+        """Cuántas escrituras se consolidaron en una traza existente.
+
+        Es la medición directa de si el mecanismo de fusión está actuando. Un
+        umbral de fusión que el dominio no alcanza deja este contador en cero, y
+        entonces no puede haber régimen de compresión por bajo que sea `r`.
+        """
 
     @property
     def capacity(self) -> int:
@@ -51,12 +59,14 @@ class PolicyMemory:
 
         store.tick()
         g.decay.step(store.strength)
+        self.n_writes += 1
 
         novelty = store.novelty(k)
         s = g.strength.initial(pred_error=pred_error, novelty=novelty)
 
         objetivo = g.write.route(store, k)
         if objetivo is not None:
+            self.n_merges += 1
             # Consolidación Hebbiana: la experiencia refuerza un engrama existente
             # en vez de crear una copia redundante. No hay traza nueva, así que no
             # puede haber desalojo.

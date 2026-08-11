@@ -184,3 +184,61 @@ intra-prototipo hace que el umbral de fusión se dispare menos seguido.
 - [ ] `exp05`: si el umbral se mueve al pasar a embeddings de CIFAR-100.
 - [ ] Caracterizar las 107 arquitecturas que puntúan peor que el FIFO, para
       poder decir si son combinaciones degeneradas o no.
+
+---
+
+## 5. Un hallazgo nuevo: la ley tiene una precondición que el borrador no enuncia
+
+Salió al instrumentar `exp05`. **Afecta cómo hay que enunciar el claim central.**
+
+### Lo que se observó
+
+Sobre un flujo construido desde embeddings —con varianza intra-clase realista en
+vez de un centro más ruido de 0.05— el eje de escritura explica ~0 % de la
+varianza **incluso con r = 0.5**, donde la ley predice que debería dominar.
+
+Primera hipótesis: el umbral de fusión (0.85) es inalcanzable en ese dominio, el
+mismo modo de falla que mataba al eje de lectura. **Falsa**: la fusión se dispara
+en el 50 % de las escrituras.
+
+Segunda medición, directa: cuántas trazas ocupa la experiencia rutinaria después
+de consolidar, sin presión de capacidad.
+
+| Dominio | K nominal | K efectivo | r efectivo | η² escritura |
+|---|---|---|---|---|
+| sintético | 10 | 10 | 0.50 | **0.818** |
+| sintético | 40 | 40 | 2.00 | 0.004 |
+| embeddings | 10 | **35** | **1.75** | 0.004 |
+| embeddings | 40 | **149** | **7.45** | 0.000 |
+
+### Qué significa
+
+Con consolidación **parcial**, cada prototipo ocupa varias ranuras. Diez clases
+de un banco de embeddings se convierten en 35 trazas, porque la mitad de las
+visitas queda por debajo del umbral de fusión y crea traza nueva. La rutina llena
+la memoria igual que si no se hubiera fusionado nada, y no queda lugar para lo
+raro.
+
+**La ley no se rompe: se estaba aplicando a la variable equivocada.** El caso de
+K=10 sobre embeddings tiene r efectivo = 1.75, y su η² de escritura es 0.004 —
+exactamente lo que la ley predice para r > 1.
+
+### Cómo hay que enunciarla
+
+> La variable de control del régimen es el número de prototipos **efectivo tras
+> consolidar**, no el nominal. Sobre flujos sintéticos con dispersión
+> intra-prototipo baja los dos coinciden, que es por qué la distinción no
+> aparecía.
+
+Esto es **mejor** que el enunciado del borrador, no peor:
+
+1. Explica por qué la ley podría no transferir a datos reales, y muestra que
+   transfiere si se mide la variable correcta.
+2. Le da al robot una cantidad medible en línea: `K_efectivo` se cuenta mirando
+   cuántas trazas tiene la memoria, sin saber nada del ambiente.
+3. Convierte la sección de limitaciones en un resultado.
+
+**Decisión pendiente del autor**: si el paper se reescribe sobre `r_efectivo` o
+si se reporta la precondición como una calificación de la ley nominal.
+`exp05` localiza el cruce contra ambas variables para que la comparación esté
+sobre la mesa.
