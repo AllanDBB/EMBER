@@ -167,11 +167,24 @@ def verify_paper(tex_path: Path | str, results_dir: Path | str = "results") -> l
 
 
 def _tabular(
-    encabezados: list[str], filas: list[list[str]], alineacion: str, caption: str, label: str
+    encabezados: list[str],
+    filas: list[list[str]],
+    alineacion: str,
+    caption: str,
+    label: str,
+    *,
+    ancho_completo: bool = False,
 ) -> str:
+    """`ancho_completo=True` abre la tabla a las dos columnas (`table*`).
+
+    Con muchas columnas numéricas, una `table` a una columna desborda el
+    margen (Overfull \\hbox) en vez de encogerse: IEEEtran no reduce la fuente
+    sola. `table*` la ubica arriba de página abarcando las dos columnas.
+    """
+    entorno = "table*" if ancho_completo else "table"
     lineas = [
         "% Generado por ember.paper_sync. No editar a mano.",
-        "\\begin{table}[t]",
+        f"\\begin{{{entorno}}}[t]",
         "\\centering",
         f"\\caption{{{caption}}}",
         f"\\label{{{label}}}",
@@ -181,7 +194,7 @@ def _tabular(
         "\\hline",
     ]
     lineas += [" & ".join(f) + " \\\\" for f in filas]
-    lineas += ["\\hline", "\\end{tabular}", "\\end{table}", ""]
+    lineas += ["\\hline", "\\end{tabular}", f"\\end{{{entorno}}}", ""]
     return "\n".join(lineas)
 
 
@@ -268,6 +281,36 @@ def tabla_benchmark(datos: dict[str, Any]) -> str:
         "Evaluación en dos fases. R1--R4 miden reconstrucción sin presión de "
         "capacidad y deciden la admisión; T1--T3 miden retención bajo presión.",
         "tab:benchmark",
+        ancho_completo=True,
+    )
+
+
+def tabla_precondicion_dominios(datos: dict[str, Any]) -> str:
+    """Compara el dominio sintético contra CIFAR-100: fusión alcanzable y cruce de régimen."""
+    etiquetas = {"synthetic": "Sintético", "cifar100": "CIFAR-100"}
+    filas = []
+    for nombre, d in datos["dominios"].items():
+        etas = [c["eta2_write"] for c in d["celdas"]]
+        cruce = d["r_umbral"]
+        pre = datos[f"precondicion_{nombre}"]
+        filas.append(
+            [
+                etiquetas.get(nombre, nombre),
+                f"{pre['similitud_intra_prototipo']:.3f}",
+                "\\checkmark" if pre["fusion_alcanzable"] else "$\\times$",
+                f"{100 * min(etas):.1f}--{100 * max(etas):.1f}\\,\\%",
+                f"{cruce:.2f}" if cruce else "--",
+            ]
+        )
+    return _tabular(
+        ["Dominio", "Sim. intra-proto.", "Fusión alcanzable", "$\\eta^2$ escritura", "Cruce $r$"],
+        filas,
+        "lrcrr",
+        "Precondición de la ley del umbral: si la similitud coseno intra-prototipo "
+        "no alcanza el umbral de fusión (0.85), el eje de escritura queda inoperante "
+        "y no hay cruce de régimen que localizar, para ningún $r$.",
+        "tab:domains",
+        ancho_completo=True,
     )
 
 
@@ -275,6 +318,7 @@ GENERADORES = {
     "exp01_nas_full": [("tab_main_effects", tabla_efectos_principales)],
     "exp02_threshold_grid": [("tab_regimes", tabla_regimenes)],
     "exp04_arch_benchmark": [("tab_benchmark", tabla_benchmark)],
+    "exp05_real_embeddings": [("tab_domains", tabla_precondicion_dominios)],
 }
 
 

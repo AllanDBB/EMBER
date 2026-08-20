@@ -23,7 +23,7 @@ Retomar leyendo, en este orden:
 | 20 · `exp05` embeddings reales | **corrido** con el banco real de CIFAR-100, Figura 2 generada |
 | 21 · `ember.envs` (MiniGrid) | listo y verificado contra el entorno real |
 | 22 · `CLAUDE.md`, skills, README | listo |
-| 23 · `paper/` y `paper_sync` | listo (el texto del paper falta) |
+| 23 · `paper/` y `paper_sync` | **listo**, incluida la prosa completa (compila con `pdflatex`) |
 
 **259 tests pasan** (1 salteado: necesita el banco real de CIFAR). `ruff` limpio.
 CI tiene tres jobs: tests, auditoría de ejes y verificación de sincronía del
@@ -148,14 +148,20 @@ cuenta mirando cuántas trazas tiene la memoria.
 
 ## Lo siguiente
 
-1. **Escribir el texto del paper.** El esqueleto, las tablas generadas y las
-   figuras están (incluida la Figura 2, dominio sintético contra CIFAR-100);
-   falta la prosa. Todo número medido va con `\result{}`.
-2. **Confirmar la fecha límite de BIP2026.**
+1. **Confirmar la fecha límite de BIP2026.**
+2. **Revisión editorial del texto** (2026-08-20): tono, longitud por sección,
+   y decidir si la promoción de `exp05` a sección propia (en vez de un párrafo
+   de limitaciones) es la que el autor quiere para el envío.
+3. Los tres puntos de `docs/notas/.../2026-08-11-numeros-movidos.md#4` (barrido
+   de `exp05` en más capacidades, otro extractor de embeddings, validación en
+   MiniGrid) quedan como trabajo futuro explícito en el paper, no como
+   pendientes de esta sesión.
 
-Ya hecho, quedaba mal reflejado en esta lista en la corrida anterior:
-caracterizar las 107 arquitecturas peores que el FIFO (`docs/notas/2026-08-11-numeros-movidos.md`,
-commit `dc271e1`) y correr `exp05` contra el banco real de CIFAR-100 (arriba).
+Ya hecho: escribir la prosa completa del paper (`paper/main.tex` compila limpio
+con `pdflatex`+`bibtex`, 7 páginas, cero discrepancias en `verify_paper`);
+caracterizar las 107 arquitecturas peores que el FIFO
+(`docs/notas/2026-08-11-numeros-movidos.md`, commit `dc271e1`); correr `exp05`
+contra el banco real de CIFAR-100 (arriba).
 
 ## Comandos
 

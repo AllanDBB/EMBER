@@ -23,7 +23,7 @@
 
 \begin{abstract}
 Presentamos EMBER, un programa de investigación sobre memoria episódica de largo
-plazo para robots cognitivos, y reportamos dos contribuciones empíricas.
+plazo para robots cognitivos, y reportamos tres contribuciones empíricas.
 Primero, aplicamos búsqueda exhaustiva de arquitecturas sobre un espacio
 discreto de \result{exp03_axis_liveness:n_genotipos|int}{576} mecanismos de
 memoria bioinspirada derivados de Sparse Distributed Memory, consolidación de
@@ -41,6 +41,19 @@ de error de predicción alcanza retención perfecta de eventos raros
 (\result{exp04_arch_benchmark:architectures.SDM.battery.per_task.rare_retention}{1.000}),
 mientras el buffer FIFO de la arquitectura desplegada e-MDB obtiene
 \result{exp04_arch_benchmark:architectures.FIFO.battery.per_task.rare_retention}{0.038}.
+Tercero, instrumentamos la ley del umbral sobre un flujo construido a partir de
+embeddings perceptuales reales (CIFAR-100, ResNet-18) y encontramos una
+precondición que el diseño sintético no expone: si la similitud intra-prototipo
+del dominio no alcanza el umbral de consolidación, el eje de escritura queda
+inoperante y no existe régimen de compresión para ningún $r$. Es exactamente lo
+que ocurre con este extractor —similitud intra-clase
+\result{exp05_real_embeddings:precondicion_cifar100.similitud_intra_prototipo|f3}{0.401}
+contra un umbral de \result{exp05_real_embeddings:precondicion_cifar100.umbral_de_fusion|f2}{0.85}—,
+de modo que la varianza explicada por la escritura queda entre
+\result{exp05_real_embeddings:dominios.cifar100.celdas.4.eta2_write|pct}{0.0}\,\%
+y
+\result{exp05_real_embeddings:dominios.cifar100.celdas.1.eta2_write|pct}{0.4}\,\%
+en las cinco celdas del barrido, sin ningún cruce de régimen que localizar.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -50,17 +63,234 @@ Memory, consolidación de engramas, memoria episódica, aprendizaje de por vida
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Introducción}
-% TODO: reescribir desde el draft, incorporando los cambios de docs/notas/.
+
+Un robot cognitivo que aprende a lo largo de su vida enfrenta un problema de
+memoria que va mucho más allá del simple almacenamiento. Tiene que decidir qué
+vale la pena conservar, mantener esa información accesible en proporción a su
+relevancia, y recuperarla de forma confiable incluso a partir de un indicio
+parcial o degradado. Estos tres requisitos corresponden a tres propiedades bien
+estudiadas de la memoria biológica: codificación selectiva modulada por
+sorpresa y novedad, consolidación y decaimiento de trazas regulados por el uso,
+y recuperación direccionable por contenido, robusta al ruido.
+
+El buffer episódico de la arquitectura e-MDB \cite{emdb2021} —una cola FIFO de
+capacidad fija— no satisface ninguno de los tres. Conserva lo percibido más
+recientemente, tratando cada experiencia por igual sin importar su importancia,
+novedad o error de predicción. La recuperación es secuencial, no por contenido.
+Cuando el buffer se llena, el episodio más viejo simplemente se descarta: es,
+en efecto, una base de datos sin criterio.
+
+La literatura de memoria bioinspirada ofrece varios remedios de principio.
+Sparse Distributed Memory (SDM) de Kanerva \cite{kanerva1988} ofrece
+recuperación direccionable por contenido sobre una superposición distribuida de
+posiciones de memoria, con degradación gradual ante el ruido. La consolidación
+de engramas hebbiana \cite{liu2012,hebb1949} ofrece un mecanismo biológicamente
+plausible de refuerzo de trazas por co-activación repetida. La compuerta por
+error de predicción \cite{cole2015}, apoyada en el rol neurobiológico de la
+dopamina, regula cuán fuerte se codifica una experiencia nueva en función de
+cuán sorpresiva es. Y las políticas de olvido selectivo basadas en fuerza o
+utilidad de traza \cite{murdock1962} dan un criterio de qué descartar cuando se
+excede la capacidad.
+
+Pero estos mecanismos casi siempre se evalúan aislados, embebidos en
+arquitecturas diseñadas específicamente para lucirlos, y comparados contra
+líneas de base que no comparten su mismo espacio de diseño. Eso hace difícil, a
+veces imposible, determinar si una ganancia reportada viene del mecanismo en sí
+o de una ventaja incidental del protocolo de evaluación.
+
+Este trabajo invierte el enfoque habitual. En vez de proponer una arquitectura
+nueva y argumentar que es mejor que una línea de base simple, definimos un
+espacio de diseño discreto en el que cada mecanismo bioinspirado es un eje, y
+lo recorremos exhaustivamente. El FIFO de e-MDB no se trata como una línea de
+base externa a la comparación: es un punto más dentro del mismo espacio de
+búsqueda. Esta elección convierte una comparación potencialmente circular en
+una pregunta falsable —dado el espacio completo, ¿dónde cae el incumbente
+desplegado, y qué combinación de mecanismos define la frontera de desempeño?
+
+Después evaluamos las arquitecturas bioinspiradas individuales que emergen de
+ese análisis con un banco de dos fases que separa explícitamente la capacidad
+de reconstruir un indicio degradado (un prerrequisito de cualquier memoria
+asociativa útil) del problema más difícil de retener los episodios correctos
+bajo presión continua de capacidad (la condición realista de un robot que opera
+durante toda su vida útil). Finalmente, instrumentamos la ley del umbral sobre
+embeddings perceptuales reales para exponer una precondición que ningún diseño
+sintético revela por sí solo.
+
+Las contribuciones principales de este trabajo son:
+
+\begin{itemize}
+  \item Una \emph{ley de umbral}: el cociente $r = K_{proto}/C$ determina qué
+  familia de mecanismos gobierna el desempeño, con una transición de régimen
+  que se reproduce de forma independiente en tres capacidades distintas.
+  \item Una demostración de que la modulación de la fuerza de codificación por
+  novedad y error de predicción —el mecanismo más citado en la literatura de
+  memoria bioinspirada— explica apenas un
+  \result{exp01_nas_full:main_effects.3.eta2|pct}{1.4}\,\% de la varianza como
+  efecto principal, pero produce una mejora
+  \result{exp01_nas_full:salience_conditional_ratio|f2}{14.41}$\times$ en
+  retención de eventos raros al combinarse con desalojo por mínima fuerza en el
+  régimen de selección.
+  \item Un banco de dos fases que admite arquitecturas por reconstrucción antes
+  de exponerlas a presión de capacidad, revelando que un circuito de disparos
+  puro (LIF + STDP) no transfiere al dominio de vectores continuos sin una capa
+  de codificación intermedia.
+  \item Una precondición para la ley del umbral —la alcanzabilidad del umbral
+  de fusión— que sobre CIFAR-100 resulta ser la variable dominante: no hay
+  ningún $r$, nominal o efectivo, en el que exista régimen de compresión.
+\end{itemize}
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Trabajo relacionado}
-% TODO
+
+\subsection{Sparse Distributed Memory}
+
+La Sparse Distributed Memory de Kanerva \cite{kanerva1988} es un modelo
+computacional de memoria asociativa inspirado en la estructura de alta
+dimensión del sistema nervioso. Su idea central es que guardar información en
+una única posición es frágil; en cambio, los patrones deben distribuirse entre
+muchas posiciones superpuestas, de modo que una consulta ruidosa o parcial
+todavía active suficientes de esas mismas posiciones para reconstruir el
+original. Una SDM consiste en posiciones fijas (\emph{hard locations}) con
+direcciones aleatorias; escribir activa las posiciones dentro de un radio de
+similitud de la dirección consultada, y leer suma y umbraliza las mismas
+posiciones. La propiedad clave es la degradación gradual: direcciones cercanas
+activan conjuntos parcialmente superpuestos, así que una consulta corrupta
+todavía recupera el patrón guardado mientras la memoria no esté sobrecargada.
+En la adaptación de EMBER, el espacio de direcciones se reemplaza por vectores
+unitarios continuos, y la activación es por producto interno en vez de radio de
+Hamming; \cite{kanerva2009} extiende la misma intuición a computación
+hiperdimensional.
+
+\subsection{Engramas y consolidación hebbiana}
+
+El concepto de engrama —la traza física que una memoria deja en el tejido
+neural— fue acuñado por Semon \cite{semon1904} y confirmado experimentalmente
+en neurociencia moderna: poblaciones neuronales específicas se activan durante
+el aprendizaje y se reactivan durante el recuerdo \cite{liu2012}. El mecanismo
+celular que subyace a la formación del engrama es la potenciación a largo plazo
+(LTP): cuando dos neuronas se activan juntas repetidamente, la sinapsis que las
+conecta se fortalece. Es el principio que Hebb \cite{hebb1949} resumió en su
+dictum: las células que se activan juntas se conectan entre sí. En la
+instanciación ENN de EMBER esto se traduce en una matriz de pesos hebbianos
+rápidos, actualizados en línea sin retropropagación: cada escritura crea una
+traza nueva o refuerza una existente si supera el umbral de similitud coseno,
+con fuerza inicial proporcional al error de predicción de la experiencia
+entrante y decaimiento exponencial sin refuerzo.
+
+\subsection{Plasticidad dependiente del tiempo de disparo}
+
+Las neuronas biológicas se comunican mediante pulsos eléctricos discretos. El
+tiempo relativo entre esos pulsos porta información que una neurona basada en
+tasa descarta. La plasticidad dependiente del tiempo de disparo (STDP)
+\cite{bipoo1998} es una regla hebbiana a nivel del disparo individual: una
+sinapsis se fortalece si la neurona presináptica dispara justo antes que la
+postsináptica, y se debilita en el orden contrario. Esta regla agrupa neuronas
+en ensambles: cuando un grupo se co-activa repetidamente, STDP fortalece las
+conexiones internas del grupo más que las externas, dejando una traza
+estructural que es, precisamente, un engrama. En la PoC-3 del programa EMBER
+verificamos esto sobre una red de neuronas de integración-y-disparo con fuga
+(LIF) organizadas en grupos: tras presentaciones repetidas por ráfagas
+forzadas, los pesos intra-grupo subieron muy por encima de los pesos
+inter-grupo, y un indicio parcial de un grupo bastó para reclutar al resto de
+sus neuronas sin activar los otros grupos. En este trabajo probamos si ese
+mismo mecanismo —que opera nativamente sobre patrones de activación neuronal
+discretos— se extiende a vectores de entrada continuos.
+
+\subsection{Búsqueda de arquitecturas para módulos de memoria}
+
+La búsqueda de arquitecturas neuronales (NAS) \cite{elsken2019} automatiza el
+diseño de componentes de redes neuronales tratando las decisiones
+arquitectónicas como variables optimizables. Su aplicación al diseño del propio
+mecanismo de memoria —en vez de su integración con una tarea posterior— está
+mucho menos explorada. El trabajo previo más cercano, las Neural Turing
+Machines \cite{graves2014} y las arquitecturas de memoria diferenciable
+emparentadas (p.\,ej. \cite{munkhdalai2017}), fija el tipo de memoria
+(direccionable externamente) y busca sobre las cabezas de lectura/escritura y
+los mecanismos de atención. Nuestra contribución es hacer del mecanismo de
+memoria fundamental la variable de búsqueda, y usar un espacio discreto
+completamente enumerable para que ningún resultado se pueda atribuir al
+comportamiento de un optimizador aproximado.
+
+\subsection{La arquitectura e-MDB y el problema LOLA}
+
+e-MDB (\emph{epistemic Multilevel Darwinist Brain}) \cite{emdb2021} es una
+arquitectura cognitiva basada en ROS2 diseñada para abordar el problema LOLA
+(\emph{Lifelong Open-ended Learning Autonomy}): construir un robot que adquiere
+y relaciona conocimiento de forma autónoma y continua, sin objetivos ni
+fronteras de tarea predefinidas. Organiza todos sus componentes cognitivos como
+\emph{Cognitive Nodes} con una interfaz común, y usa un objeto \texttt{Episode}
+como unidad de experiencia. Su componente de memoria episódica,
+\texttt{EpisodicBuffer}, es un \texttt{deque} de tamaño fijo: los episodios
+nuevos se agregan y los más viejos se descartan automáticamente al llegar al
+límite. No hay criterio de importancia, ni recuperación por similitud, ni
+mecanismo de consolidación. En la formulación NAS de la Sección
+\ref{sec:nas}, esto corresponde exactamente al genotipo
+\texttt{\{read: nn, write: append, strength: constant, decay: 1.0, evict: fifo,
+reinforce: 0.0\}} —un punto entre 576 en el espacio de diseño.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Búsqueda sobre un espacio de diseño bioinspirado}
+\label{sec:nas}
 
 \subsection{Espacio de diseño y codificación del genotipo}
-% TODO: la tabla de ejes con su raíz biológica.
+
+Codificamos cada arquitectura de memoria candidata como un genotipo discreto de
+seis ejes, cada uno motivado por un principio biológico o computacional
+distinto. La Tabla \ref{tab:axes} lista los ejes, sus opciones, y la
+inspiración biológica correspondiente. El producto cartesiano da
+\result{exp03_axis_liveness:n_genotipos|int}{576} genotipos candidatos.
+
+\begin{table}[t]
+\centering
+\caption{Espacio de diseño bioinspirado. El producto cartesiano da 576
+genotipos candidatos, enumerables de forma exhaustiva.}
+\label{tab:axes}
+\begin{tabular}{p{1.5cm}p{2.6cm}p{3.3cm}}
+\hline
+Eje & Opciones & Raíz biológica \\
+\hline
+\texttt{read} & nn / topk3 / radius & Recuperación episódica vs. círculo de
+activación (Kanerva) \\
+\texttt{write} & append / merge & Creación de traza vs. consolidación Hebbiana
+por fusión \\
+\texttt{strength} & constant / novelty / pred\_error / both & Compuerta de LTP
+por saliencia y sorpresa (dopamina) \\
+\texttt{decay} & 1.0 / 0.995 / 0.98 & Debilitamiento sináptico sin refuerzo \\
+\texttt{evict} & fifo / min\_strength / min\_utility / random & Olvido por edad
+vs. por importancia \\
+\texttt{reinforce} & 0 / 0.5 & LTP por reactivación \\
+\hline
+\end{tabular}
+\end{table}
+
+El eje de \emph{lectura} operacionaliza cómo se recuperan experiencias
+pasadas: \texttt{nn} devuelve el único episodio guardado más cercano;
+\texttt{topk3} agrega los tres más cercanos; \texttt{radius} implementa la
+lectura SDM completa, con superposición de todas las trazas dentro de un radio
+de similitud relativo al mejor match. El eje de \emph{escritura} controla la
+creación de trazas: \texttt{append} siempre crea una traza nueva;
+\texttt{merge} primero comprueba si ya existe una traza suficientemente
+similar (similitud coseno $\geq 0.85$) y, de ser así, la refuerza en vez de
+crear una copia redundante —el análogo computacional de la consolidación
+hebbiana. El eje de \emph{fuerza inicial} modula cuánto peso recibe una
+experiencia nueva al momento de codificarla: \texttt{constant} asigna peso fijo;
+las otras tres opciones introducen una señal biológica —novedad, error de
+predicción, o ambas combinadas—. El eje de \emph{decaimiento} determina si la
+fuerza de las trazas guardadas se erosiona con el tiempo sin refuerzo. El eje
+de \emph{desalojo} controla qué se olvida cuando la memoria se llena:
+\texttt{fifo} descarta lo más viejo (el default de e-MDB), \texttt{min\_strength}
+descarta la traza más débil, \texttt{min\_utility} descarta la menos consultada,
+y \texttt{random} descarta al azar. El eje de \emph{refuerzo por lectura} modela
+LTP por reactivación: cada vez que se recupera un episodio, su fuerza aumenta.
+
+Una versión temprana de este espacio tenía dos ejes silenciosamente muertos —el
+piloto reportaba 576 genotipos pero solo 96 eran funcionalmente distintos,
+porque \texttt{read} y \texttt{reinforce} no cambiaban el resultado en ningún
+par de genotipos hermanos—. Ambas fallas se repararon: \texttt{read} porque los
+tres modos ahora hacen cosas distintas, y \texttt{reinforce} porque las tareas
+de evaluación intercalan lecturas entre escrituras. \texttt{exp03\_axis\_liveness}
+verifica automáticamente esta propiedad y corre en integración continua para
+que ningún eje pueda volver a morir sin que el paper lo note.
 
 \subsection{Observabilidad de los ejes}
 
@@ -72,9 +302,60 @@ diferencia de desempeño entre genotipos que difieren únicamente en ese eje.
 
 \input{tables/tab_main_effects}
 
+El modo de escritura es el efecto principal más fuerte
+(\result{exp01_nas_full:main_effects.0.eta2|pct}{56.6}\,\%), seguido por la
+política de desalojo (\result{exp01_nas_full:main_effects.1.eta2|pct}{17.0}\,\%).
+Decaimiento y fuerza inicial explican mucho menos como efecto principal
+(\result{exp01_nas_full:main_effects.2.eta2|pct}{1.8}\,\% y
+\result{exp01_nas_full:main_effects.3.eta2|pct}{1.4}\,\% respectivamente), y
+lectura y refuerzo por lectura quedan cerca de cero
+(\result{exp01_nas_full:main_effects.5.eta2|pct}{0.0}\,\% y
+\result{exp01_nas_full:main_effects.4.eta2|pct}{0.0}\,\%). La diferencia con el
+piloto es que ahora ambos tienen observabilidad estrictamente positiva
+(\result{exp01_nas_full:main_effects.5.liveness|f3}{0.119} y
+\result{exp01_nas_full:main_effects.4.liveness|f3}{0.206}): un $\eta^2$ nulo con
+observabilidad positiva no dice que el mecanismo no importa, dice que su efecto
+no es un efecto principal —la Sección \ref{sec:interaction} muestra exactamente
+ese caso para la fuerza inicial.
+
+El FIFO de e-MDB —genotipo
+\texttt{\{read: nn, write: append, strength: constant, decay: 1.0, evict: fifo,
+reinforce: 0.0\}}— obtiene un puntaje de
+\result{exp01_nas_full:incumbent.score|f3}{0.106}, en el rango
+\result{exp01_nas_full:incumbent.rank_optimistic|int}{416}--%
+\result{exp01_nas_full:incumbent.rank_pessimistic|int}{469} de 576, con
+\result{exp01_nas_full:incumbent.n_tied|int}{54} empates. No es el piso
+absoluto del espacio de genotipos: \result{exp01_nas_full:incumbent.rank_pessimistic|int}{469}\ puestos
+por debajo de él hay arquitecturas que puntúan estrictamente peor, casi todas
+combinando escritura por \texttt{append} sin criterio con desalojo por mínima
+utilidad o lectura por \texttt{topk3} sobre memoria comprimida. La frontera del
+espacio puntúa \result{exp01_nas_full:frontier.score|f3}{0.818}: un factor de
+casi ocho sobre el incumbente.
+
 \subsection{La transición de régimen}
 
+El $56.6\,\%$ del modo de escritura no es principalmente una propiedad del
+mecanismo de fusión; es una propiedad de la relación entre la cantidad de
+prototipos de experiencia recurrentes y la capacidad de memoria. Definimos el
+cociente prototipos-a-capacidad $r = K_{proto}/C$ y barremos el espacio
+efectivo de arquitecturas sobre una grilla de capacidades y ratios, controlando
+las visitas por prototipo para que el ratio no quede confundido con la
+recurrencia del flujo.
+
 \input{tables/tab_regimes}
+
+La transición de "domina la consolidación" a "domina el desalojo" cae de forma
+abrupta cerca de $r=1$ en las tres capacidades evaluadas (10, 20 y 40),
+independientemente de $K_{proto}$: el cruce estimado (media geométrica sobre la
+celda de transición) es
+\result{exp02_threshold_grid:r_umbral_medio|f2}{0.88}, con intervalo
+[\result{exp02_threshold_grid:r_umbral_ci.0|f2}{0.87},
+\result{exp02_threshold_grid:r_umbral_ci.1|f2}{0.89}]. Por debajo de $r=1$,
+fusionar comprime lo rutinario en menos ranuras de las que ocuparía de otro
+modo, y las ranuras liberadas quedan disponibles para lo raro. Por encima de
+$r=1$ no hay nada que comprimir: cada prototipo necesita su propia ranura, y la
+pregunta se reduce a qué política de desalojo preserva mejor los más
+importantes.
 
 \begin{figure*}[t]
   \centering
@@ -87,22 +368,247 @@ diferencia de desempeño entre genotipos que difieren únicamente en ese eje.
   \label{fig:threshold}
 \end{figure*}
 
+\subsection{La interacción entre saliencia y desalojo}
+\label{sec:interaction}
+
+El $1.4\,\%$ de efecto principal de la fuerza inicial (Tabla
+\ref{tab:main-effects}) es engañoso si se lee solo. Refleja que la modulación
+de fuerza únicamente influye en el comportamiento de una arquitectura cuando
+existe un mecanismo que \emph{lee} esa señal —y de las cuatro políticas de
+desalojo, solo \texttt{min\_strength} lo hace—. Condicionando la retención de
+eventos raros a \texttt{\{evict: min\_strength, write: append\}}, la fuerza
+constante deja a la política degenerada en un desalojo pseudoaleatorio
+(\result{exp01_nas_full:salience_conditional.constant|pct}{3.6}\,\%), mientras
+que combinar novedad y error de predicción la vuelve selectiva
+(\result{exp01_nas_full:salience_conditional.both|pct}{52.0}\,\%): una mejora
+condicional de \result{exp01_nas_full:salience_conditional_ratio|f2}{14.41}$\times$,
+enteramente atribuible a esta interacción y no a la compuerta de saliencia como
+mecanismo aislado.
+
 % ═══════════════════════════════════════════════════════════════════════
 \section{Evaluación comparativa de arquitecturas}
 
+La búsqueda de arquitecturas identifica la combinación de ejes que mejor
+funciona, pero no evalúa las arquitecturas como sistemas de memoria autónomos.
+En particular, no prueba si cada una puede realizar la operación fundamental
+que cualquier memoria asociativa debe soportar: reconstruir un patrón completo
+a partir de un indicio ruidoso o parcial. Esta sección describe un banco de dos
+fases que primero admite arquitecturas por fidelidad de reconstrucción (R1--R4,
+sin presión de capacidad) y después las evalúa bajo presión de capacidad
+continua (T1--T3), sobre las mismas cuatro arquitecturas —SDM, ENN (memoria
+hebbiana pura), Spiking-SDM (SDM con activación por neuronas LIF), y un
+circuito de disparos puro (LIF + STDP)— además del FIFO de e-MDB como línea de
+base compartiendo el mismo espacio de diseño. La Tabla \ref{tab:benchmark}
+resume ambas fases.
+
 \input{tables/tab_benchmark}
+
+Todas las arquitecturas menos el circuito de disparos puro superan el umbral de
+admisión de 0.50
+(\result{exp04_arch_benchmark:architectures.Spiking.gate.mean|f3}{0.459}\ contra
+un gate de 0.50). ENN y FIFO obtienen exactamente el mismo puntaje de gate: sin
+presión de capacidad, el umbral de fusión de ENN (0.85) rara vez se supera
+entre vectores casi ortogonales, así que cada escritura crea una traza nueva y
+ambas arquitecturas se reducen a búsqueda por vecino más cercano sobre el
+conjunto completo de claves guardadas. La diferencia entre ellas emerge recién
+bajo presión de capacidad con flujos estructurados, en la fase 2.
+
+El circuito de disparos puro falla reconstrucción de patrón y robustez al ruido
+pese a formar ensambles distinguibles (interferencia $A\to B$ perfecta). La
+causa es un desajuste de dominio: el circuito se diseñó y validó sobre patrones
+de activación neuronal discretos; sobre un vector \texttt{float32} continuo, la
+selección de neuronas por producto interno es sensible a perturbaciones
+pequeñas, y una versión ruidosa de un vector guardado activa un conjunto
+parcialmente distinto de neuronas. Este resultado no es un defecto del
+mecanismo de disparos en sí —es la motivación directa de la PoC-5 del programa
+EMBER: un núcleo integrado que combine SDM (para el mapeo de continuo a
+distribuido) con ENN (para el ciclo de vida de la traza).
+
+En la fase 2, SDM alcanza retención perfecta de eventos raros
+(\result{exp04_arch_benchmark:architectures.SDM.battery.per_task.rare_retention}{1.000}):
+los eventos raros reciben fuerza inicial alta por error de predicción, y el
+desalojo por mínima fuerza siempre desplaza primero lo rutinario. ENN, con la
+misma compuerta de fuerza y la misma política de desalojo, retiene menos
+(\result{exp04_arch_benchmark:architectures.ENN.battery.per_task.rare_retention}{0.750}):
+su mecanismo de fusión reforzado repetidamente por visitas rutinarias puede
+acumular más fuerza que un evento raro escrito una sola vez, aunque este efecto
+es menos severo que en diseños anteriores porque la dispersión intra-prototipo
+de los flujos actuales dispara la fusión con menos frecuencia. Spiking-SDM
+retiene
+\result{exp04_arch_benchmark:architectures.SpikingSDM.battery.per_task.rare_retention}{0.675},
+y el FIFO —sin ningún criterio de importancia— es el piso entre arquitecturas
+(\result{exp04_arch_benchmark:architectures.FIFO.battery.per_task.rare_retention}{0.038}).
+Con señal de error de predicción diferenciada por bloque, la tarea de
+interferencia secuencial da
+\result{exp04_arch_benchmark:architectures.SDM.battery.per_task.sequential_interference|f3}{0.875}\
+para SDM,
+\result{exp04_arch_benchmark:architectures.ENN.battery.per_task.sequential_interference|f3}{0.375}\
+para ENN, y
+\result{exp04_arch_benchmark:architectures.FIFO.battery.per_task.sequential_interference|f3}{0.000}\
+para el FIFO —la comparación que separa a las tres arquitecturas por su
+capacidad de resistir el olvido catastrófico.
+
+% ═══════════════════════════════════════════════════════════════════════
+\section{Validación sobre embeddings perceptuales reales}
+\label{sec:real}
+
+Todos los experimentos anteriores corren sobre vectores gaussianos aleatorios
+en $\mathbb{R}^{32}$, que en esa dimensión son casi ortogonales entre sí. Esto
+reduce la interferencia cruzada entre patrones guardados y podría
+sobreestimar la precisión de recuperación frente a embeddings perceptuales
+reales, que exhiben estructura correlacionada y densidad de clúster desigual.
+Para responder esta objeción sin depender del robot, instrumentamos la misma
+grilla de la Sección \ref{sec:nas} sobre flujos construidos a partir de
+embeddings de CIFAR-100 \cite{krizhevsky2009} extraídos con un ResNet-18
+preentrenado \cite{he2016} y reducidos por PCA a la misma dimensión de
+trabajo.
+
+\input{tables/tab_domains}
+
+El resultado, resumido en la Tabla \ref{tab:domains}, no es que el umbral se
+desplace: es que, con este extractor, el eje de escritura queda inoperante en
+las cinco celdas del barrido. La similitud
+coseno intra-prototipo medida sobre CIFAR-100 tiene una mediana de
+\result{exp05_real_embeddings:precondicion_cifar100.similitud_intra_prototipo|f3}{0.401},
+muy por debajo del umbral de fusión
+(\result{exp05_real_embeddings:precondicion_cifar100.umbral_de_fusion|f2}{0.85}),
+así que la fusión casi nunca se dispara y $K_{efectivo}$ —cuántas trazas ocupa
+la experiencia rutinaria tras consolidar— crece sin techo con el número de
+escrituras en vez de converger a $K_{proto}$: de
+\result{exp05_real_embeddings:dominios.cifar100.celdas.0.k_efectivo|int}{84}\
+a \result{exp05_real_embeddings:dominios.cifar100.celdas.4.k_efectivo|int}{1435}\
+trazas al subir $K$ nominal de 5 a 80, con capacidad fija en 20. El dominio
+sintético, en la misma corrida, sí cruza normalmente
+($r \approx \result{exp05_real_embeddings:dominios.synthetic.r_umbral|f2}{0.77}$),
+confirmando que el motor y el resto de la grilla se comportan como se espera.
+
+Esta precondición no es un caso particular de reescribir la ley sobre un ratio
+efectivo: es un chequeo binario aparte, que va antes. Primero hay que preguntar
+si la similitud intra-prototipo del dominio alcanza el umbral de fusión; solo
+si la respuesta es sí tiene sentido preguntar cuántos prototipos efectivos hay.
+Sobre CIFAR-100 la respuesta a la primera pregunta ya es no, y ningún
+recálculo de $r$ —nominal o efectivo— produce un régimen de compresión donde no
+lo hay. La estimación del número de prototipos por silueta, además, se vuelve
+poco informativa sobre este dominio (intervalos de confianza que llegan hasta
+el tope de búsqueda en varias celdas), lo cual es consistente con la ausencia
+de estructura de clúster compacta: es otra razón para tratar la alcanzabilidad
+de la fusión, medida directamente por similitud, como el diagnóstico robusto,
+y no un $\hat K$ derivado.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Discusión}
-% TODO
+
+\subsection{La ley del umbral y su implicación práctica}
+
+El cociente $r = K_{proto}/C$ no es una cantidad abstracta; para un robot tiene
+una interpretación operacional directa. En un ambiente temprano y estructurado
+(un almacén, un laboratorio), $K_{proto}$ puede ser pequeño respecto del
+presupuesto de memoria: el robot ve los mismos objetos y pasillos
+repetidamente, y $r < 1$. En ese régimen, la consolidación por fusión es la
+estrategia más eficiente. Más adelante, en un ambiente heterogéneo o abierto,
+el robot encuentra muchas situaciones distintas y $r$ crece por encima de 1;
+ahí el desalojo selectivo por sorpresa y relevancia se vuelve el requisito
+dominante. La recomendación de diseño que se sigue de esto no es elegir un
+régimen y optimizar para él: la arquitectura de frontera
+(\texttt{\{write: append, strength: both, decay: 1.0, evict: min\_strength\}})
+funciona bien en ambos regímenes porque nunca depende de la fusión —que falla
+por encima de $r=1$— y siempre explota la señal de importancia, que es neutral
+al régimen por construcción.
+
+\subsection{El circuito de disparos y la motivación de la PoC-5}
+
+Que el circuito de disparos puro no pase el gate de reconstrucción es un
+resultado del espacio de diseño, no una deficiencia del mecanismo de disparos
+en sí. La PoC-3 estableció que los circuitos LIF+STDP forman engramas
+confiables y soportan completado de patrón en su dominio nativo. La brecha que
+identifica este trabajo es que el puente entre vectores de entrada continuos y
+ensambles neuronales discretos todavía no existe. Ese puente es precisamente el
+objetivo de la PoC-5 del programa EMBER: un núcleo integrado que combine SDM
+—para el mapeo de continuo a distribuido— con ENN —para el ciclo de vida de la
+traza— como un único \emph{Cognitive Node} con ciclo de vida de engrama
+completo.
+
+\subsection{El FIFO es el contraste correcto}
+
+Mapear el FIFO de e-MDB al genotipo \texttt{\{read: nn, write: append, strength:
+constant, decay: 1.0, evict: fifo, reinforce: 0.0\}} es deliberadamente
+generoso: el \texttt{EpisodicBuffer} real no tiene ninguna recuperación
+direccionable por contenido. Aun con esa ventaja, queda en el cuartil inferior
+del espacio de genotipos y es el piso entre arquitecturas evaluadas en el
+banco de dos fases. Esto no es una crítica a la arquitectura e-MDB, que fue
+diseñada con un objetivo primario distinto (sistemas motivacionales y
+aprendizaje de políticas, no memoria); es una afirmación precisa de que el
+buffer episódico, tal como está implementado hoy, es inadecuado para el régimen
+operativo LOLA, y motiva la integración de EMBER como una mejora directa con
+una brecha cuantificada por cerrar.
+
+\subsection{La precondición como diagnóstico embarcable}
+
+El hallazgo de la Sección \ref{sec:real} le da al robot algo más útil que una
+advertencia de generalización: una comprobación que puede correr en línea sin
+saber nada del ambiente. La similitud intra-prototipo se mide directamente
+sobre los vectores que la memoria ya está recibiendo, y su comparación contra
+el umbral de fusión decide, antes de que el eje de escritura importe en
+absoluto, si vale la pena que la memoria intente consolidar en primer lugar.
+Un robot que monitorea esta cantidad puede saber, sin instrumentación externa,
+si está en un régimen donde la fusión ayuda o donde es simplemente trabajo
+perdido.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Limitaciones y trabajo futuro}
-% TODO
+
+La validación sobre datos reales de la Sección \ref{sec:real} usa un único
+extractor (ResNet-18 preentrenado en ImageNet, PCA a 32 dimensiones) sobre un
+único dataset (CIFAR-100) y una única capacidad ($C=20$). No sabemos si la
+similitud intra-clase de 0.401 es una propiedad del dominio visual, del
+extractor, o de la combinación de ambos: un extractor afinado sobre el dominio
+de destino, o el umbral de fusión (fijado en 0.85 desde el diseño sintético)
+recalibrado por dominio, podrían dar un resultado distinto. Ninguna de las dos
+lecturas queda descartada por este experimento; distinguirlas es trabajo
+futuro.
+
+La estimación del número de prototipos por coeficiente de silueta, que
+funciona de forma ajustada sobre flujos sintéticos, produce intervalos de
+confianza poco informativos sobre CIFAR-100 (hasta el tope de búsqueda en
+varias celdas). Esto es consistente con la ausencia de estructura de clúster
+compacta en ese dominio, pero significa que cualquier afirmación sobre
+$\hat K_{proto}$ real necesita reportarse con su intervalo, nunca como un
+entero puntual.
+
+Validar en una tarea de navegación bajo observabilidad parcial —MiniGrid,
+después POPGym— con el adaptador \texttt{ember.envs} sigue pendiente para el
+envío. El adaptador está implementado y verificado contra el entorno real, pero
+todavía no corrido con el propósito de generar una cifra publicable.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Conclusión}
-% TODO
+
+Presentamos EMBER, un programa de investigación sobre memoria episódica
+bioinspirada para robots cognitivos, con tres contribuciones empíricas. La
+búsqueda exhaustiva de arquitecturas revela que la importancia relativa de los
+mecanismos de memoria bioinspirada no es fija: depende del régimen operativo,
+caracterizado por el cociente entre prototipos de experiencia recurrentes y
+capacidad de memoria. Por debajo de un umbral cercano a 1, domina la
+consolidación por fusión; por encima, domina el desalojo selectivo por fuerza.
+De forma crítica, el mecanismo de saliencia en la codificación —el que más
+motiva a la literatura de memoria bioinspirada— muestra un efecto principal
+despreciable pero se vuelve el diferenciador decisivo en el régimen de
+selección al combinarse con desalojo por mínima fuerza, recuperando catorce
+veces la retención de eventos raros de una arquitectura sin esa compuerta. El
+banco de arquitecturas confirma estos hallazgos: SDM con compuerta de error de
+predicción es la única arquitectura evaluada que logra simultáneamente alta
+fidelidad de reconstrucción y retención perfecta de eventos raros, mientras el
+FIFO de e-MDB queda en el piso en todas las condiciones. El circuito de
+disparos puro, aunque validado en su dominio nativo, todavía no transfiere a
+vectores de entrada continuos, identificando la PoC-5 —el núcleo integrado de
+EMBER— como el próximo hito crítico de implementación. Finalmente, instrumentar
+la misma ley sobre embeddings perceptuales reales expone una precondición que
+ningún diseño sintético revela por sí solo: sin similitud intra-prototipo
+suficiente, no hay ningún cociente prototipos-a-capacidad, nominal o efectivo,
+que produzca un régimen de compresión. Lejos de debilitar la ley del umbral,
+esta precondición la convierte en una cantidad medible en línea que un robot
+puede usar para decidir, sin conocimiento previo de su ambiente, si la
+consolidación vale la pena.
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
