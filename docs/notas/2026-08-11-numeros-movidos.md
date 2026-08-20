@@ -207,12 +207,14 @@ intra-prototipo hace que el umbral de fusión se dispare menos seguido.
 
 ## 4. Qué falta comprobar
 
-- [ ] `exp02`: si el cruce de régimen sigue cayendo en r=1 en todas las
-      capacidades. Al 2026-08-11 va confirmado en C=10, C=20 y C=40, siempre
-      entre r=0.75 y r=1.00.
-- [ ] `exp05`: si el umbral se mueve al pasar a embeddings de CIFAR-100.
-- [ ] Caracterizar las 107 arquitecturas que puntúan peor que el FIFO, para
-      poder decir si son combinaciones degeneradas o no.
+- [x] `exp02`: si el cruce de régimen sigue cayendo en r=1 en todas las
+      capacidades. Confirmado en C=10, C=20 y C=40, siempre entre r=0.75 y
+      r=1.00.
+- [x] `exp05`: si el umbral se mueve al pasar a embeddings de CIFAR-100. Corrido
+      contra el banco real — ver §6. No se mueve: desaparece.
+- [x] Caracterizar las 107 arquitecturas que puntúan peor que el FIFO, para
+      poder decir si son combinaciones degeneradas o no. Ver §2, "Qué son esas
+      107 arquitecturas" — no son degeneradas.
 
 ---
 
@@ -271,3 +273,73 @@ Esto es **mejor** que el enunciado del borrador, no peor:
 si se reporta la precondición como una calificación de la ley nominal.
 `exp05` localiza el cruce contra ambas variables para que la comparación esté
 sobre la mesa.
+
+---
+
+## 6. `exp05` corrido contra el banco real de CIFAR-100 — la decisión de §5 se resuelve
+
+**Fecha:** 2026-08-20. `results/exp05_real_embeddings/`, Figura 2
+(`paper/figures/fig2_dominios.pdf`), 5 ratios × 3 semillas × 576 genotipos por
+dominio, banco extraído con `extract_cifar100_embeddings` (ResNet-18 + PCA a 32
+dim).
+
+El script tenía dos bugs que nunca se habían ejercitado —`_celda()` no
+calculaba las dos claves que `main()` leía (`similitud_intra_prototipo`,
+`fusion_alcanzable`), y `enumerate_space()` es un generador al que se le pedía
+`len()` directamente. Ninguna prueba corría `main()` de punta a punta; las
+pruebas existentes solo testean `barrer_grilla` de `exp02`. Arreglados en el
+mismo cambio que corrió el experimento.
+
+### El resultado
+
+| Dominio | fusión alcanzable | η² escritura (todas las celdas) | cruce r nominal | cruce r efectivo |
+|---|---|---|---|---|
+| sintético | sí (sim. 0.929) | 0.765 – 0.020 | 0.77 | 0.71 |
+| CIFAR-100 | **no** (sim. 0.401) | **0.000 – 0.004** | **sin cruce** | **sin cruce** |
+
+La hipótesis de §5 era optimista: proponía que la consolidación es *parcial*
+(cada prototipo ocupa varias trazas, `K_efectivo > K_nominal` pero finito) y que
+reescribir la ley sobre `r_efectivo` la rescata. Sobre el banco real la
+consolidación es **nula** — la similitud intra-clase (0.401 de mediana) no
+alcanza ni de cerca el umbral de fusión (0.85) en ninguna de las cinco celdas
+del ratio. `K_efectivo` no converge a nada útil: crece con el número de
+escrituras (84 → 178 → 373 → 736 → 1435 al subir K nominal), siempre muy por
+encima de la capacidad. Reescribir sobre `r_efectivo` no rescata nada acá: no
+hay ninguna celda donde el ratio efectivo prediga compresión, porque no hay
+compresión posible.
+
+### Qué cambia en el enunciado
+
+La precondición **no es un caso particular de la ley reformulada en
+`r_efectivo`**; es un chequeo aparte, más simple y binario, que va *antes*:
+
+1. ¿La similitud intra-prototipo del dominio alcanza el umbral de fusión? Si
+   no, el eje de escritura es inoperante y no hay régimen de compresión para
+   ningún r, nominal ni efectivo. Es el caso de CIFAR-100 con este extractor.
+2. Si sí alcanza el umbral, la variable de control del régimen es `K_efectivo`
+   tras consolidar, no `K_nominal` — el caso que motivó investigar esto en
+   primer lugar, y que sigue sin datos reales que lo confirmen (el flujo
+   sintético con dispersión intra-prototipo alta de §5 es una aproximación).
+
+Sobre datos sintéticos con dispersión baja las tres cantidades (K nominal, K
+efectivo, umbral alcanzable) coinciden, que es por qué la distinción no
+aparecía en el diseño original.
+
+### Qué decir en limitaciones
+
+Con el extractor usado (ResNet-18 preentrenado en ImageNet + PCA a 32
+dimensiones), CIFAR-100 no tiene la estructura de clúster compacta que la ley
+asume — la variación intra-clase es demasiado alta para el umbral de fusión
+elegido (0.85, tomado del diseño sintético). Dos lecturas posibles, ninguna
+descartada por este experimento:
+
+- El umbral de fusión (0.85) es una constante del diseño original y podría
+  recalibrarse por dominio.
+- La similitud intra-clase de embeddings de una red preentrenada en un dataset
+  distinto (ImageNet, no CIFAR-100) es una medida pesimista de "la misma
+  experiencia" — un extractor afinado en el dominio, o una capa distinta,
+  podría dar clústeres más compactos.
+
+Cualquiera de las dos es trabajo futuro, no algo que corregir en este
+resultado: lo que `exp05` establece es que la precondición existe y es
+observable, no cuál es el valor correcto del umbral entre dominios.

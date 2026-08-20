@@ -104,6 +104,32 @@ def _genotipo_de_fusion():
     )
 
 
+def similitud_intra_prototipo(stream) -> float:
+    """Similitud coseno mediana entre visitas al mismo prototipo.
+
+    Es la comprobación directa de si el umbral de fusión es alcanzable en este
+    dominio: sobre embeddings reales la variación intra-clase puede dejar todas
+    las visitas por debajo del umbral, y entonces no existe ningún r que
+    produzca compresión, sin importar cuán chica sea la capacidad.
+    """
+    por_prototipo: dict[object, list] = {}
+    for it in stream:
+        if it.is_rare:
+            continue
+        por_prototipo.setdefault(it.value, []).append(it.key)
+
+    similitudes: list[float] = []
+    for claves in por_prototipo.values():
+        if len(claves) < 2:
+            continue
+        m = np.stack(claves)
+        sims = m @ m.T
+        i, j = np.triu_indices(len(claves), k=1)
+        similitudes.extend(sims[i, j].tolist())
+
+    return float(np.median(similitudes)) if similitudes else 0.0
+
+
 def prototipos_efectivos(stream, *, seed: int = 0) -> tuple[int, float]:
     """Cuántas ranuras ocupa la experiencia rutinaria después de consolidar.
 
@@ -178,6 +204,7 @@ def comparar_dominios(
 
                 k_hat, k_ci, tiene_estructura = _estimar(streams[0])
                 k_efectivo, tasa = prototipos_efectivos(streams[0])
+                intra = similitud_intra_prototipo(streams[0])
 
                 celda = _celda(streams, k_hat, k_ci, capacity)
                 celda["tiene_estructura"] = tiene_estructura
@@ -186,6 +213,8 @@ def comparar_dominios(
                 celda["r_efectivo"] = k_efectivo / capacity
                 # La compresión sirve solo si deja ranuras libres para lo raro.
                 celda["compresion_util"] = bool(k_efectivo < capacity)
+                celda["similitud_intra_prototipo"] = intra
+                celda["fusion_alcanzable"] = bool(intra >= UMBRAL_DE_FUSION)
                 celdas.append(celda)
 
                 if verbose:
@@ -239,7 +268,7 @@ def main() -> int:
             "Sobre datos reales K_proto no se conoce: la ley se enuncia contra K "
             "estimado con su intervalo, no contra el número de clases del generador."
         )
-        run.log(f"{len(enumerate_space())} genotipos por celda")
+        run.log(f"{len(list(enumerate_space()))} genotipos por celda")
 
         resultado = comparar_dominios()
         run.record("dominios", resultado)

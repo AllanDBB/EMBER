@@ -138,11 +138,23 @@ recurrencia, y el ratio queda confundido con ella.
 (`ember.data.prototypes`). Si la silueta es baja, no hay estructura de
 prototipos y `r` simplemente no está definido para ese flujo.
 
-### La precondición: prototipos efectivos, no nominales
+### La precondición: dos capas, no una
 
-Descubierta al instrumentar `exp05` (2026-08-11). **Afecta cómo se enuncia la
-ley**, así que hay que conocerla antes de escribir sobre el tema.
+Descubierta al instrumentar `exp05` (2026-08-11), confirmada corriéndolo contra
+el banco real de CIFAR-100 (2026-08-20). **Afecta cómo se enuncia la ley**, así
+que hay que conocerla antes de escribir sobre el tema. Son dos chequeos
+separados, y hay que hacerlos en este orden:
 
+**1. ¿La fusión es alcanzable en este dominio?** Comparación binaria: si la
+similitud coseno intra-prototipo del flujo no alcanza el umbral de fusión
+(0.85), el eje de escritura es inoperante y **no hay régimen de compresión para
+ningún r** — nominal ni efectivo. Es el caso de CIFAR-100 con un extractor
+ResNet-18 + PCA a 32 dim: similitud intra-clase 0.401 de mediana, muy por debajo
+del umbral, en las cinco celdas de `exp05`. η² de escritura queda en 0.000–0.004
+sin importar r, y no hay cruce de régimen que localizar. Se mide con
+`experiments.exp05_real_embeddings.similitud_intra_prototipo`.
+
+**2. Si la fusión sí es alcanzable, ¿cuántos prototipos efectivos hay?**
 `K_proto` es cuántos prototipos tiene el flujo. `K_efectivo` es **cuántas trazas
 ocupa la experiencia rutinaria después de consolidar**, y no son lo mismo: si la
 dispersión intra-prototipo deja parte de las visitas por debajo del umbral de
@@ -151,22 +163,25 @@ fusión, cada prototipo se fragmenta en varias trazas.
 | Dominio | K nominal | K efectivo | r efectivo | η² escritura |
 |---|---|---|---|---|
 | sintético (ruido 0.05) | 10 | 10 | 0.50 | **0.818** |
-| embeddings (variación real) | 10 | **35** | **1.75** | 0.004 |
+| sintético (dispersión alta, hipotético) | 10 | **35** | **1.75** | 0.004 |
 
 Diez clases se vuelven 35 trazas, la rutina llena la memoria igual que sin
 fusionar, y no queda lugar para lo raro. **La ley predice ese 0.004
-correctamente** — sobre `r` efectivo, que es 1.75.
+correctamente** — sobre `r` efectivo, que es 1.75. Se mide con
+`experiments.exp05_real_embeddings.prototipos_efectivos`, o directamente con
+`PolicyMemory.n_merges / n_writes` más el conteo final de trazas sin presión de
+capacidad.
 
-Enunciado corregido: *la variable de control del régimen es el número de
-prototipos efectivo tras consolidar*. Sobre flujos sintéticos con dispersión baja
-los dos coinciden, que es por qué la distinción no aparecía.
-
-Se mide con `experiments.exp05_real_embeddings.prototipos_efectivos`, o
-directamente con `PolicyMemory.n_merges / n_writes` más el conteo final de
-trazas sin presión de capacidad.
-
-**Queda abierta la decisión** de si el paper se reescribe sobre `r_efectivo` o si
-la precondición se reporta como calificación de la ley nominal.
+**Decisión resuelta con el banco real**: la precondición **no** es un caso
+particular de la ley reescrita sobre `r_efectivo`. Son dos capas distintas. Sobre
+CIFAR-100 real, `K_efectivo` no converge a nada útil — crece sin techo con el
+número de escrituras (84 → 178 → 373 → 736 → 1435 al subir K nominal de 5 a 80
+con C=20 fijo) porque no hay ninguna fusión que lo frene. Reescribir sobre
+`r_efectivo` no rescata nada ahí: hace falta el chequeo 1 primero. El caso de
+consolidación parcial (chequeo 2) sigue siendo la lectura correcta para dominios
+donde la fusión sí se dispara mal que bien, pero es un caso distinto del que
+CIFAR-100 termina ejemplificando. Ver `docs/notas/2026-08-11-numeros-movidos.md`
+§6 para el detalle completo.
 
 ## Genotipo y espacio de diseño
 

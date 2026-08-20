@@ -1,6 +1,6 @@
 # Estado del trabajo — EMBER
 
-**Última actualización:** 2026-08-11
+**Última actualización:** 2026-08-20
 **Rama:** `feat/ember-foundation` (aún no mergeada a `main`)
 
 Retomar leyendo, en este orden:
@@ -20,7 +20,7 @@ Retomar leyendo, en este orden:
 | 17 · `exp01` y `exp03` | **corridos** |
 | 18 · `exp02` grilla del umbral | **corrido**, Figura 1 generada |
 | 19 · `exp04` benchmark de arquitecturas | **corrido** |
-| 20 · `exp05` embeddings reales | código probado; falta el banco de CIFAR-100 |
+| 20 · `exp05` embeddings reales | **corrido** con el banco real de CIFAR-100, Figura 2 generada |
 | 21 · `ember.envs` (MiniGrid) | listo y verificado contra el entorno real |
 | 22 · `CLAUDE.md`, skills, README | listo |
 | 23 · `paper/` y `paper_sync` | listo (el texto del paper falta) |
@@ -93,12 +93,25 @@ ratio queda confundido con ella.
 ### `exp05` — la ley tiene una precondición que el borrador no enuncia
 
 **Es el hallazgo que más afecta cómo se escribe el paper.** Salió al instrumentar
-el experimento, antes incluso de tener los datos reales.
+el experimento, antes incluso de tener los datos reales, y **se confirmó al
+correrlo sobre el banco real de CIFAR-100** (5 ratios × 3 semillas × 576
+genotipos, `results/exp05_real_embeddings/`, Figura 2 generada).
 
-Sobre un flujo con varianza intra-prototipo realista, el eje de escritura explica
+Sobre CIFAR-100 real la cosa es más extrema que la hipótesis de trabajo: **la
+fusión no se dispara nunca**. La similitud coseno intra-prototipo medida sobre
+el banco real es **0.401** de mediana, contra el umbral de fusión de **0.85**.
+`fusion_alcanzable = False` en las cinco celdas del ratio. Con el eje de
+escritura inoperante, η² de escritura queda en 0.000–0.004 en **las cinco
+celdas**, sin importar el ratio, y **no hay cruce de régimen que localizar**
+(`cruce r nominal = nan`, `cruce r efectivo = nan`). El dominio sintético, en
+la misma corrida, sí cruza normalmente (r nominal 0.77, r efectivo 0.71),
+confirmando que el motor y el resto de la grilla están bien.
+
+Sobre un flujo sintético con varianza intra-prototipo realista (el diseño previo
+a tener el banco real, que motivó investigar esto) el eje de escritura explica
 ~0 % de la varianza **incluso con r = 0.5**, donde la ley predice que debería
-dominar. La causa no es que la fusión no se dispare (lo hace en el 50 % de las
-escrituras) sino que **la consolidación parcial deja varias trazas por
+dominar. Ahí la causa no era que la fusión no se disparara (lo hacía en el 50 %
+de las escrituras) sino que **la consolidación parcial dejaba varias trazas por
 prototipo**:
 
 | Dominio | K nominal | K efectivo | r efectivo | η² escritura |
@@ -109,27 +122,40 @@ prototipo**:
 La ley no se rompe: se estaba aplicando a la variable equivocada. Con r efectivo
 de 1.75, un η² de escritura de 0.004 es **exactamente** lo que la ley predice.
 
-Enunciado corregido: *la variable de control del régimen es el número de
-prototipos efectivo tras consolidar, no el nominal.* Sobre flujos sintéticos con
-dispersión baja los dos coinciden, que es por qué la distinción no aparecía.
+**La corrida real resuelve la decisión que quedaba abierta.** Sobre CIFAR-100,
+`r_efectivo` no rescata la ley — no hay ninguna celda donde valga la pena
+calcularlo, porque la fusión nunca se dispara y `K_efectivo` crece sin techo con
+el largo del flujo (84 → 178 → 373 → 736 → 1435 según crece K nominal, siempre
+muy por encima de C=20). Reescribir sobre `r_efectivo` habría sido correcto para
+el caso de consolidación *parcial* (la hipótesis de trabajo), pero CIFAR-100 no
+es ese caso: es consolidación **nula**, un régimen más simple y más binario.
 
-Es un enunciado mejor: le da al robot una cantidad medible en línea (contar
-trazas), y convierte la sección de limitaciones en un resultado. **Queda abierta
-la decisión de si el paper se reescribe sobre `r_efectivo` o si la precondición
-se reporta como calificación de la ley nominal.** `exp05` localiza el cruce
-contra ambas variables.
+Enunciado corregido, con las dos causas separadas:
+
+1. **Precondición binaria**: si la similitud intra-prototipo del dominio no
+   alcanza el umbral de fusión, el eje de escritura es inoperante y no existe
+   régimen de compresión para ningún r — nominal o efectivo. Es lo que pasa en
+   CIFAR-100 con este extractor (ResNet-18 + PCA a 32 dim).
+2. **Si la fusión sí es alcanzable**, la variable de control del régimen
+   es el número de prototipos efectivo tras consolidar, no el nominal — es el
+   caso de consolidación parcial que motivó investigar esto.
+
+Sobre flujos sintéticos con dispersión baja las tres cantidades (K nominal, K
+efectivo, umbral de fusión alcanzable) coinciden, que es por qué la distinción
+no aparecía. Le da al robot dos cantidades medibles en línea: `fusion_alcanzable`
+se decide con una comparación de similitud contra el umbral, y `K_efectivo` se
+cuenta mirando cuántas trazas tiene la memoria.
 
 ## Lo siguiente
 
-1. **Correr `exp05` con CIFAR-100 real.** El código está probado contra un banco
-   sintético; falta el banco real, que se extrae con
-   `extract_cifar100_embeddings(Path('data/cache'))` — la descarga desde
-   `cs.toronto.edu` es lenta (~1 h).
-2. **Escribir el texto del paper.** El esqueleto, las tablas generadas y las
-   figuras están; falta la prosa. Todo número medido va con `\result{}`.
-3. **Caracterizar las 107 arquitecturas que puntúan peor que el FIFO** — hace
-   falta para decir si son combinaciones degeneradas o no.
-4. **Confirmar la fecha límite de BIP2026.**
+1. **Escribir el texto del paper.** El esqueleto, las tablas generadas y las
+   figuras están (incluida la Figura 2, dominio sintético contra CIFAR-100);
+   falta la prosa. Todo número medido va con `\result{}`.
+2. **Confirmar la fecha límite de BIP2026.**
+
+Ya hecho, quedaba mal reflejado en esta lista en la corrida anterior:
+caracterizar las 107 arquitecturas peores que el FIFO (`docs/notas/2026-08-11-numeros-movidos.md`,
+commit `dc271e1`) y correr `exp05` contra el banco real de CIFAR-100 (arriba).
 
 ## Comandos
 

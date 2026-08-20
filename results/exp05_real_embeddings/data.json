@@ -1,0 +1,237 @@
+{
+ "dominios": {
+  "synthetic": {
+   "celdas": [
+    {
+     "capacity": 20,
+     "k_declarado": 5,
+     "k_hat": 9,
+     "k_hat_ci": [
+      6,
+      12
+     ],
+     "r": 0.45,
+     "r_declarado": 0.25,
+     "eta2_write": 0.765065640824488,
+     "eta2_evict": 0.07072226045696721,
+     "tiene_estructura": true,
+     "tasa_de_fusion": 0.95,
+     "k_efectivo": 5,
+     "r_efectivo": 0.25,
+     "compresion_util": true,
+     "similitud_intra_prototipo": 0.9285796880722046,
+     "fusion_alcanzable": true
+    },
+    {
+     "capacity": 20,
+     "k_declarado": 10,
+     "k_hat": 12,
+     "k_hat_ci": [
+      9,
+      16
+     ],
+     "r": 0.6,
+     "r_declarado": 0.5,
+     "eta2_write": 0.8146794737941114,
+     "eta2_evict": 0.043189253149578846,
+     "tiene_estructura": true,
+     "tasa_de_fusion": 0.95,
+     "k_efectivo": 10,
+     "r_efectivo": 0.5,
+     "compresion_util": true,
+     "similitud_intra_prototipo": 0.930671751499176,
+     "fusion_alcanzable": true
+    },
+    {
+     "capacity": 20,
+     "k_declarado": 20,
+     "k_hat": 20,
+     "k_hat_ci": [
+      20,
+      26
+     ],
+     "r": 1.0,
+     "r_declarado": 1.0,
+     "eta2_write": 0.020587141149745518,
+     "eta2_evict": 0.266160628774507,
+     "tiene_estructura": true,
+     "tasa_de_fusion": 0.95,
+     "k_efectivo": 20,
+     "r_efectivo": 1.0,
+     "compresion_util": false,
+     "similitud_intra_prototipo": 0.9289768040180206,
+     "fusion_alcanzable": true
+    },
+    {
+     "capacity": 20,
+     "k_declarado": 40,
+     "k_hat": 44,
+     "k_hat_ci": [
+      36,
+      44
+     ],
+     "r": 2.2,
+     "r_declarado": 2.0,
+     "eta2_write": 0.019741816090415896,
+     "eta2_evict": 0.21690259972028864,
+     "tiene_estructura": true,
+     "tasa_de_fusion": 0.95,
+     "k_efectivo": 40,
+     "r_efectivo": 2.0,
+     "compresion_util": false,
+     "similitud_intra_prototipo": 0.9299065470695496,
+     "fusion_alcanzable": true
+    },
+    {
+     "capacity": 20,
+     "k_declarado": 80,
+     "k_hat": 74,
+     "k_hat_ci": [
+      74,
+      74
+     ],
+     "r": 3.7,
+     "r_declarado": 4.0,
+     "eta2_write": 0.013468541079648894,
+     "eta2_evict": 0.08430309046150604,
+     "tiene_estructura": true,
+     "tasa_de_fusion": 0.94875,
+     "k_efectivo": 82,
+     "r_efectivo": 4.1,
+     "compresion_util": false,
+     "similitud_intra_prototipo": 0.9290254712104797,
+     "fusion_alcanzable": true
+    }
+   ],
+   "r_umbral": 0.7745966692414834,
+   "r_umbral_ci": [
+    0.45,
+    0.6
+   ],
+   "r_umbral_efectivo": 0.7071067811865476,
+   "r_umbral_efectivo_ci": [
+    0.25,
+    0.5
+   ]
+  },
+  "cifar100": {
+   "celdas": [
+    {
+     "capacity": 20,
+     "k_declarado": 5,
+     "k_hat": 7,
+     "k_hat_ci": [
+      7,
+      74
+     ],
+     "r": 0.35,
+     "r_declarado": 0.25,
+     "eta2_write": 0.00133664171398137,
+     "eta2_evict": 0.4803793514364047,
+     "tiene_estructura": true,
+     "tasa_de_fusion": 0.16,
+     "k_efectivo": 84,
+     "r_efectivo": 4.2,
+     "compresion_util": false,
+     "similitud_intra_prototipo": 0.46785780787467957,
+     "fusion_alcanzable": false
+    },
+    {
+     "capacity": 20,
+     "k_declarado": 10,
+     "k_hat": 3,
+     "k_hat_ci": [
+      3,
+      96
+     ],
+     "r": 0.15,
+     "r_declarado": 0.5,
+     "eta2_write": 0.003907624614961598,
+     "eta2_evict": 0.41650697702707695,
+     "tiene_estructura": true,
+     "tasa_de_fusion": 0.11,
+     "k_efectivo": 178,
+     "r_efectivo": 8.9,
+     "compresion_util": false,
+     "similitud_intra_prototipo": 0.4341333359479904,
+     "fusion_alcanzable": false
+    },
+    {
+     "capacity": 20,
+     "k_declarado": 20,
+     "k_hat": 9,
+     "k_hat_ci": [
+      9,
+      96
+     ],
+     "r": 0.45,
+     "r_declarado": 1.0,
+     "eta2_write": 0.00010833053885639124,
+     "eta2_evict": 0.25407510340393674,
+     "tiene_estructura": true,
+     "tasa_de_fusion": 0.0675,
+     "k_efectivo": 373,
+     "r_efectivo": 18.65,
+     "compresion_util": false,
+     "similitud_intra_prototipo": 0.40120160579681396,
+     "fusion_alcanzable": false
+    },
+    {
+     "capacity": 20,
+     "k_declarado": 40,
+     "k_hat": 2,
+     "k_hat_ci": [
+      2,
+      96
+     ],
+     "r": 0.1,
+     "r_declarado": 2.0,
+     "eta2_write": 0.00010540887928803301,
+     "eta2_evict": 0.26715886722429344,
+     "tiene_estructura": true,
+     "tasa_de_fusion": 0.08,
+     "k_efectivo": 736,
+     "r_efectivo": 36.8,
+     "compresion_util": false,
+     "similitud_intra_prototipo": 0.3822491466999054,
+     "fusion_alcanzable": false
+    },
+    {
+     "capacity": 20,
+     "k_declarado": 80,
+     "k_hat": 4,
+     "k_hat_ci": [
+      4,
+      96
+     ],
+     "r": 0.2,
+     "r_declarado": 4.0,
+     "eta2_write": 1.2306381309943595e-06,
+     "eta2_evict": 0.15298021585119345,
+     "tiene_estructura": true,
+     "tasa_de_fusion": 0.103125,
+     "k_efectivo": 1435,
+     "r_efectivo": 71.75,
+     "compresion_util": false,
+     "similitud_intra_prototipo": 0.39689284563064575,
+     "fusion_alcanzable": false
+    }
+   ],
+   "r_umbral": null,
+   "r_umbral_ci": null,
+   "r_umbral_efectivo": null,
+   "r_umbral_efectivo_ci": null
+  }
+ },
+ "precondicion_synthetic": {
+  "similitud_intra_prototipo": 0.9290254712104797,
+  "umbral_de_fusion": 0.85,
+  "fusion_alcanzable": true
+ },
+ "precondicion_cifar100": {
+  "similitud_intra_prototipo": 0.40120160579681396,
+  "umbral_de_fusion": 0.85,
+  "fusion_alcanzable": false
+ },
+ "figura": "paper/figures/fig2_dominios.pdf"
+}
