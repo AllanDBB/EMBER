@@ -178,3 +178,18 @@ class TestMiniGrid:
         a = comparar(seeds=(0, 1), n_steps=150, verbose=False)
         b = comparar(seeds=(0, 1), n_steps=150, verbose=False)
         assert a == b
+
+    def test_la_politica_sesgada_no_toca_la_senal_de_sorpresa(self):
+        """La política solo cambia qué se visita, nunca cómo se puntúa la sorpresa."""
+        from experiments.exp06_minigrid import ForwardBiasedPolicy
+
+        a = comparar(seeds=(0, 1), n_steps=150, policy_factory=ForwardBiasedPolicy, verbose=False)
+        b = comparar(seeds=(0, 1), n_steps=150, policy_factory=ForwardBiasedPolicy, verbose=False)
+        assert a == b
+
+    def test_la_politica_sesgada_favorece_avanzar(self):
+        from experiments.exp06_minigrid import ForwardBiasedPolicy
+
+        p = ForwardBiasedPolicy(seed=0, p_avanzar=0.7)
+        acciones = [p(obs=None) for _ in range(2000)]
+        assert acciones.count(2) / len(acciones) == pytest.approx(0.7, abs=0.03)

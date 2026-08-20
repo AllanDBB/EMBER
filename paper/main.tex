@@ -580,28 +580,50 @@ Instrumentamos también el adaptador \texttt{ember.envs} sobre
 observabilidad parcial diseñado específicamente para exigir memoria: el agente
 tiene que recordar un objeto visto al principio del episodio para elegir
 correctamente al final. Con una política aleatoria sobre
-\result{exp06_minigrid:comparacion.n_seeds|int}{40} rollouts, tanto el genotipo
-de frontera como el FIFO quedan en el piso de retención de eventos raros
-(\result{exp06_minigrid:comparacion.resultados.frontera.tasa|pct}{0.0}\,\% y
-\result{exp06_minigrid:comparacion.resultados.FIFO.tasa|pct}{2.6}\,\%\ sobre
-\result{exp06_minigrid:comparacion.n_raros_total|int}{38}\ episodios
+\result{exp06_minigrid:comparacion_aleatoria.n_seeds|int}{40} rollouts, tanto
+el genotipo de frontera como el FIFO quedan en el piso de retención de eventos
+raros
+(\result{exp06_minigrid:comparacion_aleatoria.resultados.frontera.tasa|pct}{0.0}\,\%
+y
+\result{exp06_minigrid:comparacion_aleatoria.resultados.FIFO.tasa|pct}{2.6}\,\%\
+sobre
+\result{exp06_minigrid:comparacion_aleatoria.n_raros_total|int}{38}\ episodios
 recompensados). La causa no es un error de recuperación —sin presión de
 capacidad el genotipo de frontera recupera cualquier traza guardada con
 similitud 1.0— sino que el error de predicción de un paso, calculado por un
 modelo de transición lineal en línea, no separa lo recompensado de lo
 meramente novedoso: el
-\result{exp06_minigrid:comparacion.separacion_de_saliencia.fraccion_comunes_sobre_minimo_raro|pct}{75.4}\,\%
+\result{exp06_minigrid:comparacion_aleatoria.separacion_de_saliencia.fraccion_comunes_sobre_minimo_raro|pct}{75.4}\,\%
 de las experiencias comunes tiene error de predicción igual o mayor que el
-evento recompensado menos sorpresivo. Los flujos sintéticos y los de
-CIFAR-100 no tienen este problema porque el error de predicción se fija (o se
-mide) para que separe las dos poblaciones por construcción; un entorno con
-exploración aleatoria no ofrece esa garantía. Esto identifica una segunda
-precondición, distinta de la de la Sección \ref{sec:real}: el mecanismo de
-saliencia necesita una señal de sorpresa que correlacione con relevancia de
-tarea, no solo con novedad perceptual, y una política de exploración dirigida
-—o una señal de sorpresa derivada de la recompensa, no solo de la
-predicción— es candidata a resolverlo. Validar con esa alternativa, y
-extender a POPGym, queda como trabajo futuro.
+evento recompensado menos sorpresivo.
+
+Antes de atribuir esto a una precondición del dominio, hay que descartar la
+explicación más simple: que sea escasez de datos, no de señal. Una política
+sesgada a avanzar en vez de girar —que no toca el cálculo de la sorpresa en
+absoluto, solo cambia qué se visita— multiplica los episodios recompensados
+por
+\result{exp06_minigrid:comparacion_sesgada_a_avanzar.n_raros_total|int}{156}\
+sobre 40 rollouts, casi $4\times$ más que la política aleatoria. La retención
+sigue en el piso en ambas arquitecturas
+(\result{exp06_minigrid:comparacion_sesgada_a_avanzar.resultados.frontera.tasa|pct}{0.0}\,\%
+y
+\result{exp06_minigrid:comparacion_sesgada_a_avanzar.resultados.FIFO.tasa|pct}{1.3}\,\%),
+y el solapamiento de saliencia no mejora
+(\result{exp06_minigrid:comparacion_sesgada_a_avanzar.separacion_de_saliencia.fraccion_comunes_sobre_minimo_raro|pct}{73.5}\,\%).
+Cuadruplicar los datos sin tocar la señal no cambia nada, así que el problema
+no es de muestra: es que el error de predicción de un paso no correlaciona
+con relevancia de tarea en este dominio, sin importar cuánto se explore.
+
+Los flujos sintéticos y los de CIFAR-100 no tienen este problema porque el
+error de predicción se fija (o se mide) para que separe las dos poblaciones
+por construcción; un entorno con exploración aleatoria o dirigida no ofrece
+esa garantía por sí sola. Esto identifica una segunda precondición, distinta
+de la de la Sección \ref{sec:real}: el mecanismo de saliencia necesita una
+señal de sorpresa que correlacione con relevancia de tarea, no solo con
+novedad perceptual. Explorar más no lo resuelve —ya lo descartamos—; una
+señal de sorpresa derivada de la recompensa, o un modelo de transición que
+aprenda qué predecir en función de lo que importa, son candidatos que quedan
+como trabajo futuro, junto con extender esta validación a POPGym.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Conclusión}

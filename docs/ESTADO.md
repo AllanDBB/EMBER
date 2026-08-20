@@ -169,10 +169,20 @@ Es la misma forma de hallazgo que `exp05`: un dominio real expone una
 precondición que el diseño sintético no necesita enunciar. Acá la
 precondición es distinta —no es sobre el eje de escritura sino sobre el eje
 de fuerza/desalojo—: la señal de sorpresa tiene que correlacionar con
-relevancia de tarea, no solo con novedad perceptual. Una política de
-exploración dirigida, o una señal de sorpresa derivada de la recompensa,
-son candidatas para resolverlo; queda como trabajo futuro explícito en el
-paper (§ Limitaciones).
+relevancia de tarea, no solo con novedad perceptual.
+
+**Se descartó la explicación fácil.** Antes de atribuirlo a una precondición
+del dominio había que preguntar si era simplemente escasez de datos —pocos
+episodios recompensados por rollout bajo política aleatoria—. Se agregó
+`ForwardBiasedPolicy` (favorece avanzar sobre girar, sin tocar en absoluto el
+cálculo de la sorpresa) y se repitió la corrida: **4.1× más episodios
+recompensados (38 → 156)**, retención sigue en el piso en las dos
+arquitecturas, solapamiento de saliencia prácticamente igual (75.4 % → 73.5 %).
+Cuadruplicar los datos sin tocar la señal no cambió nada, así que el problema
+no es de muestra chica: es que el error de predicción de un paso no
+correlaciona con relevancia de tarea en este dominio, sin importar cuánto se
+explore. Trabajo futuro explícito en el paper (§ Limitaciones): una señal de
+sorpresa derivada de la recompensa, o extender a POPGym.
 
 ## Lo siguiente
 

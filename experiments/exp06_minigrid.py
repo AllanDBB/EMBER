@@ -10,9 +10,21 @@ de "simplemente nunca visto antes".
 
 Este experimento corre el genotipo de frontera (el que gana el NAS en
 `exp01`) contra el `FIFO_GENOTYPE` sobre rollouts de `MiniGrid-MemoryS13-v0`
-con política aleatoria, retiene el mismo `t1_rare_retention` que mide "rareza"
-en el resto del programa, y mide directamente si el error de predicción
-separa lo recompensado de lo meramente novedoso.
+con dos políticas de comportamiento, retiene el mismo `t1_rare_retention` que
+mide "rareza" en el resto del programa, y mide directamente si el error de
+predicción separa lo recompensado de lo meramente novedoso.
+
+Por qué dos políticas
+---------------------
+La política aleatoria uniforme visita el entorno de forma ineficiente y
+produce pocos episodios recompensados por rollout. La primera pregunta
+honesta es si el resultado es un artefacto de esa escasez —¿alcanza con
+explorar más para que la señal de fuerza tenga algo que proteger?— antes de
+concluir que el mecanismo no transfiere. `ForwardBiasedPolicy` responde eso
+sin tocar la señal de sorpresa en absoluto: solo cambia el comportamiento
+(favorece avanzar sobre girar), de modo que el agente atraviesa el entorno
+en vez de quedarse girando en un rincón, y produce varias veces más episodios
+recompensados con el mismo presupuesto de pasos.
 """
 
 from __future__ import annotations
@@ -34,6 +46,30 @@ SEMILLAS = tuple(range(40))
 DIM = 32
 CAPACITY = 20
 
+
+class ForwardBiasedPolicy:
+    """Favorece avanzar sobre girar. No toca la señal de sorpresa, solo el comportamiento.
+
+    Acciones de MiniGrid: 0=girar izquierda, 1=girar derecha, 2=avanzar. Girar
+    en exceso bajo política uniforme (1/3 de probabilidad cada una) hace que el
+    agente pase la mayor parte del tiempo dando vueltas sin atravesar el
+    entorno, lo que deja pocos episodios completos —y por lo tanto pocos
+    eventos raros— por rollout.
+    """
+
+    def __init__(self, seed: int, p_avanzar: float = 0.7) -> None:
+        self.rng = np.random.default_rng(seed + 90_000)
+        self.pesos = np.array([(1 - p_avanzar) / 2, (1 - p_avanzar) / 2, p_avanzar])
+
+    def __call__(self, obs) -> int:
+        return int(self.rng.choice(3, p=self.pesos))
+
+
+POLITICAS = {
+    "aleatoria": None,
+    "sesgada_a_avanzar": ForwardBiasedPolicy,
+}
+
 FRONTIER_GENOTYPE = Genotype(
     read=NearestNeighbour(),
     write=Append(),
@@ -45,8 +81,10 @@ FRONTIER_GENOTYPE = Genotype(
 """El genotipo de frontera de `exp01`, reconstruido acá para no depender de `results/`."""
 
 
-def rollout(seed: int, *, n_steps: int = N_STEPS) -> Stream:
-    return MiniGridStreamAdapter(ENV_ID, dim=DIM, capacity=CAPACITY, seed=seed).rollout(n_steps)
+def rollout(seed: int, *, n_steps: int = N_STEPS, policy_factory=None) -> Stream:
+    policy = policy_factory(seed) if policy_factory is not None else None
+    adaptador = MiniGridStreamAdapter(ENV_ID, dim=DIM, capacity=CAPACITY, seed=seed)
+    return adaptador.rollout(n_steps, policy=policy)
 
 
 def separacion_de_saliencia(streams: list[Stream]) -> dict:
@@ -75,9 +113,13 @@ def separacion_de_saliencia(streams: list[Stream]) -> dict:
 
 
 def comparar(
-    seeds: tuple[int, ...] = SEMILLAS, n_steps: int = N_STEPS, *, verbose: bool = True
+    seeds: tuple[int, ...] = SEMILLAS,
+    n_steps: int = N_STEPS,
+    *,
+    policy_factory=None,
+    verbose: bool = True,
 ) -> dict:
-    streams = [rollout(s, n_steps=n_steps) for s in seeds]
+    streams = [rollout(s, n_steps=n_steps, policy_factory=policy_factory) for s in seeds]
     n_raros_por_semilla = [len(s.rare_items) for s in streams]
     n_raros_total = sum(n_raros_por_semilla)
 
@@ -108,35 +150,50 @@ def main() -> int:
     with ExperimentRun("exp06_minigrid") as run:
         run.set_seeds(SEMILLAS)
         run.note(
-            "Política aleatoria uniforme sobre MiniGrid-MemoryS13-v0. Lo raro es una "
-            "recompensa positiva del entorno; a diferencia de los flujos sintéticos, "
-            "nada garantiza que el error de predicción de OneStepPredictor separe eso "
-            "de la novedad perceptual ordinaria."
+            "Dos políticas sobre MiniGrid-MemoryS13-v0. Lo raro es una recompensa "
+            "positiva del entorno; a diferencia de los flujos sintéticos, nada "
+            "garantiza que el error de predicción de OneStepPredictor separe eso de "
+            "la novedad perceptual ordinaria. La política sesgada a avanzar prueba si "
+            "el problema es escasez de datos (poca exploración, pocos eventos raros) "
+            "sin tocar la señal de sorpresa en absoluto."
         )
 
-        salida = comparar()
-        run.record("comparacion", salida)
+        por_politica = {}
+        for nombre, fabrica in POLITICAS.items():
+            print(f"\n[{nombre}]")
+            salida = comparar(policy_factory=fabrica)
+            por_politica[nombre] = salida
+            run.record(f"comparacion_{nombre}", salida)
 
-        sep = salida["separacion_de_saliencia"]
-        print(
-            f"\nseparación de saliencia: {salida['n_raros_total']} eventos raros sobre "
-            f"{sep.get('n_comunes', 0)} comunes"
-        )
-        if sep.get("n_raros", 0) and sep["fraccion_comunes_sobre_minimo_raro"] > 0.05:
-            frac = sep["fraccion_comunes_sobre_minimo_raro"]
-            run.note(
-                f"el {100 * frac:.1f}% de las experiencias comunes tiene error de "
-                "predicción igual o mayor que el evento raro menos sorpresivo. El "
-                "error de predicción de un paso no separa lo recompensado de lo "
-                "meramente novedoso en este dominio, así que el desalojo por fuerza "
-                "no tiene una señal confiable que proteger — precondición para el "
-                "mecanismo de saliencia que ningún flujo sintético expone, análoga a "
-                "la de exp05 para el eje de escritura."
+            sep = salida["separacion_de_saliencia"]
+            print(
+                f"  separación de saliencia: {salida['n_raros_total']} eventos raros "
+                f"sobre {sep.get('n_comunes', 0)} comunes"
             )
+            if sep.get("n_raros", 0) and sep["fraccion_comunes_sobre_minimo_raro"] > 0.05:
+                frac = sep["fraccion_comunes_sobre_minimo_raro"]
+                run.note(
+                    f"{nombre}: el {100 * frac:.1f}% de las experiencias comunes tiene "
+                    "error de predicción igual o mayor que el evento raro menos "
+                    "sorpresivo."
+                )
+            for arq, r in salida["resultados"].items():
+                if r["n_raros"] and r["tasa"] < 0.05:
+                    run.note(
+                        f"{nombre}/{arq}: retención de eventos raros en el piso ({r['tasa']:.3f})."
+                    )
 
-        for nombre, r in salida["resultados"].items():
-            if r["n_raros"] and r["tasa"] < 0.05:
-                run.note(f"{nombre}: retención de eventos raros en el piso ({r['tasa']:.3f}).")
+        base, sesgada = por_politica["aleatoria"], por_politica["sesgada_a_avanzar"]
+        if sesgada["n_raros_total"] > base["n_raros_total"] * 2:
+            run.note(
+                f"la política sesgada a avanzar multiplica los eventos raros por "
+                f"{sesgada['n_raros_total'] / base['n_raros_total']:.1f}× "
+                f"({base['n_raros_total']} → {sesgada['n_raros_total']}) sin cambiar "
+                "la señal de sorpresa. La retención sigue en el piso en ambas "
+                "condiciones y el solapamiento de saliencia no mejora: el problema no "
+                "es escasez de datos, es que el error de predicción de un paso no "
+                "correlaciona con relevancia de tarea en este dominio."
+            )
 
         return 0
 

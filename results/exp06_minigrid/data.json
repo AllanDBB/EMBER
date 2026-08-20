@@ -1,5 +1,5 @@
 {
- "comparacion": {
+ "comparacion_aleatoria": {
   "env_id": "MiniGrid-MemoryS13-v0",
   "n_steps": 1200,
   "n_seeds": 40,
@@ -65,6 +65,74 @@
    "pred_error_comunes_media": 0.47387661549512444,
    "pred_error_comunes_p90": 0.786384350379244,
    "fraccion_comunes_sobre_minimo_raro": 0.7536382969851132
+  }
+ },
+ "comparacion_sesgada_a_avanzar": {
+  "env_id": "MiniGrid-MemoryS13-v0",
+  "n_steps": 1200,
+  "n_seeds": 40,
+  "n_raros_por_semilla": [
+   1,
+   5,
+   8,
+   4,
+   6,
+   4,
+   5,
+   2,
+   1,
+   5,
+   4,
+   1,
+   4,
+   9,
+   6,
+   1,
+   3,
+   6,
+   6,
+   3,
+   2,
+   2,
+   6,
+   7,
+   2,
+   4,
+   3,
+   3,
+   6,
+   3,
+   4,
+   1,
+   6,
+   6,
+   2,
+   3,
+   1,
+   7,
+   3,
+   1
+  ],
+  "n_raros_total": 156,
+  "resultados": {
+   "frontera": {
+    "aciertos": 0,
+    "n_raros": 156,
+    "tasa": 0.0
+   },
+   "FIFO": {
+    "aciertos": 2,
+    "n_raros": 156,
+    "tasa": 0.01282051282051282
+   }
+  },
+  "separacion_de_saliencia": {
+   "n_raros": 156,
+   "n_comunes": 47844,
+   "pred_error_raros_media": 0.5006393100305505,
+   "pred_error_comunes_media": 0.4749100135818531,
+   "pred_error_comunes_p90": 0.7637383007120249,
+   "fraccion_comunes_sobre_minimo_raro": 0.7346166708469192
   }
  }
 }
