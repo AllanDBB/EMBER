@@ -314,11 +314,45 @@ def tabla_precondicion_dominios(datos: dict[str, Any]) -> str:
     )
 
 
+def tabla_minigrid(datos: dict[str, Any]) -> str:
+    """Las tres condiciones de exp06: política y fuente de sorpresa, una variable a la vez."""
+    etiquetas = {
+        "aleatoria_prediccion": ("Aleatoria", "Percepción"),
+        "sesgada_prediccion": ("Sesgada a avanzar", "Percepción"),
+        "aleatoria_recompensa": ("Aleatoria", "Recompensa"),
+    }
+    filas = []
+    for clave, (politica, fuente) in etiquetas.items():
+        d = datos[f"comparacion_{clave}"]
+        sep = d["separacion_de_saliencia"]
+        filas.append(
+            [
+                politica,
+                fuente,
+                str(d["n_raros_total"]),
+                f"{100 * sep['fraccion_comunes_sobre_minimo_raro']:.1f}\\,\\%",
+                f"{100 * d['resultados']['frontera']['tasa']:.1f}\\,\\%",
+                f"{100 * d['resultados']['FIFO']['tasa']:.1f}\\,\\%",
+            ]
+        )
+    return _tabular(
+        ["Política", "Sorpresa", "Raros", "Solapamiento", "Frontera", "FIFO"],
+        filas,
+        "llrrrr",
+        "MiniGrid-MemoryS13-v0, 40 rollouts por condición. Solapamiento: fracción "
+        "de experiencias comunes con error de predicción igual o mayor que el "
+        "evento raro menos sorpresivo. Frontera / FIFO: retención de eventos raros.",
+        "tab:minigrid",
+        ancho_completo=True,
+    )
+
+
 GENERADORES = {
     "exp01_nas_full": [("tab_main_effects", tabla_efectos_principales)],
     "exp02_threshold_grid": [("tab_regimes", tabla_regimenes)],
     "exp04_arch_benchmark": [("tab_benchmark", tabla_benchmark)],
     "exp05_real_embeddings": [("tab_domains", tabla_precondicion_dominios)],
+    "exp06_minigrid": [("tab_minigrid", tabla_minigrid)],
 }
 
 

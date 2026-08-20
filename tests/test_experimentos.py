@@ -193,3 +193,9 @@ class TestMiniGrid:
         p = ForwardBiasedPolicy(seed=0, p_avanzar=0.7)
         acciones = [p(obs=None) for _ in range(2000)]
         assert acciones.count(2) / len(acciones) == pytest.approx(0.7, abs=0.03)
+
+    def test_la_sorpresa_de_recompensa_corre_de_punta_a_punta(self):
+        r = comparar(seeds=(0, 1, 2), n_steps=200, surprise_source="reward", verbose=False)
+        assert r["n_seeds"] == 3
+        for datos in r["resultados"].values():
+            assert 0.0 <= datos["tasa"] <= 1.0

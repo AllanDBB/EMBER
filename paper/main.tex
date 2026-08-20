@@ -23,7 +23,7 @@
 
 \begin{abstract}
 Presentamos EMBER, un programa de investigación sobre memoria episódica de largo
-plazo para robots cognitivos, y reportamos tres contribuciones empíricas.
+plazo para robots cognitivos, y reportamos cuatro contribuciones empíricas.
 Primero, aplicamos búsqueda exhaustiva de arquitecturas sobre un espacio
 discreto de \result{exp03_axis_liveness:n_genotipos|int}{576} mecanismos de
 memoria bioinspirada derivados de Sparse Distributed Memory, consolidación de
@@ -54,6 +54,14 @@ de modo que la varianza explicada por la escritura queda entre
 y
 \result{exp05_real_embeddings:dominios.cifar100.celdas.1.eta2_write|pct}{0.4}\,\%
 en las cinco celdas del barrido, sin ningún cruce de régimen que localizar.
+Cuarto, validamos el mecanismo de saliencia en un entorno real bajo
+observabilidad parcial (MiniGrid): con una señal de sorpresa perceptual la
+retención de eventos raros queda en el piso, pero sustituirla por un error de
+predicción de recompensa —sin cambiar el genotipo ni la política— la sube de
+\result{exp06_minigrid:comparacion_aleatoria_prediccion.resultados.frontera.tasa|pct}{0.0}\,\%
+a
+\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.frontera.tasa|pct}{52.6}\,\%,
+mientras el FIFO, que no lee esa señal, no se mueve.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -112,9 +120,12 @@ ese análisis con un banco de dos fases que separa explícitamente la capacidad
 de reconstruir un indicio degradado (un prerrequisito de cualquier memoria
 asociativa útil) del problema más difícil de retener los episodios correctos
 bajo presión continua de capacidad (la condición realista de un robot que opera
-durante toda su vida útil). Finalmente, instrumentamos la ley del umbral sobre
-embeddings perceptuales reales para exponer una precondición que ningún diseño
-sintético revela por sí solo.
+durante toda su vida útil). Finalmente, instrumentamos la ley del umbral y el
+mecanismo de saliencia sobre dos dominios reales —embeddings perceptuales y un
+entorno de navegación bajo observabilidad parcial— para exponer precondiciones
+que ningún diseño sintético revela por sí solo, y mostramos que al menos una
+de ellas se corrige identificando qué señal debe alimentar la compuerta de
+fuerza.
 
 Las contribuciones principales de este trabajo son:
 
@@ -137,6 +148,10 @@ Las contribuciones principales de este trabajo son:
   \item Una precondición para la ley del umbral —la alcanzabilidad del umbral
   de fusión— que sobre CIFAR-100 resulta ser la variable dominante: no hay
   ningún $r$, nominal o efectivo, en el que exista régimen de compresión.
+  \item Una precondición análoga para el mecanismo de saliencia, identificada
+  y corregida sobre un entorno real bajo observabilidad parcial: la sorpresa
+  tiene que anclarse en la variable que decide qué importa (la recompensa),
+  no en la novedad perceptual del estado.
 \end{itemize}
 
 % ═══════════════════════════════════════════════════════════════════════
@@ -496,6 +511,64 @@ de la fusión, medida directamente por similitud, como el diagnóstico robusto,
 y no un $\hat K$ derivado.
 
 % ═══════════════════════════════════════════════════════════════════════
+\section{Validación en un entorno real bajo observabilidad parcial}
+\label{sec:minigrid}
+
+CIFAR-100 valida la ley del umbral sobre datos reales, pero sigue siendo un
+flujo construido a mano a partir de embeddings estáticos. Un robot no recibe
+un flujo: recibe la consecuencia de sus propias acciones, con observación
+parcial y estructura temporal que ningún generador reproduce. Instrumentamos
+el adaptador \texttt{ember.envs} sobre \texttt{MiniGrid-MemoryS13-v0}
+\cite{minigrid}, un entorno de navegación diseñado específicamente para exigir
+memoria: el agente tiene que recordar un objeto visto al principio del
+episodio para elegir correctamente al final. Comparamos el genotipo de
+frontera de la Sección \ref{sec:nas} contra el FIFO con \texttt{t1\_rare\_retention}
+—la misma tarea que mide rareza en el resto del programa— sobre tres
+condiciones que cambian una variable a la vez (Tabla \ref{tab:minigrid}).
+
+\input{tables/tab_minigrid}
+
+\textbf{Línea de base.} Con política aleatoria uniforme, tanto la frontera
+como el FIFO quedan en el piso de retención de eventos raros. La causa no es
+un error de recuperación —sin presión de capacidad la frontera recupera
+cualquier traza guardada con similitud 1.0— sino que el error de predicción
+de un paso, calculado por un modelo de transición lineal en línea sobre la
+observación, no separa lo recompensado de lo meramente novedoso: el 75.4\,\%
+de las experiencias comunes tiene error de predicción igual o mayor que el
+evento recompensado menos sorpresivo.
+
+\textbf{Descartar escasez de datos.} Antes de atribuir esto a una
+precondición del dominio hay que descartar la explicación más simple. Una
+política sesgada a avanzar sobre girar —que no toca el cálculo de la sorpresa
+en absoluto, solo cambia qué se visita— produce $4\times$ más episodios
+recompensados con el mismo presupuesto de pasos. La retención sigue en el
+piso y el solapamiento no mejora: cuadruplicar los datos sin tocar la señal no
+cambia nada, así que el problema no es de muestra chica.
+
+\textbf{La señal, no la cantidad.} La compuerta de fuerza está motivada por
+la cuenta dopaminérgica del error de predicción \cite{cole2015}, pero esa
+cuenta es sobre error de predicción de \emph{recompensa}, no de percepción.
+Sustituimos el modelo de transición por un predictor de recompensa
+—misma arquitectura lineal en línea, misma política aleatoria de la línea de
+base, cambia solo qué se predice— y el solapamiento cae de 75.4\,\% a
+5.6\,\%. La retención de la frontera sube de
+\result{exp06_minigrid:comparacion_aleatoria_prediccion.resultados.frontera.tasa|pct}{0.0}\,\%
+a
+\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.frontera.tasa|pct}{52.6}\,\%,
+mientras el FIFO —que no lee la señal de fuerza en absoluto— se queda en
+\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.FIFO.tasa|pct}{2.6}\,\%,
+igual que en la línea de base. Que solo la arquitectura que efectivamente
+consulta la señal de fuerza mejore descarta que la mejora sea un artefacto
+del cambio de predictor: es específicamente la compuerta de saliencia
+funcionando, ahora que tiene una señal que correlaciona con lo que importa.
+
+El mecanismo de saliencia sí transfiere a un entorno real bajo observabilidad
+parcial —no automáticamente, sino bajo una precondición identificable y
+corregible: la sorpresa tiene que anclarse en la variable que decide qué
+importa, y en un entorno con recompensa esa variable es la recompensa misma,
+no la novedad perceptual del estado.
+
+% ═══════════════════════════════════════════════════════════════════════
 \section{Discusión}
 
 \subsection{La ley del umbral y su implicación práctica}
@@ -554,6 +627,24 @@ Un robot que monitorea esta cantidad puede saber, sin instrumentación externa,
 si está en un régimen donde la fusión ayuda o donde es simplemente trabajo
 perdido.
 
+\subsection{La fuente de la sorpresa importa tanto como su existencia}
+
+La Sección \ref{sec:minigrid} generaliza esta lección más allá de la fusión.
+El diseño sintético y el de CIFAR-100 comparten un supuesto silencioso: que la
+señal de sorpresa que alimenta la compuerta de fuerza ya viene alineada con lo
+que el robot necesita recordar. Ese supuesto es gratis cuando el generador la
+fija a mano; en un entorno real hay que elegir \emph{qué predecir}, y esa
+elección determina si el mecanismo tiene algo que proteger. Predecir la
+observación produce una señal que reacciona a cualquier cosa perceptualmente
+nueva, recompensada o no. Predecir la recompensa produce una señal que
+reacciona específicamente a lo que el robot tiene razones para recordar. La
+arquitectura de frontera es la misma en los dos casos —el genotipo no cambia—
+pero solo funciona cuando la señal que recibe es la correcta. La compuerta de
+saliencia no es un mecanismo que funcione o no funcione en abstracto: es un
+mecanismo que hereda la calidad de su entrada, y elegir esa entrada es una
+decisión de diseño tan consecuente como cualquier eje del espacio de
+búsqueda.
+
 % ═══════════════════════════════════════════════════════════════════════
 \section{Limitaciones y trabajo futuro}
 
@@ -575,62 +666,16 @@ compacta en ese dominio, pero significa que cualquier afirmación sobre
 $\hat K_{proto}$ real necesita reportarse con su intervalo, nunca como un
 entero puntual.
 
-Instrumentamos también el adaptador \texttt{ember.envs} sobre
-\texttt{MiniGrid-MemoryS13-v0} \cite{minigrid}, un entorno de navegación bajo
-observabilidad parcial diseñado específicamente para exigir memoria: el agente
-tiene que recordar un objeto visto al principio del episodio para elegir
-correctamente al final. Con una política aleatoria sobre
-\result{exp06_minigrid:comparacion_aleatoria.n_seeds|int}{40} rollouts, tanto
-el genotipo de frontera como el FIFO quedan en el piso de retención de eventos
-raros
-(\result{exp06_minigrid:comparacion_aleatoria.resultados.frontera.tasa|pct}{0.0}\,\%
-y
-\result{exp06_minigrid:comparacion_aleatoria.resultados.FIFO.tasa|pct}{2.6}\,\%\
-sobre
-\result{exp06_minigrid:comparacion_aleatoria.n_raros_total|int}{38}\ episodios
-recompensados). La causa no es un error de recuperación —sin presión de
-capacidad el genotipo de frontera recupera cualquier traza guardada con
-similitud 1.0— sino que el error de predicción de un paso, calculado por un
-modelo de transición lineal en línea, no separa lo recompensado de lo
-meramente novedoso: el
-\result{exp06_minigrid:comparacion_aleatoria.separacion_de_saliencia.fraccion_comunes_sobre_minimo_raro|pct}{75.4}\,\%
-de las experiencias comunes tiene error de predicción igual o mayor que el
-evento recompensado menos sorpresivo.
-
-Antes de atribuir esto a una precondición del dominio, hay que descartar la
-explicación más simple: que sea escasez de datos, no de señal. Una política
-sesgada a avanzar en vez de girar —que no toca el cálculo de la sorpresa en
-absoluto, solo cambia qué se visita— produce
-\result{exp06_minigrid:comparacion_sesgada_a_avanzar.n_raros_total|int}{156}\
-episodios recompensados sobre 40 rollouts, casi $4\times$ más que los
-\result{exp06_minigrid:comparacion_aleatoria.n_raros_total|int}{38}\ de la
-política aleatoria. La retención
-sigue en el piso en ambas arquitecturas
-(\result{exp06_minigrid:comparacion_sesgada_a_avanzar.resultados.frontera.tasa|pct}{0.0}\,\%
-y
-\result{exp06_minigrid:comparacion_sesgada_a_avanzar.resultados.FIFO.tasa|pct}{1.3}\,\%),
-y el solapamiento de saliencia no mejora
-(\result{exp06_minigrid:comparacion_sesgada_a_avanzar.separacion_de_saliencia.fraccion_comunes_sobre_minimo_raro|pct}{73.5}\,\%).
-Cuadruplicar los datos sin tocar la señal no cambia nada, así que el problema
-no es de muestra: es que el error de predicción de un paso no correlaciona
-con relevancia de tarea en este dominio, sin importar cuánto se explore.
-
-Los flujos sintéticos y los de CIFAR-100 no tienen este problema porque el
-error de predicción se fija (o se mide) para que separe las dos poblaciones
-por construcción; un entorno con exploración aleatoria o dirigida no ofrece
-esa garantía por sí sola. Esto identifica una segunda precondición, distinta
-de la de la Sección \ref{sec:real}: el mecanismo de saliencia necesita una
-señal de sorpresa que correlacione con relevancia de tarea, no solo con
-novedad perceptual. Explorar más no lo resuelve —ya lo descartamos—; una
-señal de sorpresa derivada de la recompensa, o un modelo de transición que
-aprenda qué predecir en función de lo que importa, son candidatos que quedan
-como trabajo futuro, junto con extender esta validación a POPGym.
+La validación en MiniGrid de la Sección \ref{sec:minigrid} usa un único
+entorno (\texttt{MemoryS13}) y una única política de exploración además de la
+sesgada a avanzar; extender a POPGym y a políticas entrenadas queda como
+trabajo futuro.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Conclusión}
 
 Presentamos EMBER, un programa de investigación sobre memoria episódica
-bioinspirada para robots cognitivos, con tres contribuciones empíricas. La
+bioinspirada para robots cognitivos, con cuatro contribuciones empíricas. La
 búsqueda exhaustiva de arquitecturas revela que la importancia relativa de los
 mecanismos de memoria bioinspirada no es fija: depende del régimen operativo,
 caracterizado por el cociente entre prototipos de experiencia recurrentes y
@@ -647,14 +692,21 @@ fidelidad de reconstrucción y retención perfecta de eventos raros, mientras el
 FIFO de e-MDB queda en el piso en todas las condiciones. El circuito de
 disparos puro, aunque validado en su dominio nativo, todavía no transfiere a
 vectores de entrada continuos, identificando la PoC-5 —el núcleo integrado de
-EMBER— como el próximo hito crítico de implementación. Finalmente, instrumentar
-la misma ley sobre embeddings perceptuales reales expone una precondición que
-ningún diseño sintético revela por sí solo: sin similitud intra-prototipo
-suficiente, no hay ningún cociente prototipos-a-capacidad, nominal o efectivo,
-que produzca un régimen de compresión. Lejos de debilitar la ley del umbral,
-esta precondición la convierte en una cantidad medible en línea que un robot
-puede usar para decidir, sin conocimiento previo de su ambiente, si la
-consolidación vale la pena.
+EMBER— como el próximo hito crítico de implementación. Instrumentar la misma ley sobre embeddings perceptuales reales expone una
+precondición que ningún diseño sintético revela por sí solo: sin similitud
+intra-prototipo suficiente, no hay ningún cociente prototipos-a-capacidad,
+nominal o efectivo, que produzca un régimen de compresión. Lejos de debilitar
+la ley del umbral, esta precondición la convierte en una cantidad medible en
+línea que un robot puede usar para decidir, sin conocimiento previo de su
+ambiente, si la consolidación vale la pena. Finalmente, validar el mecanismo
+de saliencia en un entorno real bajo observabilidad parcial revela una
+precondición análoga y, a diferencia de la anterior, la resuelve: la
+retención de eventos raros queda en el piso con una señal de sorpresa
+perceptual, descartamos que fuera escasez de datos, y sube a más de la mitad
+cuando la señal se ancla en la recompensa en vez de en la novedad del estado
+—sin cambiar ni el genotipo ni la política de exploración. El mecanismo de
+saliencia funciona en un dominio real; lo que hace falta es alimentarlo con
+la señal correcta.
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}

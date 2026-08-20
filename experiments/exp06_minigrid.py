@@ -4,27 +4,28 @@ La Sección de limitaciones del paper dejaba esto pendiente: la ley del umbral y
 el mecanismo de saliencia se miden sobre flujos donde el error de predicción de
 un evento raro está fijado por diseño muy por encima del de uno común (0.9
 contra 0.1). Ningún generador impone eso en un entorno real: acá el error de
-predicción lo calcula `OneStepPredictor` a partir de lo que el modelo de
-transición no anticipó, y nada garantiza que ese número separe "recompensado"
-de "simplemente nunca visto antes".
+predicción lo calcula un modelo en línea a partir de lo que no anticipó, y
+nada garantiza que ese número separe "recompensado" de "simplemente nunca
+visto antes".
 
 Este experimento corre el genotipo de frontera (el que gana el NAS en
 `exp01`) contra el `FIFO_GENOTYPE` sobre rollouts de `MiniGrid-MemoryS13-v0`
-con dos políticas de comportamiento, retiene el mismo `t1_rare_retention` que
-mide "rareza" en el resto del programa, y mide directamente si el error de
-predicción separa lo recompensado de lo meramente novedoso.
+bajo tres condiciones, reteniendo siempre el mismo `t1_rare_retention` que
+mide "rareza" en el resto del programa.
 
-Por qué dos políticas
----------------------
-La política aleatoria uniforme visita el entorno de forma ineficiente y
-produce pocos episodios recompensados por rollout. La primera pregunta
-honesta es si el resultado es un artefacto de esa escasez —¿alcanza con
-explorar más para que la señal de fuerza tenga algo que proteger?— antes de
-concluir que el mecanismo no transfiere. `ForwardBiasedPolicy` responde eso
-sin tocar la señal de sorpresa en absoluto: solo cambia el comportamiento
-(favorece avanzar sobre girar), de modo que el agente atraviesa el entorno
-en vez de quedarse girando en un rincón, y produce varias veces más episodios
-recompensados con el mismo presupuesto de pasos.
+Tres condiciones, una variable a la vez
+----------------------------------------
+1. **`aleatoria_prediccion`** (línea de base): política uniforme,
+   `OneStepPredictor` mide sorpresa *perceptual*. ¿Cuánto se retiene con la
+   señal de sorpresa que el resto de `ember.envs` ya tenía?
+2. **`sesgada_prediccion`**: cambia solo la política (favorece avanzar sobre
+   girar, sin tocar el cálculo de la sorpresa), para descartar que el
+   resultado de (1) sea artefacto de escasez de datos.
+3. **`aleatoria_recompensa`**: cambia solo la señal (misma política uniforme
+   que (1), pero `RewardPredictionError` en vez de `OneStepPredictor` —
+   predice recompensa, no observación). Si la retención mejora acá y no en
+   (2), el problema nunca fue de exploración: era que la sorpresa perceptual
+   no correlaciona con relevancia de tarea, y una sorpresa de recompensa sí.
 """
 
 from __future__ import annotations
@@ -65,10 +66,12 @@ class ForwardBiasedPolicy:
         return int(self.rng.choice(3, p=self.pesos))
 
 
-POLITICAS = {
-    "aleatoria": None,
-    "sesgada_a_avanzar": ForwardBiasedPolicy,
+CONDICIONES = {
+    "aleatoria_prediccion": (None, "prediction"),
+    "sesgada_prediccion": (ForwardBiasedPolicy, "prediction"),
+    "aleatoria_recompensa": (None, "reward"),
 }
+"""nombre -> (fábrica de política o None, fuente de sorpresa)."""
 
 FRONTIER_GENOTYPE = Genotype(
     read=NearestNeighbour(),
@@ -81,9 +84,17 @@ FRONTIER_GENOTYPE = Genotype(
 """El genotipo de frontera de `exp01`, reconstruido acá para no depender de `results/`."""
 
 
-def rollout(seed: int, *, n_steps: int = N_STEPS, policy_factory=None) -> Stream:
+def rollout(
+    seed: int,
+    *,
+    n_steps: int = N_STEPS,
+    policy_factory=None,
+    surprise_source: str = "prediction",
+) -> Stream:
     policy = policy_factory(seed) if policy_factory is not None else None
-    adaptador = MiniGridStreamAdapter(ENV_ID, dim=DIM, capacity=CAPACITY, seed=seed)
+    adaptador = MiniGridStreamAdapter(
+        ENV_ID, dim=DIM, capacity=CAPACITY, seed=seed, surprise_source=surprise_source
+    )
     return adaptador.rollout(n_steps, policy=policy)
 
 
@@ -117,9 +128,13 @@ def comparar(
     n_steps: int = N_STEPS,
     *,
     policy_factory=None,
+    surprise_source: str = "prediction",
     verbose: bool = True,
 ) -> dict:
-    streams = [rollout(s, n_steps=n_steps, policy_factory=policy_factory) for s in seeds]
+    streams = [
+        rollout(s, n_steps=n_steps, policy_factory=policy_factory, surprise_source=surprise_source)
+        for s in seeds
+    ]
     n_raros_por_semilla = [len(s.rare_items) for s in streams]
     n_raros_total = sum(n_raros_por_semilla)
 
@@ -150,19 +165,18 @@ def main() -> int:
     with ExperimentRun("exp06_minigrid") as run:
         run.set_seeds(SEMILLAS)
         run.note(
-            "Dos políticas sobre MiniGrid-MemoryS13-v0. Lo raro es una recompensa "
-            "positiva del entorno; a diferencia de los flujos sintéticos, nada "
-            "garantiza que el error de predicción de OneStepPredictor separe eso de "
-            "la novedad perceptual ordinaria. La política sesgada a avanzar prueba si "
-            "el problema es escasez de datos (poca exploración, pocos eventos raros) "
-            "sin tocar la señal de sorpresa en absoluto."
+            "Tres condiciones sobre MiniGrid-MemoryS13-v0, una variable a la vez: "
+            "línea de base (política uniforme + sorpresa perceptual), sesgada a "
+            "avanzar (descarta escasez de datos sin tocar la señal), y sorpresa de "
+            "recompensa (misma política que la línea de base, cambia solo la señal). "
+            "Lo raro es una recompensa positiva del entorno."
         )
 
-        por_politica = {}
-        for nombre, fabrica in POLITICAS.items():
+        por_condicion = {}
+        for nombre, (fabrica, fuente) in CONDICIONES.items():
             print(f"\n[{nombre}]")
-            salida = comparar(policy_factory=fabrica)
-            por_politica[nombre] = salida
+            salida = comparar(policy_factory=fabrica, surprise_source=fuente)
+            por_condicion[nombre] = salida
             run.record(f"comparacion_{nombre}", salida)
 
             sep = salida["separacion_de_saliencia"]
@@ -170,7 +184,7 @@ def main() -> int:
                 f"  separación de saliencia: {salida['n_raros_total']} eventos raros "
                 f"sobre {sep.get('n_comunes', 0)} comunes"
             )
-            if sep.get("n_raros", 0) and sep["fraccion_comunes_sobre_minimo_raro"] > 0.05:
+            if sep.get("n_raros", 0):
                 frac = sep["fraccion_comunes_sobre_minimo_raro"]
                 run.note(
                     f"{nombre}: el {100 * frac:.1f}% de las experiencias comunes tiene "
@@ -178,21 +192,34 @@ def main() -> int:
                     "sorpresivo."
                 )
             for arq, r in salida["resultados"].items():
-                if r["n_raros"] and r["tasa"] < 0.05:
-                    run.note(
-                        f"{nombre}/{arq}: retención de eventos raros en el piso ({r['tasa']:.3f})."
-                    )
+                if r["n_raros"]:
+                    run.note(f"{nombre}/{arq}: retención de eventos raros = {r['tasa']:.3f}.")
 
-        base, sesgada = por_politica["aleatoria"], por_politica["sesgada_a_avanzar"]
+        base = por_condicion["aleatoria_prediccion"]
+        sesgada = por_condicion["sesgada_prediccion"]
+        recompensa = por_condicion["aleatoria_recompensa"]
+
         if sesgada["n_raros_total"] > base["n_raros_total"] * 2:
             run.note(
                 f"la política sesgada a avanzar multiplica los eventos raros por "
                 f"{sesgada['n_raros_total'] / base['n_raros_total']:.1f}× "
                 f"({base['n_raros_total']} → {sesgada['n_raros_total']}) sin cambiar "
-                "la señal de sorpresa. La retención sigue en el piso en ambas "
-                "condiciones y el solapamiento de saliencia no mejora: el problema no "
-                "es escasez de datos, es que el error de predicción de un paso no "
-                "correlaciona con relevancia de tarea en este dominio."
+                "la señal de sorpresa, y la retención sigue en el piso: el problema "
+                "no era escasez de datos."
+            )
+
+        tasa_base = base["resultados"]["frontera"]["tasa"]
+        tasa_recompensa = recompensa["resultados"]["frontera"]["tasa"]
+        if tasa_recompensa > tasa_base + 0.1:
+            run.note(
+                f"con la misma política que la línea de base, cambiar solo la señal "
+                f"de sorpresa perceptual por error de predicción de recompensa sube "
+                f"la retención de la frontera de {100 * tasa_base:.1f}% a "
+                f"{100 * tasa_recompensa:.1f}%, mientras el FIFO —que no lee la señal "
+                f"de fuerza— sigue en el piso "
+                f"({100 * recompensa['resultados']['FIFO']['tasa']:.1f}%). El "
+                "mecanismo de saliencia sí transfiere a un entorno real cuando la "
+                "sorpresa se ancla en recompensa en vez de en novedad perceptual."
             )
 
         return 0

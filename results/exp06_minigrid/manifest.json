@@ -1,11 +1,11 @@
 {
  "experiment": "exp06_minigrid",
  "ember_version": "0.1.0",
- "git_sha": "f64398bd73946ed73e8c5463f6e1b629459a8a34",
+ "git_sha": "40db6567f902127667a3087268594e149989ff96",
  "git_branch": "feat/ember-foundation",
  "git_dirty": true,
- "timestamp_utc": "2026-08-20T18:03:25.020596+00:00",
- "duration_s": 16.49,
+ "timestamp_utc": "2026-08-20T20:46:37.597757+00:00",
+ "duration_s": 23.39,
  "python": "3.12.13",
  "platform": "Linux-7.1.6-1-cachyos-x86_64-with-glibc2.44",
  "packages": {
@@ -59,13 +59,17 @@
   39
  ],
  "notes": [
-  "Dos pol\u00edticas sobre MiniGrid-MemoryS13-v0. Lo raro es una recompensa positiva del entorno; a diferencia de los flujos sint\u00e9ticos, nada garantiza que el error de predicci\u00f3n de OneStepPredictor separe eso de la novedad perceptual ordinaria. La pol\u00edtica sesgada a avanzar prueba si el problema es escasez de datos (poca exploraci\u00f3n, pocos eventos raros) sin tocar la se\u00f1al de sorpresa en absoluto.",
-  "aleatoria: el 75.4% de las experiencias comunes tiene error de predicci\u00f3n igual o mayor que el evento raro menos sorpresivo.",
-  "aleatoria/frontera: retenci\u00f3n de eventos raros en el piso (0.000).",
-  "aleatoria/FIFO: retenci\u00f3n de eventos raros en el piso (0.026).",
-  "sesgada_a_avanzar: el 73.5% de las experiencias comunes tiene error de predicci\u00f3n igual o mayor que el evento raro menos sorpresivo.",
-  "sesgada_a_avanzar/frontera: retenci\u00f3n de eventos raros en el piso (0.000).",
-  "sesgada_a_avanzar/FIFO: retenci\u00f3n de eventos raros en el piso (0.013).",
-  "la pol\u00edtica sesgada a avanzar multiplica los eventos raros por 4.1\u00d7 (38 \u2192 156) sin cambiar la se\u00f1al de sorpresa. La retenci\u00f3n sigue en el piso en ambas condiciones y el solapamiento de saliencia no mejora: el problema no es escasez de datos, es que el error de predicci\u00f3n de un paso no correlaciona con relevancia de tarea en este dominio."
+  "Tres condiciones sobre MiniGrid-MemoryS13-v0, una variable a la vez: l\u00ednea de base (pol\u00edtica uniforme + sorpresa perceptual), sesgada a avanzar (descarta escasez de datos sin tocar la se\u00f1al), y sorpresa de recompensa (misma pol\u00edtica que la l\u00ednea de base, cambia solo la se\u00f1al). Lo raro es una recompensa positiva del entorno.",
+  "aleatoria_prediccion: el 75.4% de las experiencias comunes tiene error de predicci\u00f3n igual o mayor que el evento raro menos sorpresivo.",
+  "aleatoria_prediccion/frontera: retenci\u00f3n de eventos raros = 0.000.",
+  "aleatoria_prediccion/FIFO: retenci\u00f3n de eventos raros = 0.026.",
+  "sesgada_prediccion: el 73.5% de las experiencias comunes tiene error de predicci\u00f3n igual o mayor que el evento raro menos sorpresivo.",
+  "sesgada_prediccion/frontera: retenci\u00f3n de eventos raros = 0.000.",
+  "sesgada_prediccion/FIFO: retenci\u00f3n de eventos raros = 0.013.",
+  "aleatoria_recompensa: el 5.6% de las experiencias comunes tiene error de predicci\u00f3n igual o mayor que el evento raro menos sorpresivo.",
+  "aleatoria_recompensa/frontera: retenci\u00f3n de eventos raros = 0.526.",
+  "aleatoria_recompensa/FIFO: retenci\u00f3n de eventos raros = 0.026.",
+  "la pol\u00edtica sesgada a avanzar multiplica los eventos raros por 4.1\u00d7 (38 \u2192 156) sin cambiar la se\u00f1al de sorpresa, y la retenci\u00f3n sigue en el piso: el problema no era escasez de datos.",
+  "con la misma pol\u00edtica que la l\u00ednea de base, cambiar solo la se\u00f1al de sorpresa perceptual por error de predicci\u00f3n de recompensa sube la retenci\u00f3n de la frontera de 0.0% a 52.6%, mientras el FIFO \u2014que no lee la se\u00f1al de fuerza\u2014 sigue en el piso (2.6%). El mecanismo de saliencia s\u00ed transfiere a un entorno real cuando la sorpresa se ancla en recompensa en vez de en novedad perceptual."
  ]
 }

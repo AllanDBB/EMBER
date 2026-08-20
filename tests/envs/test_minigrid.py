@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from ember.envs.minigrid import OneStepPredictor
+from ember.envs.minigrid import OneStepPredictor, RewardPredictionError
 
 
 class TestPredictorDeSorpresa:
@@ -63,6 +63,58 @@ class TestPredictorDeSorpresa:
         assert correr() == correr()
 
 
+class TestErrorDePrediccionDeRecompensa:
+    """La cuenta dopaminérgica correcta: sorpresa de recompensa, no perceptual."""
+
+    def test_la_sorpresa_esta_en_cero_uno(self):
+        rng = np.random.default_rng(0)
+        p = RewardPredictionError(obs_dim=8, n_actions=3)
+        for _ in range(50):
+            o = rng.standard_normal(8).astype(np.float32)
+            s = p.surprise(o, int(rng.integers(3)), float(rng.choice([0.0, 0.0, 0.0, 1.0])))
+            assert 0.0 <= s <= 1.0
+
+    def test_una_recompensa_repetida_deja_de_sorprender(self):
+        rng = np.random.default_rng(0)
+        p = RewardPredictionError(obs_dim=8, n_actions=2, lr=0.3)
+        o = rng.standard_normal(8).astype(np.float32)
+
+        primera = p.surprise(o, 0, 1.0)
+        for _ in range(30):
+            p.surprise(o, 0, 1.0)
+        ultima = p.surprise(o, 0, 1.0)
+
+        assert ultima < primera
+
+    def test_una_recompensa_inesperada_sorprende_mas_que_la_rutina_sin_recompensa(self):
+        """Es la comprobación directa de por qué esta señal separa lo raro de lo común."""
+        rng = np.random.default_rng(0)
+        p = RewardPredictionError(obs_dim=8, n_actions=2, lr=0.1)
+
+        rutina = [
+            p.surprise(rng.standard_normal(8).astype(np.float32), int(rng.integers(2)), 0.0)
+            for _ in range(200)
+        ]
+        recompensada = p.surprise(rng.standard_normal(8).astype(np.float32), 0, 1.0)
+
+        assert recompensada > max(rutina)
+
+    def test_es_determinista(self):
+        def correr():
+            rng = np.random.default_rng(3)
+            p = RewardPredictionError(obs_dim=8, n_actions=2)
+            return [
+                p.surprise(
+                    rng.standard_normal(8).astype(np.float32),
+                    int(rng.integers(2)),
+                    float(rng.choice([0.0, 1.0])),
+                )
+                for _ in range(20)
+            ]
+
+        assert correr() == correr()
+
+
 def _hay_minigrid() -> bool:
     from importlib.util import find_spec
 
@@ -105,3 +157,16 @@ class TestAdaptador:
         spec = MiniGridStreamAdapter(seed=0).rollout(20).spec
         assert spec.is_estimated
         assert spec.source.startswith("minigrid:")
+
+    def test_surprise_source_invalido_falla_ruidosamente(self):
+        from ember.envs.minigrid import MiniGridStreamAdapter
+
+        with pytest.raises(ValueError):
+            MiniGridStreamAdapter(seed=0, surprise_source="lo_que_sea")
+
+    def test_surprise_source_recompensa_tambien_produce_un_stream_valido(self):
+        from ember.envs.minigrid import MiniGridStreamAdapter
+
+        s = MiniGridStreamAdapter(seed=0, surprise_source="reward").rollout(n_steps=50)
+        assert len(s) == 50
+        assert all(0.0 <= it.pred_error <= 1.0 for it in s)

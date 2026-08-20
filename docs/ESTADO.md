@@ -146,66 +146,67 @@ no aparecía. Le da al robot dos cantidades medibles en línea: `fusion_alcanzab
 se decide con una comparación de similitud contra el umbral, y `K_efectivo` se
 cuenta mirando cuántas trazas tiene la memoria.
 
-### `exp06` — MiniGrid expone una segunda precondición: la saliencia necesita señal, no solo sorpresa
+### `exp06` — MiniGrid: la saliencia no transfiere con sorpresa perceptual, pero sí con sorpresa de recompensa
 
-Corrido el 2026-08-20 (`results/exp06_minigrid/`). Compara el genotipo de
-frontera (`append + both + decay 1.0 + min_strength`) contra el FIFO sobre 40
-rollouts de política aleatoria en `MiniGrid-MemoryS13-v0`, con
-`t1_rare_retention` midiendo si un episodio recompensado (evento raro) se
-retiene tras 1200 pasos en capacidad 20.
+Corrido el 2026-08-20 (`results/exp06_minigrid/`), en tres condiciones que
+cambian una variable a la vez. Compara el genotipo de frontera
+(`append + both + decay 1.0 + min_strength`) contra el FIFO sobre 40 rollouts
+en `MiniGrid-MemoryS13-v0`, con `t1_rare_retention` midiendo si un episodio
+recompensado (evento raro) se retiene tras 1200 pasos en capacidad 20.
 
-**Ambos quedan en el piso**: frontera 0.0 %, FIFO 2.6 %, sobre 38 episodios
-recompensados. No es un bug de recuperación —sin presión de capacidad la
-frontera recupera cualquier traza con similitud 1.0—, es que el error de
-predicción de un paso (`OneStepPredictor`, un modelo lineal en línea) no
-separa lo recompensado de lo meramente novedoso: **75.4 %** de las
-experiencias comunes tiene error de predicción igual o mayor que el evento
-recompensado menos sorpresivo. Los flujos sintéticos y CIFAR-100 no tienen
-este problema porque el error de predicción se fija o se mide para separar
-las dos poblaciones por construcción; una política de exploración aleatoria
-no ofrece esa garantía.
+**1. Línea de base (política aleatoria + `OneStepPredictor`).** Ambos quedan
+en el piso: frontera 0.0 %, FIFO 2.6 %, sobre 38 episodios recompensados. No
+es un bug de recuperación —sin presión de capacidad la frontera recupera
+cualquier traza con similitud 1.0—, es que el error de predicción de un paso
+(un modelo lineal en línea sobre la observación) no separa lo recompensado de
+lo meramente novedoso: **75.4 %** de las experiencias comunes tiene error de
+predicción igual o mayor que el evento recompensado menos sorpresivo.
 
-Es la misma forma de hallazgo que `exp05`: un dominio real expone una
-precondición que el diseño sintético no necesita enunciar. Acá la
-precondición es distinta —no es sobre el eje de escritura sino sobre el eje
-de fuerza/desalojo—: la señal de sorpresa tiene que correlacionar con
-relevancia de tarea, no solo con novedad perceptual.
+**2. Se descartó la explicación fácil (escasez de datos).**
+`ForwardBiasedPolicy` (favorece avanzar sobre girar, sin tocar la sorpresa)
+produce **4.1× más episodios recompensados (38 → 156)** con el mismo
+presupuesto de pasos. La retención sigue en el piso y el solapamiento no
+mejora (75.4 % → 73.5 %). Cuadruplicar los datos sin tocar la señal no
+cambia nada.
 
-**Se descartó la explicación fácil.** Antes de atribuirlo a una precondición
-del dominio había que preguntar si era simplemente escasez de datos —pocos
-episodios recompensados por rollout bajo política aleatoria—. Se agregó
-`ForwardBiasedPolicy` (favorece avanzar sobre girar, sin tocar en absoluto el
-cálculo de la sorpresa) y se repitió la corrida: **4.1× más episodios
-recompensados (38 → 156)**, retención sigue en el piso en las dos
-arquitecturas, solapamiento de saliencia prácticamente igual (75.4 % → 73.5 %).
-Cuadruplicar los datos sin tocar la señal no cambió nada, así que el problema
-no es de muestra chica: es que el error de predicción de un paso no
-correlaciona con relevancia de tarea en este dominio, sin importar cuánto se
-explore. Trabajo futuro explícito en el paper (§ Limitaciones): una señal de
-sorpresa derivada de la recompensa, o extender a POPGym.
+**3. La señal, no la cantidad — y acá está el giro.** La compuerta de fuerza
+está motivada por "la cuenta dopaminérgica", pero esa cuenta es sobre error
+de predicción de **recompensa** (Schultz), no de percepción genérica.
+Se agregó `RewardPredictionError` (mismo modelo lineal en línea, misma
+política aleatoria que la línea de base, cambia solo qué se predice) y el
+solapamiento cae de 75.4 % a **5.6 %**. La retención de la frontera sube de
+**0.0 % a 52.6 %**, mientras el FIFO —que no lee la señal de fuerza— se queda
+en 2.6 %, igual que en la línea de base. Que solo la arquitectura que
+consulta la señal mejore descarta que sea un artefacto del cambio de
+predictor: es la compuerta de saliencia funcionando, con una señal que
+correlaciona con lo que importa.
+
+**Conclusión:** el mecanismo de saliencia sí transfiere a un entorno real bajo
+observabilidad parcial, bajo una precondición identificable y corregible —la
+sorpresa tiene que anclarse en la recompensa, no en la novedad perceptual—.
+Esto pasó de ser un párrafo de "trabajo futuro" en Limitaciones a su propia
+sección del paper (§VI, con tabla y subsección de Discusión propia), porque
+ya no es una limitación: es un resultado positivo completo.
 
 ## Lo siguiente
 
-1. **Confirmar la fecha límite de BIP2026.**
-2. **Revisión editorial del texto**: tono, longitud por sección, y decidir si
-   la promoción de `exp05` a sección propia (en vez de un párrafo de
-   limitaciones) es la que el autor quiere para el envío.
-3. Trabajo futuro ya explícito en el paper, no pendiente de esta sesión:
+1. **Revisión editorial del texto**: tono, longitud por sección (el paper
+   quedó en 8 páginas con cuatro contribuciones).
+2. Trabajo futuro ya explícito en el paper, no pendiente de esta sesión:
    barrer `exp05` en más capacidades y con otro extractor de embeddings;
-   repetir `exp06` con una política de exploración dirigida o con una señal
-   de sorpresa derivada de la recompensa; extender a POPGym.
+   extender `exp06` a POPGym y a políticas entrenadas.
 
 Ya hecho: escribir la prosa completa del paper (`paper/main.tex` compila limpio
-con `pdflatex`+`bibtex`, 7 páginas, cero discrepancias en `verify_paper`);
-caracterizar las 107 arquitecturas peores que el FIFO
+con `pdflatex`+`bibtex`, 8 páginas, cuatro contribuciones, cero discrepancias
+en `verify_paper`); caracterizar las 107 arquitecturas peores que el FIFO
 (`docs/notas/2026-08-11-numeros-movidos.md`, commit `dc271e1`); correr `exp05`
-contra el banco real de CIFAR-100 (arriba); correr `exp06` contra MiniGrid
-(arriba).
+contra el banco real de CIFAR-100 y `exp06` contra MiniGrid, ambos con el
+hallazgo resuelto en resultado positivo (arriba).
 
 ## Comandos
 
 ```bash
-uv run pytest -q                                  # 265 tests
+uv run pytest -q                                  # 274 tests
 uv run pytest -q -m "not slow"
 uv run ruff check . && uv run ruff format --check .
 

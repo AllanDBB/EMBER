@@ -6,6 +6,6 @@ hay que calcularlo, porque poner una etiqueta a mano sería decidir a dedo la
 variable que gobierna todo el resultado.
 """
 
-from ember.envs.minigrid import MiniGridStreamAdapter, OneStepPredictor
+from ember.envs.minigrid import MiniGridStreamAdapter, OneStepPredictor, RewardPredictionError
 
-__all__ = ["MiniGridStreamAdapter", "OneStepPredictor"]
+__all__ = ["MiniGridStreamAdapter", "OneStepPredictor", "RewardPredictionError"]

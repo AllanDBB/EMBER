@@ -10,19 +10,24 @@ De dónde sale el error de predicción
 En los flujos sintéticos, `pred_error` viene puesto por el generador: es una
 etiqueta que declara qué experiencias son sorpresivas. Acá no hay etiqueta, y
 poner una a mano sería hacer trampa con la variable que decide todo el
-resultado. Se calcula: un modelo de transición de un paso predice la próxima
-observación a partir de la actual y la acción, y el error de esa predicción es
-la señal de sorpresa — que es exactamente el rol que la cuenta dopaminérgica le
-asigna en el cerebro.
+resultado. Se calcula, y hay dos maneras honestas de hacerlo, cada una una
+lectura distinta de "la cuenta dopaminérgica":
 
-El modelo es deliberadamente simple (un mapa lineal ajustado en línea por
-mínimos cuadrados recursivos). No hace falta que prediga bien: hace falta que
-sea *sorprendido* por lo que es genuinamente nuevo, y un modelo simple lo es más
+- `OneStepPredictor` (`surprise_source="prediction"`, el default): un modelo de
+  transición de un paso predice la próxima observación, y el error de esa
+  predicción es sorpresa *perceptual*.
+- `RewardPredictionError` (`surprise_source="reward"`): predice la recompensa
+  esperada en vez de la observación, y el error de esa predicción es sorpresa
+  de *recompensa* — el relato de Schultz sobre lo que la dopamina codifica en
+  realidad. En un entorno de recompensa rara, esta señal puede separar lo
+  recompensado de lo meramente novedoso donde la sorpresa perceptual no puede,
+  porque perceptualmente un paso exitoso no tiene por qué distinguirse de
+  cualquier otro paso nuevo.
+
+Ambos modelos son deliberadamente simples (un mapa lineal ajustado en línea).
+No hace falta que prediga bien: hace falta que sea *sorprendido* por lo que es
+genuinamente nuevo (o genuinamente recompensado), y un modelo simple lo es más
 honestamente que uno entrenado hasta el sobreajuste.
-
-Este módulo está cableado pero no se corre para el envío de BIP2026: la
-validación en navegación pertenece al trabajo siguiente, y el claim de la ley
-del umbral no la necesita.
 """
 
 from __future__ import annotations
@@ -73,6 +78,47 @@ class OneStepPredictor:
         return float(np.clip(magnitud / (2.0 * self._escala + 1e-8), 0.0, 1.0))
 
 
+class RewardPredictionError:
+    """Error de predicción de recompensa. La cuenta dopaminérgica correcta.
+
+    `OneStepPredictor` mide sorpresa perceptual: qué tan mal predice el modelo
+    la próxima observación. La dopamina, en el relato de Schultz, codifica
+    específicamente error de predicción de *recompensa* — no sorpresa
+    perceptual genérica —, que es la lectura neurobiológica que motiva la
+    compuerta de fuerza en el resto del programa. Predice
+    la recompensa esperada desde `[obs, one_hot(action)]` con un mapa lineal
+    ajustado en línea, y el error absoluto normalizado es la señal de fuerza.
+
+    Sobre un entorno de recompensa rara, la recompensa esperada se queda cerca
+    de 0 salvo en el paso que efectivamente la entrega, así que esta señal
+    puede separar lo recompensado de lo meramente novedoso donde
+    `OneStepPredictor` no puede: perceptualmente, un paso exitoso no tiene por
+    qué verse distinto de cualquier otro paso nuevo.
+    """
+
+    def __init__(self, obs_dim: int, n_actions: int, lr: float = 0.1) -> None:
+        self.obs_dim = obs_dim
+        self.n_actions = n_actions
+        self.lr = lr
+        self.w = np.zeros(obs_dim + n_actions, dtype=np.float32)
+        self._escala = 1.0
+
+    def _entrada(self, obs: NDArray, action: int) -> NDArray[np.float32]:
+        a = np.zeros(self.n_actions, dtype=np.float32)
+        a[action] = 1.0
+        return np.concatenate([obs.astype(np.float32), a])
+
+    def surprise(self, obs: NDArray, action: int, reward: float) -> float:
+        """Error de predicción de recompensa normalizado a [0, 1], y actualiza el modelo."""
+        x = self._entrada(obs, action)
+        pred = float(self.w @ x)
+        err = float(reward) - pred
+
+        self.w += self.lr * err * x
+        self._escala = 0.99 * self._escala + 0.01 * abs(err)
+        return float(np.clip(abs(err) / (2.0 * self._escala + 1e-8), 0.0, 1.0))
+
+
 class MiniGridStreamAdapter:
     """Convierte rollouts de MiniGrid en un `Stream` evaluable.
 
@@ -89,11 +135,17 @@ class MiniGridStreamAdapter:
         dim: int = 32,
         capacity: int = 20,
         seed: int = 0,
+        surprise_source: str = "prediction",
     ) -> None:
+        if surprise_source not in ("prediction", "reward"):
+            raise ValueError(
+                f"surprise_source debe ser 'prediction' o 'reward', no {surprise_source!r}"
+            )
         self.env_id = env_id
         self.dim = dim
         self.capacity = capacity
         self.seed = seed
+        self.surprise_source = surprise_source
         self.rng = np.random.default_rng(seed)
         self._proyeccion: NDArray[np.float32] | None = None
 
@@ -119,7 +171,12 @@ class MiniGridStreamAdapter:
         env = self._make_env()
         obs, _ = env.reset(seed=self.seed)
 
-        predictor = OneStepPredictor(self.dim, int(env.action_space.n))
+        n_acciones = int(env.action_space.n)
+        predictor = (
+            OneStepPredictor(self.dim, n_acciones)
+            if self.surprise_source == "prediction"
+            else RewardPredictionError(self.dim, n_acciones)
+        )
         clave = self._codificar(obs)
 
         items: list[StreamItem] = []
@@ -130,7 +187,11 @@ class MiniGridStreamAdapter:
             siguiente, recompensa, terminado, truncado, _ = env.step(accion)
             clave_siguiente = self._codificar(siguiente)
 
-            sorpresa = predictor.surprise(clave, accion, clave_siguiente)
+            sorpresa = (
+                predictor.surprise(clave, accion, clave_siguiente)
+                if self.surprise_source == "prediction"
+                else predictor.surprise(clave, accion, recompensa)
+            )
             items.append(
                 StreamItem(
                     key=clave,
