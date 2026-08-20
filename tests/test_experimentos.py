@@ -6,12 +6,21 @@ parámetros de publicación. Los valores publicados viven en `results/` y los
 verifica `ember.paper_sync`.
 """
 
+import numpy as np
 import pytest
 
+from ember.data.streams import Stream, StreamItem, StreamSpec
 from ember.nas.space import AXES
 from experiments.exp02_threshold_grid import barrer_grilla, localizar_umbral
 from experiments.exp03_axis_liveness import genotipos_a_auditar, medir_liveness
 from experiments.exp04_arch_benchmark import correr_benchmark
+from experiments.exp06_minigrid import comparar, separacion_de_saliencia
+
+
+def _hay_minigrid() -> bool:
+    from importlib.util import find_spec
+
+    return find_spec("minigrid") is not None
 
 
 class TestAuditoriaDeEjes:
@@ -116,3 +125,56 @@ class TestBenchmarkDeArquitecturas:
         """Sin presión de capacidad, hasta el FIFO reconstruye bien."""
         r = correr_benchmark(seeds=(0,), incluir_lentas=False, verbose=False)
         assert all(d["gate"]["passes"] for d in r.values())
+
+
+class TestSeparacionDeSaliencia:
+    """`separacion_de_saliencia` no depende de MiniGrid: opera sobre `Stream`."""
+
+    def _stream(self, raros: list[float], comunes: list[float]) -> Stream:
+        items = [
+            StreamItem(key=np.zeros(4, dtype=np.float32), value=i, pred_error=pe, is_rare=True)
+            for i, pe in enumerate(raros)
+        ] + [
+            StreamItem(
+                key=np.zeros(4, dtype=np.float32),
+                value=f"c{i}",
+                pred_error=pe,
+                is_rare=False,
+            )
+            for i, pe in enumerate(comunes)
+        ]
+        spec = StreamSpec(n_prototypes=0, capacity=20, dim=4, source="test")
+        return Stream(items=items, spec=spec, rare_items=items[: len(raros)])
+
+    def test_sin_solapamiento_la_fraccion_es_cero(self):
+        s = self._stream(raros=[0.9, 0.9], comunes=[0.1, 0.1, 0.1])
+        r = separacion_de_saliencia([s])
+        assert r["fraccion_comunes_sobre_minimo_raro"] == 0.0
+
+    def test_con_solapamiento_total_la_fraccion_es_uno(self):
+        s = self._stream(raros=[0.5], comunes=[0.5, 0.9, 0.6])
+        r = separacion_de_saliencia([s])
+        assert r["fraccion_comunes_sobre_minimo_raro"] == 1.0
+
+    def test_sin_eventos_raros_no_calcula_solapamiento(self):
+        s = self._stream(raros=[], comunes=[0.5, 0.5])
+        r = separacion_de_saliencia([s])
+        assert r["n_raros"] == 0
+        assert "fraccion_comunes_sobre_minimo_raro" not in r
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not _hay_minigrid(), reason="requiere el extra envs")
+class TestMiniGrid:
+    def test_comparar_corre_de_punta_a_punta(self):
+        """Fija que main() no rompa al orquestar: el bug de exp05 era exactamente esto."""
+        r = comparar(seeds=(0, 1, 2), n_steps=200, verbose=False)
+        assert r["n_seeds"] == 3
+        assert set(r["resultados"]) == {"frontera", "FIFO"}
+        for datos in r["resultados"].values():
+            assert 0.0 <= datos["tasa"] <= 1.0
+
+    def test_es_reproducible(self):
+        a = comparar(seeds=(0, 1), n_steps=150, verbose=False)
+        b = comparar(seeds=(0, 1), n_steps=150, verbose=False)
+        assert a == b

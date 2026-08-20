@@ -21,11 +21,11 @@ Retomar leyendo, en este orden:
 | 18 · `exp02` grilla del umbral | **corrido**, Figura 1 generada |
 | 19 · `exp04` benchmark de arquitecturas | **corrido** |
 | 20 · `exp05` embeddings reales | **corrido** con el banco real de CIFAR-100, Figura 2 generada |
-| 21 · `ember.envs` (MiniGrid) | listo y verificado contra el entorno real |
+| 21 · `ember.envs` (MiniGrid) | listo, verificado, y **corrido** (`exp06_minigrid`) |
 | 22 · `CLAUDE.md`, skills, README | listo |
 | 23 · `paper/` y `paper_sync` | **listo**, incluida la prosa completa (compila con `pdflatex`) |
 
-**259 tests pasan** (1 salteado: necesita el banco real de CIFAR). `ruff` limpio.
+**265 tests pasan.** `ruff` limpio.
 CI tiene tres jobs: tests, auditoría de ejes y verificación de sincronía del
 paper. `verify_paper` no reporta discrepancias.
 
@@ -146,27 +146,56 @@ no aparecía. Le da al robot dos cantidades medibles en línea: `fusion_alcanzab
 se decide con una comparación de similitud contra el umbral, y `K_efectivo` se
 cuenta mirando cuántas trazas tiene la memoria.
 
+### `exp06` — MiniGrid expone una segunda precondición: la saliencia necesita señal, no solo sorpresa
+
+Corrido el 2026-08-20 (`results/exp06_minigrid/`). Compara el genotipo de
+frontera (`append + both + decay 1.0 + min_strength`) contra el FIFO sobre 40
+rollouts de política aleatoria en `MiniGrid-MemoryS13-v0`, con
+`t1_rare_retention` midiendo si un episodio recompensado (evento raro) se
+retiene tras 1200 pasos en capacidad 20.
+
+**Ambos quedan en el piso**: frontera 0.0 %, FIFO 2.6 %, sobre 38 episodios
+recompensados. No es un bug de recuperación —sin presión de capacidad la
+frontera recupera cualquier traza con similitud 1.0—, es que el error de
+predicción de un paso (`OneStepPredictor`, un modelo lineal en línea) no
+separa lo recompensado de lo meramente novedoso: **75.4 %** de las
+experiencias comunes tiene error de predicción igual o mayor que el evento
+recompensado menos sorpresivo. Los flujos sintéticos y CIFAR-100 no tienen
+este problema porque el error de predicción se fija o se mide para separar
+las dos poblaciones por construcción; una política de exploración aleatoria
+no ofrece esa garantía.
+
+Es la misma forma de hallazgo que `exp05`: un dominio real expone una
+precondición que el diseño sintético no necesita enunciar. Acá la
+precondición es distinta —no es sobre el eje de escritura sino sobre el eje
+de fuerza/desalojo—: la señal de sorpresa tiene que correlacionar con
+relevancia de tarea, no solo con novedad perceptual. Una política de
+exploración dirigida, o una señal de sorpresa derivada de la recompensa,
+son candidatas para resolverlo; queda como trabajo futuro explícito en el
+paper (§ Limitaciones).
+
 ## Lo siguiente
 
 1. **Confirmar la fecha límite de BIP2026.**
-2. **Revisión editorial del texto** (2026-08-20): tono, longitud por sección,
-   y decidir si la promoción de `exp05` a sección propia (en vez de un párrafo
-   de limitaciones) es la que el autor quiere para el envío.
-3. Los tres puntos de `docs/notas/.../2026-08-11-numeros-movidos.md#4` (barrido
-   de `exp05` en más capacidades, otro extractor de embeddings, validación en
-   MiniGrid) quedan como trabajo futuro explícito en el paper, no como
-   pendientes de esta sesión.
+2. **Revisión editorial del texto**: tono, longitud por sección, y decidir si
+   la promoción de `exp05` a sección propia (en vez de un párrafo de
+   limitaciones) es la que el autor quiere para el envío.
+3. Trabajo futuro ya explícito en el paper, no pendiente de esta sesión:
+   barrer `exp05` en más capacidades y con otro extractor de embeddings;
+   repetir `exp06` con una política de exploración dirigida o con una señal
+   de sorpresa derivada de la recompensa; extender a POPGym.
 
 Ya hecho: escribir la prosa completa del paper (`paper/main.tex` compila limpio
 con `pdflatex`+`bibtex`, 7 páginas, cero discrepancias en `verify_paper`);
 caracterizar las 107 arquitecturas peores que el FIFO
 (`docs/notas/2026-08-11-numeros-movidos.md`, commit `dc271e1`); correr `exp05`
-contra el banco real de CIFAR-100 (arriba).
+contra el banco real de CIFAR-100 (arriba); correr `exp06` contra MiniGrid
+(arriba).
 
 ## Comandos
 
 ```bash
-uv run pytest -q                                  # 239 tests
+uv run pytest -q                                  # 265 tests
 uv run pytest -q -m "not slow"
 uv run ruff check . && uv run ruff format --check .
 
@@ -174,7 +203,8 @@ uv run python -m experiments.exp01_nas_full       # 16 s
 uv run python -m experiments.exp02_threshold_grid # ~15 min
 uv run python -m experiments.exp03_axis_liveness  # 15 s
 uv run python -m experiments.exp04_arch_benchmark # ~6 min (el spiking es lento)
-uv run python -m experiments.exp05_real_embeddings
+uv run python -m experiments.exp05_real_embeddings # ~3 min
+uv run python -m experiments.exp06_minigrid       # ~8 s
 
 uv run python -c "from ember.paper_sync import render_tables; print(render_tables())"
 uv run python -c "from ember.paper_sync import verify_paper; print(verify_paper('paper/main.tex'))"

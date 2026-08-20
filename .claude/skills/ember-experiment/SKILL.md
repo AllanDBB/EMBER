@@ -112,6 +112,7 @@ medí una celda primero.
 | `exp03_axis_liveness` | Auditoría de observabilidad; corre en CI |
 | `exp04_arch_benchmark` | Gate de reconstrucción y batería, por arquitectura |
 | `exp05_real_embeddings` | La ley sobre CIFAR-100, con K estimado |
+| `exp06_minigrid` | Frontera vs. FIFO sobre un entorno real bajo observabilidad parcial |
 
 ## Cuando los números se mueven
 

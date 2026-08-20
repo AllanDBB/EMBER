@@ -1,0 +1,70 @@
+{
+ "comparacion": {
+  "env_id": "MiniGrid-MemoryS13-v0",
+  "n_steps": 1200,
+  "n_seeds": 40,
+  "n_raros_por_semilla": [
+   2,
+   1,
+   1,
+   1,
+   3,
+   2,
+   2,
+   2,
+   0,
+   1,
+   0,
+   1,
+   1,
+   1,
+   0,
+   1,
+   0,
+   4,
+   1,
+   0,
+   1,
+   2,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   1,
+   1,
+   0,
+   0,
+   2,
+   1,
+   1,
+   0,
+   2,
+   0,
+   0,
+   1
+  ],
+  "n_raros_total": 38,
+  "resultados": {
+   "frontera": {
+    "aciertos": 0,
+    "n_raros": 38,
+    "tasa": 0.0
+   },
+   "FIFO": {
+    "aciertos": 1,
+    "n_raros": 38,
+    "tasa": 0.02631578947368421
+   }
+  },
+  "separacion_de_saliencia": {
+   "n_raros": 38,
+   "n_comunes": 47962,
+   "pred_error_raros_media": 0.48181258885688416,
+   "pred_error_comunes_media": 0.47387661549512444,
+   "pred_error_comunes_p90": 0.786384350379244,
+   "fraccion_comunes_sobre_minimo_raro": 0.7536382969851132
+  }
+ }
+}

@@ -575,10 +575,33 @@ compacta en ese dominio, pero significa que cualquier afirmación sobre
 $\hat K_{proto}$ real necesita reportarse con su intervalo, nunca como un
 entero puntual.
 
-Validar en una tarea de navegación bajo observabilidad parcial —MiniGrid,
-después POPGym— con el adaptador \texttt{ember.envs} sigue pendiente para el
-envío. El adaptador está implementado y verificado contra el entorno real, pero
-todavía no corrido con el propósito de generar una cifra publicable.
+Instrumentamos también el adaptador \texttt{ember.envs} sobre
+\texttt{MiniGrid-MemoryS13-v0} \cite{minigrid}, un entorno de navegación bajo
+observabilidad parcial diseñado específicamente para exigir memoria: el agente
+tiene que recordar un objeto visto al principio del episodio para elegir
+correctamente al final. Con una política aleatoria sobre
+\result{exp06_minigrid:comparacion.n_seeds|int}{40} rollouts, tanto el genotipo
+de frontera como el FIFO quedan en el piso de retención de eventos raros
+(\result{exp06_minigrid:comparacion.resultados.frontera.tasa|pct}{0.0}\,\% y
+\result{exp06_minigrid:comparacion.resultados.FIFO.tasa|pct}{2.6}\,\%\ sobre
+\result{exp06_minigrid:comparacion.n_raros_total|int}{38}\ episodios
+recompensados). La causa no es un error de recuperación —sin presión de
+capacidad el genotipo de frontera recupera cualquier traza guardada con
+similitud 1.0— sino que el error de predicción de un paso, calculado por un
+modelo de transición lineal en línea, no separa lo recompensado de lo
+meramente novedoso: el
+\result{exp06_minigrid:comparacion.separacion_de_saliencia.fraccion_comunes_sobre_minimo_raro|pct}{75.4}\,\%
+de las experiencias comunes tiene error de predicción igual o mayor que el
+evento recompensado menos sorpresivo. Los flujos sintéticos y los de
+CIFAR-100 no tienen este problema porque el error de predicción se fija (o se
+mide) para que separe las dos poblaciones por construcción; un entorno con
+exploración aleatoria no ofrece esa garantía. Esto identifica una segunda
+precondición, distinta de la de la Sección \ref{sec:real}: el mecanismo de
+saliencia necesita una señal de sorpresa que correlacione con relevancia de
+tarea, no solo con novedad perceptual, y una política de exploración dirigida
+—o una señal de sorpresa derivada de la recompensa, no solo de la
+predicción— es candidata a resolverlo. Validar con esa alternativa, y
+extender a POPGym, queda como trabajo futuro.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Conclusión}

@@ -19,6 +19,7 @@ uv run python -m experiments.exp02_threshold_grid  # la ley del umbral (~12 min)
 uv run python -m experiments.exp03_axis_liveness   # auditoría de ejes (~15 s)
 uv run python -m experiments.exp04_arch_benchmark  # benchmark de arquitecturas
 uv run python -m experiments.exp05_real_embeddings # CIFAR-100 (baja el dataset)
+uv run python -m experiments.exp06_minigrid        # MiniGrid, entorno real (~8 s)
 ```
 
 Extras: `uv pip install -e ".[dev]"` para trabajar, `".[lab]"` para experimentos
