@@ -1,13 +1,13 @@
 {
  "experiment": "exp04_arch_benchmark",
  "ember_version": "0.1.0",
- "git_sha": "e4208d9ba5dfa986ff5eb0a489ce9cb8c522014e",
+ "git_sha": "74dd035f1e1e791bcb22918cd2128bdfc662be84",
  "git_branch": "feat/ember-foundation",
  "git_dirty": true,
- "timestamp_utc": "2026-08-11T23:07:04.106641+00:00",
- "duration_s": 368.74,
+ "timestamp_utc": "2026-08-21T18:33:28.690447+00:00",
+ "duration_s": 19.44,
  "python": "3.12.13",
- "platform": "Linux-7.1.6-1-cachyos-x86_64-with-glibc2.44",
+ "platform": "Linux-7.1.8-1-cachyos-x86_64-with-glibc2.44",
  "packages": {
   "numpy": "2.5.2",
   "torch": "2.13.0",

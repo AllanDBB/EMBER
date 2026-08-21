@@ -9,6 +9,12 @@
      "ab_interference": 0.9999999985098839,
      "capacity_profile": 0.9777777777777779
     },
+    "per_task_std": {
+     "pattern_completion": 0.006870280024663554,
+     "noise_robustness": 0.032004773949452545,
+     "ab_interference": 2.5809568183369716e-09,
+     "capacity_profile": 0.011947673982003637
+    },
     "mean": 0.8594016335697638,
     "detail": {
      "seeds": [
@@ -58,6 +64,11 @@
      "noise_under_pressure": 0.3645833333333333,
      "sequential_interference": 0.875
     },
+    "per_task_std": {
+     "rare_retention": 0.0,
+     "noise_under_pressure": 0.0438490941246858,
+     "sequential_interference": 0.0
+    },
     "mean": 0.7465277777777778,
     "detail": {
      "seeds": [
@@ -87,7 +98,7 @@
      }
     }
    },
-   "battery_s": 0.8
+   "battery_s": 0.2
   },
   "ENN": {
    "gate": {
@@ -97,6 +108,12 @@
      "noise_robustness": 0.9375,
      "ab_interference": 0.9999999985098839,
      "capacity_profile": 1.0
+    },
+    "per_task_std": {
+     "pattern_completion": 0.004111972109630696,
+     "noise_robustness": 0.037960139913101223,
+     "ab_interference": 2.5809568183369716e-09,
+     "capacity_profile": 0.0
     },
     "mean": 0.9071991339325904,
     "detail": {
@@ -139,13 +156,18 @@
     "threshold": 0.5,
     "passes": true
    },
-   "gate_s": 0.1,
+   "gate_s": 0.0,
    "battery": {
     "name": "ENN",
     "per_task": {
      "rare_retention": 0.75,
      "noise_under_pressure": 0.34375,
      "sequential_interference": 0.375
+    },
+    "per_task_std": {
+     "rare_retention": 0.0,
+     "noise_under_pressure": 0.029092166757851964,
+     "sequential_interference": 0.0
     },
     "mean": 0.4895833333333333,
     "detail": {
@@ -176,7 +198,7 @@
      }
     }
    },
-   "battery_s": 0.3
+   "battery_s": 0.1
   },
   "Spiking": {
    "gate": {
@@ -186,6 +208,12 @@
      "noise_robustness": 0.14583333333333334,
      "ab_interference": 0.9999999985098839,
      "capacity_profile": 0.49861111111111117
+    },
+    "per_task_std": {
+     "pattern_completion": 0.11139727965783618,
+     "noise_robustness": 0.03200477394945253,
+     "ab_interference": 2.5809568183369716e-09,
+     "capacity_profile": 0.05660467742309675
     },
     "mean": 0.4587053552683857,
     "detail": {
@@ -228,7 +256,7 @@
     "threshold": 0.5,
     "passes": false
    },
-   "gate_s": 363.9
+   "gate_s": 18.2
   },
   "SpikingSDM": {
    "gate": {
@@ -238,6 +266,12 @@
      "noise_robustness": 0.43333333333333335,
      "ab_interference": 0.9499999985098839,
      "capacity_profile": 0.5875
+    },
+    "per_task_std": {
+     "pattern_completion": 0.08345462059827784,
+     "noise_robustness": 0.061237243569579436,
+     "ab_interference": 0.04999999850988392,
+     "capacity_profile": 0.03881441281245035
     },
     "mean": 0.6193410398438572,
     "detail": {
@@ -280,13 +314,18 @@
     "threshold": 0.5,
     "passes": true
    },
-   "gate_s": 1.3,
+   "gate_s": 0.2,
    "battery": {
     "name": "SpikingSDM",
     "per_task": {
      "rare_retention": 0.675,
      "noise_under_pressure": 0.15833333333333333,
      "sequential_interference": 0.71875
+    },
+    "per_task_std": {
+     "rare_retention": 0.07499999999999998,
+     "noise_under_pressure": 0.018633899812498245,
+     "sequential_interference": 0.13621559198564606
     },
     "mean": 0.5173611111111112,
     "detail": {
@@ -317,7 +356,7 @@
      }
     }
    },
-   "battery_s": 1.7
+   "battery_s": 0.5
   },
   "FIFO": {
    "gate": {
@@ -327,6 +366,12 @@
      "noise_robustness": 0.9375,
      "ab_interference": 0.9999999985098839,
      "capacity_profile": 1.0
+    },
+    "per_task_std": {
+     "pattern_completion": 0.004111972109630696,
+     "noise_robustness": 0.037960139913101223,
+     "ab_interference": 2.5809568183369716e-09,
+     "capacity_profile": 0.0
     },
     "mean": 0.9071991339325904,
     "detail": {
@@ -369,12 +414,17 @@
     "threshold": 0.5,
     "passes": true
    },
-   "gate_s": 0.1,
+   "gate_s": 0.0,
    "battery": {
     "name": "FIFO",
     "per_task": {
      "rare_retention": 0.037500000000000006,
      "noise_under_pressure": 0.25416666666666665,
+     "sequential_interference": 0.0
+    },
+    "per_task_std": {
+     "rare_retention": 0.0414578098794425,
+     "noise_under_pressure": 0.033592740617910614,
      "sequential_interference": 0.0
     },
     "mean": 0.09722222222222221,
@@ -406,7 +456,7 @@
      }
     }
    },
-   "battery_s": 0.4
+   "battery_s": 0.1
   }
  },
  "gate_threshold": 0.5,

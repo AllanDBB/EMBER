@@ -1,13 +1,13 @@
 {
  "experiment": "exp06_minigrid",
  "ember_version": "0.1.0",
- "git_sha": "40db6567f902127667a3087268594e149989ff96",
+ "git_sha": "74dd035f1e1e791bcb22918cd2128bdfc662be84",
  "git_branch": "feat/ember-foundation",
  "git_dirty": true,
- "timestamp_utc": "2026-08-20T20:46:37.597757+00:00",
- "duration_s": 23.39,
+ "timestamp_utc": "2026-08-21T18:33:03.131247+00:00",
+ "duration_s": 26.58,
  "python": "3.12.13",
- "platform": "Linux-7.1.6-1-cachyos-x86_64-with-glibc2.44",
+ "platform": "Linux-7.1.8-1-cachyos-x86_64-with-glibc2.44",
  "packages": {
   "numpy": "2.5.2",
   "torch": "2.13.0",

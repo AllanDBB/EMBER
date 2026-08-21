@@ -50,12 +50,16 @@
    "frontera": {
     "aciertos": 0,
     "n_raros": 38,
-    "tasa": 0.0
+    "tasa": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.09181293258383999
    },
    "FIFO": {
     "aciertos": 1,
     "n_raros": 38,
-    "tasa": 0.02631578947368421
+    "tasa": 0.02631578947368421,
+    "ci_low": 0.004660467553530053,
+    "ci_high": 0.13495178436800256
    }
   },
   "separacion_de_saliencia": {
@@ -118,12 +122,16 @@
    "frontera": {
     "aciertos": 0,
     "n_raros": 156,
-    "tasa": 0.0
+    "tasa": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.024033793455520962
    },
    "FIFO": {
     "aciertos": 2,
     "n_raros": 156,
-    "tasa": 0.01282051282051282
+    "tasa": 0.01282051282051282,
+    "ci_low": 0.003522843269481469,
+    "ci_high": 0.045535724712821
    }
   },
   "separacion_de_saliencia": {
@@ -186,12 +194,16 @@
    "frontera": {
     "aciertos": 20,
     "n_raros": 38,
-    "tasa": 0.5263157894736842
+    "tasa": 0.5263157894736842,
+    "ci_low": 0.37258710742710854,
+    "ci_high": 0.675212211910584
    },
    "FIFO": {
     "aciertos": 1,
     "n_raros": 38,
-    "tasa": 0.02631578947368421
+    "tasa": 0.02631578947368421,
+    "ci_low": 0.004660467553530053,
+    "ci_high": 0.13495178436800256
    }
   },
   "separacion_de_saliencia": {
