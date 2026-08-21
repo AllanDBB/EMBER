@@ -114,3 +114,19 @@ class RareRetentionEvaluator:
 
 def fmt_pct(x: float) -> str:
     return f"{100 * x:5.1f} %"
+
+
+def wilson_ci(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """Intervalo de confianza de Wilson (95% por defecto) para una proporción binomial.
+
+    Con `n` chico (muestras de decenas de eventos raros, no de miles) el
+    intervalo normal puede salirse de [0, 1]; Wilson no. Ver Wilson (1927),
+    "Probable inference, the law of succession, and statistical inference".
+    """
+    if n == 0:
+        return (0.0, 0.0)
+    p = successes / n
+    denom = 1 + z**2 / n
+    centro = p + z**2 / (2 * n)
+    margen = z * ((p * (1 - p) / n + z**2 / (4 * n**2)) ** 0.5)
+    return ((centro - margen) / denom, (centro + margen) / denom)

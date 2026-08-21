@@ -38,7 +38,7 @@ from ember.data.streams import Stream
 from ember.envs.minigrid import MiniGridStreamAdapter
 from ember.experiment import ExperimentRun
 from ember.tasks.battery import t1_rare_retention
-from experiments._common import make_factory
+from experiments._common import make_factory, wilson_ci
 
 ENV_ID = "MiniGrid-MemoryS13-v0"
 N_STEPS = 1200
@@ -146,9 +146,19 @@ def comparar(
             r = t1_rare_retention(factory, s, seed=i, capacity=CAPACITY, dim=DIM)
             aciertos += round(r.score * max(len(s.rare_items), 1))
         tasa = aciertos / n_raros_total if n_raros_total else 0.0
-        resultados[nombre] = {"aciertos": aciertos, "n_raros": n_raros_total, "tasa": tasa}
+        ci_low, ci_high = wilson_ci(aciertos, n_raros_total)
+        resultados[nombre] = {
+            "aciertos": aciertos,
+            "n_raros": n_raros_total,
+            "tasa": tasa,
+            "ci_low": ci_low,
+            "ci_high": ci_high,
+        }
         if verbose:
-            print(f"  {nombre:<10} {aciertos}/{n_raros_total} = {tasa:.3f}")
+            print(
+                f"  {nombre:<10} {aciertos}/{n_raros_total} = {tasa:.3f} "
+                f"(IC95 [{ci_low:.3f}, {ci_high:.3f}])"
+            )
 
     return {
         "env_id": ENV_ID,

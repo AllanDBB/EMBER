@@ -11,6 +11,7 @@ import pytest
 
 from ember.data.streams import Stream, StreamItem, StreamSpec
 from ember.nas.space import AXES
+from experiments._common import wilson_ci
 from experiments.exp02_threshold_grid import barrer_grilla, localizar_umbral
 from experiments.exp03_axis_liveness import genotipos_a_auditar, medir_liveness
 from experiments.exp04_arch_benchmark import correr_benchmark
@@ -163,6 +164,26 @@ class TestSeparacionDeSaliencia:
         assert "fraccion_comunes_sobre_minimo_raro" not in r
 
 
+class TestWilsonCI:
+    def test_sin_observaciones_devuelve_cero(self):
+        assert wilson_ci(0, 0) == (0.0, 0.0)
+
+    def test_el_intervalo_contiene_la_proporcion_observada(self):
+        low, high = wilson_ci(20, 38)
+        assert low <= 20 / 38 <= high
+
+    def test_mas_datos_angosta_el_intervalo_a_igual_proporcion(self):
+        low_chico, high_chico = wilson_ci(1, 2)
+        low_grande, high_grande = wilson_ci(500, 1000)
+        assert (high_grande - low_grande) < (high_chico - low_chico)
+
+    def test_valor_de_referencia_20_de_38(self):
+        """20/38 (la condición de recompensa de exp06): IC95 de Wilson conocido."""
+        low, high = wilson_ci(20, 38)
+        assert low == pytest.approx(0.375, abs=0.01)
+        assert high == pytest.approx(0.672, abs=0.01)
+
+
 @pytest.mark.slow
 @pytest.mark.skipif(not _hay_minigrid(), reason="requiere el extra envs")
 class TestMiniGrid:
@@ -173,6 +194,7 @@ class TestMiniGrid:
         assert set(r["resultados"]) == {"frontera", "FIFO"}
         for datos in r["resultados"].values():
             assert 0.0 <= datos["tasa"] <= 1.0
+            assert 0.0 <= datos["ci_low"] <= datos["tasa"] <= datos["ci_high"] <= 1.0
 
     def test_es_reproducible(self):
         a = comparar(seeds=(0, 1), n_steps=150, verbose=False)
