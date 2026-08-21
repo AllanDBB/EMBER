@@ -180,15 +180,19 @@ def reconstruction_gate(
 ) -> GateResult:
     """Corre las cuatro subtareas y decide si la arquitectura pasa a la fase 2."""
     por_tarea: dict[str, float] = {}
+    por_tarea_std: dict[str, float] = {}
     detalle: dict[str, object] = {}
     for tarea in RECONSTRUCTION_TASKS:
         resultados = [tarea(factory, seed=s, dim=dim) for s in seeds]
-        por_tarea[resultados[0].name] = float(np.mean([r.score for r in resultados]))
+        puntajes = [r.score for r in resultados]
+        por_tarea[resultados[0].name] = float(np.mean(puntajes))
+        por_tarea_std[resultados[0].name] = float(np.std(puntajes))
         detalle[resultados[0].name] = resultados[0].detail
 
     return GateResult(
         name=name or "reconstruction",
         per_task=por_tarea,
+        per_task_std=por_tarea_std,
         detail={"seeds": list(seeds), **detalle},
         threshold=threshold,
     )

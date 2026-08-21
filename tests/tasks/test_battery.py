@@ -136,4 +136,13 @@ class TestBateriaCompleta:
 
     def test_serializa(self, frontera):
         d = run_battery(frontera, seeds=(0,)).to_dict()
-        assert set(d) == {"name", "per_task", "mean", "detail"}
+        assert set(d) == {"name", "per_task", "per_task_std", "mean", "detail"}
+
+    def test_per_task_std_es_cero_con_una_sola_semilla(self, frontera):
+        r = run_battery(frontera, seeds=(0,))
+        assert set(r.per_task_std) == set(r.per_task)
+        assert all(v == 0.0 for v in r.per_task_std.values())
+
+    def test_per_task_std_captura_dispersion_entre_semillas(self, frontera):
+        r = run_battery(frontera, seeds=(0, 1, 2, 3))
+        assert all(v >= 0.0 for v in r.per_task_std.values())

@@ -214,6 +214,7 @@ def run_battery(
 ) -> SuiteResult:
     """Corre las tres tareas promediando sobre semillas."""
     por_tarea: dict[str, float] = {}
+    por_tarea_std: dict[str, float] = {}
     detalle: dict[str, object] = {}
 
     t1 = [
@@ -230,11 +231,14 @@ def run_battery(
     t3 = [t3_sequential_interference(factory, seed=s, dim=dim, capacity=capacity) for s in seeds]
 
     for grupo in (t1, t2, t3):
-        por_tarea[grupo[0].name] = float(np.mean([r.score for r in grupo]))
+        puntajes = [r.score for r in grupo]
+        por_tarea[grupo[0].name] = float(np.mean(puntajes))
+        por_tarea_std[grupo[0].name] = float(np.std(puntajes))
         detalle[grupo[0].name] = grupo[0].detail
 
     return SuiteResult(
         name=name or "battery",
         per_task=por_tarea,
+        per_task_std=por_tarea_std,
         detail={"seeds": list(seeds), "capacity": capacity, **detalle},
     )

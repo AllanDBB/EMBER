@@ -33,6 +33,13 @@ class SuiteResult:
     name: str
     per_task: dict[str, float]
     detail: dict[str, Any] = field(default_factory=dict)
+    per_task_std: dict[str, float] = field(default_factory=dict)
+    """Desvío estándar entre semillas de cada tarea de `per_task`.
+
+    `per_task` promedia sobre semillas; sin esto un 1.000 o un 0.038 se leen
+    como si no tuvieran dispersión, cuando son la media de solo un puñado de
+    corridas.
+    """
 
     @property
     def mean(self) -> float:
@@ -44,6 +51,7 @@ class SuiteResult:
         return {
             "name": self.name,
             "per_task": dict(self.per_task),
+            "per_task_std": dict(self.per_task_std),
             "mean": self.mean,
             "detail": dict(self.detail),
         }

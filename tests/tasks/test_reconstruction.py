@@ -50,6 +50,7 @@ def test_el_gate_serializa_su_veredicto(fifo):
     assert d["passes"] is True
     assert d["threshold"] == 0.50
     assert 0.0 <= d["mean"] <= 1.0
+    assert set(d["per_task_std"]) == set(d["per_task"])
 
 
 def test_sdm_completa_patrones_desde_claves_enmascaradas():
