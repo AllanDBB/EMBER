@@ -104,7 +104,7 @@ class TestGeneracionDeTablas:
         (resultados / "exp01_nas_full" / "data.json").write_text(json.dumps(datos))
 
         render_tables(resultados, tmp_path / "tex")
-        assert "inobservable" in (tmp_path / "tex" / "tab_main_effects.tex").read_text()
+        assert "unobservable" in (tmp_path / "tex" / "tab_main_effects.tex").read_text()
 
     def test_saltea_en_silencio_los_experimentos_no_corridos(self, resultados, tmp_path):
         salidas = render_tables(resultados, tmp_path / "tex")

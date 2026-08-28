@@ -202,7 +202,7 @@ def tabla_efectos_principales(datos: dict[str, Any]) -> str:
     """Efectos principales por eje, con su observabilidad."""
     filas = []
     for f in datos["main_effects"]:
-        nota = "inobservable" if f["liveness"] == 0.0 else ""
+        nota = "unobservable" if f["liveness"] == 0.0 else ""
         filas.append(
             [
                 f["axis"].replace("_", "\\_"),
@@ -212,12 +212,12 @@ def tabla_efectos_principales(datos: dict[str, Any]) -> str:
             ]
         )
     return _tabular(
-        ["Eje", "$\\eta^2$", "Observabilidad", "Nota"],
+        ["Axis", "$\\eta^2$", "Observability", "Note"],
         filas,
         "lrrl",
-        "Efectos principales sobre el espacio completo. La columna de "
-        "observabilidad es la máxima diferencia entre genotipos hermanos: un eje "
-        "con $\\eta^2$ nulo y observabilidad nula no está siendo medido.",
+        "Main effects over the full space. The observability column is the "
+        "maximum difference between sibling genotypes: an axis with null "
+        "$\\eta^2$ and null observability is not being measured.",
         "tab:main-effects",
     )
 
@@ -225,9 +225,9 @@ def tabla_efectos_principales(datos: dict[str, Any]) -> str:
 def tabla_regimenes(datos: dict[str, Any]) -> str:
     """Varianza explicada por régimen del ratio."""
     etiquetas = {
-        "compression": "Compresión",
-        "transition": "Transición",
-        "selection": "Selección",
+        "compression": "Compression",
+        "transition": "Transition",
+        "selection": "Selection",
     }
     filas = [
         [
@@ -241,10 +241,10 @@ def tabla_regimenes(datos: dict[str, Any]) -> str:
         if d["eta2_write"] is not None
     ]
     return _tabular(
-        ["Régimen", "Rango", "Celdas", "$\\eta^2$ escritura", "$\\eta^2$ desalojo"],
+        ["Regime", "Range", "Cells", "$\\eta^2$ write", "$\\eta^2$ evict"],
         filas,
         "llrrr",
-        "Transición de régimen según el cociente prototipos-a-capacidad $r = K_{proto}/C$.",
+        "Regime transition as a function of the prototype-to-capacity ratio $r = K_{proto}/C$.",
         "tab:regimes",
     )
 
@@ -275,11 +275,11 @@ def tabla_benchmark(datos: dict[str, Any]) -> str:
         filas.append(fila)
 
     return _tabular(
-        ["Arq.", "R1", "R2", "R3", "R4", "Media", "Gate", "T1", "T2", "T3"],
+        ["Arch.", "R1", "R2", "R3", "R4", "Mean", "Gate", "T1", "T2", "T3"],
         filas,
         "lrrrrrcrrr",
-        "Evaluación en dos fases. R1--R4 miden reconstrucción sin presión de "
-        "capacidad y deciden la admisión; T1--T3 miden retención bajo presión.",
+        "Two-phase evaluation. R1--R4 measure reconstruction with no capacity "
+        "pressure and decide admission; T1--T3 measure retention under pressure.",
         "tab:benchmark",
         ancho_completo=True,
     )
@@ -287,7 +287,7 @@ def tabla_benchmark(datos: dict[str, Any]) -> str:
 
 def tabla_precondicion_dominios(datos: dict[str, Any]) -> str:
     """Compara el dominio sintético contra CIFAR-100: fusión alcanzable y cruce de régimen."""
-    etiquetas = {"synthetic": "Sintético", "cifar100": "CIFAR-100"}
+    etiquetas = {"synthetic": "Synthetic", "cifar100": "CIFAR-100"}
     filas = []
     for nombre, d in datos["dominios"].items():
         etas = [c["eta2_write"] for c in d["celdas"]]
@@ -303,12 +303,12 @@ def tabla_precondicion_dominios(datos: dict[str, Any]) -> str:
             ]
         )
     return _tabular(
-        ["Dominio", "Sim. intra-proto.", "Fusión alcanzable", "$\\eta^2$ escritura", "Cruce $r$"],
+        ["Domain", "Intra-proto. sim.", "Merge reachable", "$\\eta^2$ write", "Crossover $r$"],
         filas,
         "lrcrr",
-        "Precondición de la ley del umbral: si la similitud coseno intra-prototipo "
-        "no alcanza el umbral de fusión (0.85), el eje de escritura queda inoperante "
-        "y no hay cruce de régimen que localizar, para ningún $r$.",
+        "Precondition of the threshold law: if the intra-prototype cosine "
+        "similarity does not reach the merge threshold (0.85), the write axis "
+        "is inoperative and there is no regime crossover to locate, for any $r$.",
         "tab:domains",
         ancho_completo=True,
     )
@@ -317,9 +317,9 @@ def tabla_precondicion_dominios(datos: dict[str, Any]) -> str:
 def tabla_minigrid(datos: dict[str, Any]) -> str:
     """Las tres condiciones de exp06: política y fuente de sorpresa, una variable a la vez."""
     etiquetas = {
-        "aleatoria_prediccion": ("Aleatoria", "Percepción"),
-        "sesgada_prediccion": ("Sesgada a avanzar", "Percepción"),
-        "aleatoria_recompensa": ("Aleatoria", "Recompensa"),
+        "aleatoria_prediccion": ("Random", "Perception"),
+        "sesgada_prediccion": ("Forward-biased", "Perception"),
+        "aleatoria_recompensa": ("Random", "Reward"),
     }
     filas = []
     for clave, (politica, fuente) in etiquetas.items():
@@ -336,12 +336,12 @@ def tabla_minigrid(datos: dict[str, Any]) -> str:
             ]
         )
     return _tabular(
-        ["Política", "Sorpresa", "Raros", "Solapamiento", "Frontera", "FIFO"],
+        ["Policy", "Surprise", "Rare", "Overlap", "Frontier", "FIFO"],
         filas,
         "llrrrr",
-        "MiniGrid-MemoryS13-v0, 40 rollouts por condición. Solapamiento: fracción "
-        "de experiencias comunes con error de predicción igual o mayor que el "
-        "evento raro menos sorpresivo. Frontera / FIFO: retención de eventos raros.",
+        "MiniGrid-MemoryS13-v0, 40 rollouts per condition. Overlap: fraction of "
+        "common experiences with a prediction error equal to or greater than the "
+        "least surprising rare event. Frontier / FIFO: rare-event retention.",
         "tab:minigrid",
         ancho_completo=True,
     )

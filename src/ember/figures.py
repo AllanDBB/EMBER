@@ -40,8 +40,8 @@ def figura_umbral(celdas: list[dict[str, Any]], destino: str | Path) -> Path:
 
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharey=True)
     for ax, eje, titulo in (
-        (axes[0], "write", "Modo de escritura (consolidación por fusión)"),
-        (axes[1], "evict", "Política de desalojo (olvido selectivo)"),
+        (axes[0], "write", "Write mode (merge consolidation)"),
+        (axes[1], "evict", "Eviction policy (selective forgetting)"),
     ):
         for i, cap in enumerate(capacidades):
             de_esta = sorted((c for c in celdas if c["capacity"] == cap), key=lambda c: c["r"])
@@ -57,11 +57,11 @@ def figura_umbral(celdas: list[dict[str, Any]], destino: str | Path) -> Path:
         ax.axvline(1.0, color=GRIS, linestyle="--", linewidth=1.2)
         ax.text(1.05, 0.94, "r = 1", color=GRIS, fontsize=9, transform=ax.get_xaxis_transform())
         ax.set_xscale("log")
-        ax.set_xlabel("prototipos por ranura de memoria,  $r = K_{proto}/C$")
+        ax.set_xlabel("prototypes per memory slot,  $r = K_{proto}/C$")
         ax.set_title(titulo, fontsize=10)
         ax.grid(alpha=0.25)
 
-    axes[0].set_ylabel("varianza explicada del puntaje  ($\\eta^2$)")
+    axes[0].set_ylabel("score variance explained  ($\\eta^2$)")
     axes[0].legend(fontsize=8, frameon=False)
     fig.tight_layout()
     fig.savefig(ruta, dpi=200, bbox_inches="tight")
@@ -87,7 +87,7 @@ def figura_comparacion_dominios(
     fig, ax = plt.subplots(figsize=(6.4, 4.2))
 
     for celdas, etiqueta, color, marcador in (
-        (sintetico, "sintético (gaussiano estructurado)", COLORES[0], "o"),
+        (sintetico, "synthetic (structured Gaussian)", COLORES[0], "o"),
         (real, "CIFAR-100 (ResNet-18)", COLORES[1], "s"),
     ):
         de_estas = sorted(celdas, key=lambda c: c["r"])
@@ -105,8 +105,8 @@ def figura_comparacion_dominios(
     ax.axvline(1.0, color=GRIS, linestyle="--", linewidth=1.2)
     ax.set_xscale("log")
     ax.set_xlabel("$r = \\hat{K}_{proto}/C$")
-    ax.set_ylabel("$\\eta^2$ escritura $-$ $\\eta^2$ desalojo")
-    ax.set_title("Dónde cae la transición de régimen en cada dominio", fontsize=10)
+    ax.set_ylabel("$\\eta^2$ write $-$ $\\eta^2$ evict")
+    ax.set_title("Where the regime transition falls in each domain", fontsize=10)
     ax.legend(fontsize=8, frameon=False)
     ax.grid(alpha=0.25)
 
