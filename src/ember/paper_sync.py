@@ -215,9 +215,7 @@ def tabla_efectos_principales(datos: dict[str, Any]) -> str:
         ["Axis", "$\\eta^2$", "Observability", "Note"],
         filas,
         "lrrl",
-        "Main effects over the full space. The observability column is the "
-        "maximum difference between sibling genotypes: an axis with null "
-        "$\\eta^2$ and null observability is not being measured.",
+        "Main effects and per-axis observability over the full space.",
         "tab:main-effects",
     )
 
@@ -306,9 +304,7 @@ def tabla_precondicion_dominios(datos: dict[str, Any]) -> str:
         ["Domain", "Intra-proto. sim.", "Merge reachable", "$\\eta^2$ write", "Crossover $r$"],
         filas,
         "lrcrr",
-        "Precondition of the threshold law: if the intra-prototype cosine "
-        "similarity does not reach the merge threshold (0.85), the write axis "
-        "is inoperative and there is no regime crossover to locate, for any $r$.",
+        "The consolidation precondition, measured on both domains.",
         "tab:domains",
         ancho_completo=True,
     )
@@ -339,9 +335,7 @@ def tabla_minigrid(datos: dict[str, Any]) -> str:
         ["Policy", "Surprise", "Rare", "Overlap", "Frontier", "FIFO"],
         filas,
         "llrrrr",
-        "MiniGrid-MemoryS13-v0, 40 rollouts per condition. Overlap: fraction of "
-        "common experiences with a prediction error equal to or greater than the "
-        "least surprising rare event. Frontier / FIFO: rare-event retention.",
+        "MiniGrid-MemoryS13-v0: three conditions, 40 rollouts each.",
         "tab:minigrid",
         ancho_completo=True,
     )
