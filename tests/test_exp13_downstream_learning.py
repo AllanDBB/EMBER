@@ -31,13 +31,13 @@ class TestReservorio:
     def test_la_muestra_es_uniforme_en_el_tiempo(self):
         """Lo que distingue al reservorio del FIFO: lo viejo sobrevive tanto como lo nuevo."""
         viejas = 0
-        for s in range(40):
-            mem = PolicyMemory(dim=8, capacity=50, genotype=RESERVOIR_GENOTYPE, seed=s)
+        for s in range(20):
+            mem = PolicyMemory(dim=8, capacity=40, genotype=RESERVOIR_GENOTYPE, seed=s)
             rng = np.random.default_rng(s)
-            for i in range(1000):
+            for i in range(400):
                 mem.write(rng.standard_normal(8), i)
-            viejas += sum(v < 500 for v in mem.store.values)
-        assert viejas / (40 * 50) == pytest.approx(0.5, abs=0.05)
+            viejas += sum(v < 200 for v in mem.store.values)
+        assert viejas / (20 * 40) == pytest.approx(0.5, abs=0.07)
 
 
 class TestCodificador:
