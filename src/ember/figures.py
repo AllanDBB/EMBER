@@ -204,3 +204,89 @@ def figura_aprendizaje_downstream(
     fig.savefig(ruta, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return ruta
+
+
+def figura_cruces_por_familia(
+    parte_a: dict[str, Any], destino: str | Path, *, alternativa: str | None = None
+) -> Path:
+    """Figura de `exp10`: dónde cruza la dominancia en cada familia de flujos.
+
+    Dos paneles con las mismas familias: el cruce expresado en `r` nominal y en
+    la medida de presión alternativa que mejor lo colapsa. Si `r` nominal fuera
+    la variable que gobierna, los puntos del panel izquierdo tendrían que caer
+    todos sobre una misma vertical; las familias sin cruce se marcan en el
+    borde con una flecha.
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker
+
+    ruta = _preparar(destino)
+    colapso = parte_a["colapso"]
+    if alternativa is None:
+        candidatas = [
+            v for v in parte_a["variables"] if v != "r_nom" and colapso[v]["sd_log"] is not None
+        ]
+        alternativa = min(candidatas, key=lambda v: colapso[v]["sd_log"])
+
+    etiquetas_var = {
+        "r_nom": "$K/C$  (nominal)",
+        "r_eff": "$K_{eff}/C$",
+        "r_hill": "$e^{H}/C$",
+        "r_masa": "$e^{H}\\,(K_{eff}/K_{seen})/C$",
+        "r_carga_nom": "$(K + n_{rare})/C$",
+        "r_carga_eff": "$(K_{eff} + n_{rare})/C$",
+    }
+    grupos = []
+    for nombre in parte_a["orden"]:
+        g = parte_a["familias"][nombre]["grupo"]
+        if g not in grupos:
+            grupos.append(g)
+    color_de = {
+        g: (COLORES + (GRIS, "#A23B72", "#3B8EA5", "#6D6875"))[i] for i, g in enumerate(grupos)
+    }
+
+    nombres = list(parte_a["orden"])
+    y = list(range(len(nombres)))[::-1]
+    fig, axes = plt.subplots(1, 2, figsize=(10, 0.28 * len(nombres) + 1.6), sharey=True)
+    for ax, var in ((axes[0], "r_nom"), (axes[1], alternativa)):
+        xs = [
+            c for n in nombres if (c := parte_a["familias"][n]["cruce"][var]["x_cruce"]) is not None
+        ]
+        lo_ax = min(xs) / 2 if xs else 0.1
+        hi_ax = max(xs) * 2 if xs else 10
+        for yi, n in zip(y, nombres, strict=True):
+            fam = parte_a["familias"][n]
+            cr = fam["cruce"][var]
+            color = color_de[fam["grupo"]]
+            if cr["x_cruce"] is None:
+                borde = lo_ax if cr["estado"] == "siempre_desalojo" else hi_ax
+                ax.plot([borde], [yi], marker="<" if borde == lo_ax else ">", color=color)
+                continue
+            if cr.get("ci"):
+                ax.plot(cr["ci"], [yi, yi], color=color, linewidth=1.4, alpha=0.7)
+            ax.plot([cr["x_cruce"]], [yi], "o", color=color, markersize=4.5)
+        med = colapso[var]["cruce_mediano"]
+        if med:
+            ax.axvline(med, color=GRIS, linestyle=":", linewidth=1.0)
+        ax.axvline(1.0, color=GRIS, linestyle="--", linewidth=1.0)
+        ax.set_xscale("log")
+        ax.set_xlim(lo_ax / 1.2, hi_ax * 1.2)
+        marcas = [
+            m for m in (0.1, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0) if lo_ax / 1.2 <= m <= hi_ax * 1.2
+        ]
+        ax.xaxis.set_major_locator(matplotlib.ticker.FixedLocator(marcas))
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FixedFormatter([f"{m:g}" for m in marcas]))
+        ax.xaxis.set_minor_locator(matplotlib.ticker.NullLocator())
+        sd = colapso[var]["sd_log"]
+        ax.set_title(f"{etiquetas_var.get(var, var)}   (sd log = {sd:.2f})", fontsize=10)
+        ax.set_xlabel("write/evict dominance crossing")
+        ax.grid(alpha=0.25, axis="x")
+    axes[0].set_yticks(y)
+    axes[0].set_yticklabels(nombres, fontsize=7)
+    fig.tight_layout()
+    fig.savefig(ruta, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    return ruta

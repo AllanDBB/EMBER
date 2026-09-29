@@ -1,0 +1,38 @@
+{
+ "experiment": "exp10_law_robustness",
+ "ember_version": "0.1.0",
+ "git_sha": "d6a4a29ae16c676d99aef630cbb7726fa352ade0",
+ "git_branch": "rev/exp10-law-robustness",
+ "git_dirty": true,
+ "timestamp_utc": "2026-09-29T23:37:08.497424+00:00",
+ "duration_s": 5755.89,
+ "python": "3.12.13",
+ "platform": "Linux-7.2.3-1-cachyos-x86_64-with-glibc2.44",
+ "packages": {
+  "numpy": "2.5.2",
+  "torch": "2.13.0",
+  "scipy": "1.18.0",
+  "matplotlib": "3.11.1",
+  "gymnasium": "1.3.0",
+  "minigrid": "3.1.0"
+ },
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  10,
+  11,
+  12,
+  13,
+  14
+ ],
+ "notes": [
+  "Parte A: 5 semillas en estandar, zipf_10, zipf_15, deriva_30, ruido_075, raros_20pct, C005 y C010; 3 en las dem\u00e1s familias y en C040/C080; 2 en C160. C080 y C160 solo barren r en {0.5, 0.65, 0.8, 1.0, 1.5}, por costo.",
+  "El umbral de fusi\u00f3n queda en 0.85 (valor por defecto): su barrido es exp07.",
+  "Parte B: T2 y T3 no dependen del flujo; en cada familia held-out corren con semillas nuevas (10-14) a C=20. Por eso se reporta tambi\u00e9n T1 sola.",
+  "Familias sin cruce de dominancia en r nominal: ruido_085.",
+  "El cruce en r nominal cae fuera de [0.5, 1.5] o no existe en: deriva_30, deriva_60, ruido_065, ruido_075, ruido_085. La forma fuerte de la hip\u00f3tesis A queda refutada para esas familias."
+ ]
+}
