@@ -57,6 +57,14 @@ PTR = 8
 
 CLASES = ("trazas", "sustrato", "regenerable", "transitorio")
 
+METADATOS_POR_TRAZA = ("strength", "age", "utility", "contribution", "last_use", "priority")
+"""Escalares float32 por traza del `TraceStore`, además de la clave.
+
+`last_use` y `priority` los agregó `exp09` para las políticas externas (LRU,
+repetición priorizada). Existen en toda memoria aunque su política no los lea,
+así que se cuentan: son estado materializado.
+"""
+
 
 def _comp(nbytes: int, clase: str) -> dict[str, Any]:
     assert clase in CLASES, clase
@@ -84,10 +92,7 @@ def _store_real(store: TraceStore) -> dict[str, dict[str, Any]]:
     return {
         "claves_trazas": _comp(store.keys.nbytes, "trazas"),
         "metadatos": _comp(
-            store.strength.nbytes
-            + store.age.nbytes
-            + store.utility.nbytes
-            + store.contribution.nbytes,
+            sum(getattr(store, nombre).nbytes for nombre in METADATOS_POR_TRAZA),
             "trazas",
         ),
         "payload_refs": _comp(PTR * len(store.values), "trazas"),
@@ -178,10 +183,7 @@ def arreglos_no_inventariados(mem: Any) -> list[str]:
     for nombre in TraceStore.__slots__:
         if isinstance(getattr(store, nombre), np.ndarray) and nombre not in (
             "keys",
-            "strength",
-            "age",
-            "utility",
-            "contribution",
+            *METADATOS_POR_TRAZA,
         ):
             faltan.append(f"store.{nombre}")
     return faltan
@@ -201,7 +203,7 @@ def _defaults(cls: Any) -> dict[str, Any]:
 def _store_analitico(C: int, dim: int) -> dict[str, dict[str, Any]]:
     return {
         "claves_trazas": _comp(C * dim * F32, "trazas"),
-        "metadatos": _comp(4 * C * F32, "trazas"),
+        "metadatos": _comp(len(METADATOS_POR_TRAZA) * C * F32, "trazas"),
         "payload_refs": _comp(C * PTR, "trazas"),
     }
 
@@ -225,7 +227,7 @@ def bytes_analiticos(nombre: str, capacity: int, dim: int, **hp: Any) -> dict[st
 
     | Arquitectura | Componente            | Bytes                     |
     |--------------|-----------------------|---------------------------|
-    | toda         | claves + metadatos    | `4·C·d + 16·C + 8·C`      |
+    | toda         | claves + metadatos    | `4·C·d + 24·C + 8·C`      |
     | SDM          | direcciones, contad.  | `4·M·d` cada uno          |
     | Spiking-SDM  | H, W+, W−, contadores | `4·M·d` cada uno          |
     |              | conjuntos activos     | `8·C·a` (a = activas/traza)|
@@ -283,7 +285,7 @@ def bytes_analiticos(nombre: str, capacity: int, dim: int, **hp: Any) -> dict[st
         cd = int(p["code_dim"] or d)
         comp = {
             "codigos_payload": _comp(C * cd * F32, "trazas"),
-            "metadatos": _comp(4 * C * F32, "trazas"),
+            "metadatos": _comp(len(METADATOS_POR_TRAZA) * C * F32, "trazas"),
             "payload_refs": _comp(C * PTR, "trazas"),
             "direcciones": _comp(M * d * F32, "regenerable"),
             "contadores": _comp(M * (d + cd) * F32, "sustrato"),
