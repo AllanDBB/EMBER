@@ -418,7 +418,7 @@ def barrer_umbral(
             i_fm = [g.with_axis("write", Merge()) for g in g_mer[t]].index(frontera_merge)
             celdas: dict[str, dict] = {}
             for r in ratios:
-                ew, ee, front, fifo, fm = [], [], [], [], []
+                ew, ee, front, fifo, fm, efecto = [], [], [], [], [], []
                 por_genotipo = []
                 sin, con = [], []
                 for s in seeds:
@@ -430,6 +430,9 @@ def barrer_umbral(
                     front.append(pa[i_front])
                     fifo.append(pa[i_fifo])
                     fm.append(pm[i_fm])
+                    # η² no tiene signo: el efecto con signo dice si fusionar ayuda
+                    # o daña en promedio sobre el espacio.
+                    efecto.append(float(np.mean(pm) - np.mean(pa)))
                     por_genotipo.append(pm)
                     st = streams[(d, r, s)]
                     sin.append(auditar_sin_presion(st, t, s))
@@ -476,6 +479,7 @@ def barrer_umbral(
                     "puntaje_fifo": _media_ci(fifo),
                     "puntaje_frontera_merge": _media_ci(fm),
                     "puntaje_mejor_merge": _media_ci(best),
+                    "efecto_merge": _media_ci(efecto),
                     "mejor_merge_genotipo": g_mer[t][i_best].label(),
                 }
                 celdas[clave_ratio(r)] = celda
@@ -509,6 +513,7 @@ def barrer_umbral(
                 "tasa_fusion_r_min": celdas[r_min]["tasa_fusion"]["media"],
                 "pureza_fusion_r_min": celdas[r_min]["pureza_fusion"],
                 "raros_absorbidos_r_min": celdas[r_min]["raros_absorbidos"]["media"],
+                "efecto_merge_r_min": celdas[r_min]["efecto_merge"]["media"],
             }
         salida[d] = dom
     return salida
@@ -644,6 +649,9 @@ def main() -> int:
                 "umbral": u["umbral"],
                 "r_nominal": u["cruce_r_nominal"],
                 "r_efectivo": u["cruce_r_efectivo"],
+                "efecto_merge_r_min": u["efecto_merge_r_min"],
+                "pureza_fusion_r_min": u["pureza_fusion_r_min"],
+                "raros_absorbidos_r_min": u["raros_absorbidos_r_min"],
             }
             for u in umbral["cifar100"]["umbrales"].values()
             if u["cruce_r_nominal"] is not None
