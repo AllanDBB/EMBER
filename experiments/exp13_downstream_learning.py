@@ -45,8 +45,8 @@ Condiciones (misma capacidad, mismo agente)
 -------------------------------------------
 - `frontera`: el genotipo de frontera de `exp01`.
 - `FIFO`: `FIFO_GENOTYPE` (el `EpisodicBuffer` con búsqueda por similitud).
-- `reservorio`: muestreo de reservorio (Vitter 1985), implementado acá como
-  política de desalojo local. **Hay que unificarlo con `core/policies.py`**.
+- `reservorio`: muestreo de reservorio (Vitter 1985), la política `Reservoir` de
+  `ember.core.policies` (la misma que evalúa exp09).
 - `sin_saliencia`: el mejor genotipo del NAS de `exp01` con `strength=constant`
   (fusión + decaimiento 0.98 + desalojo por mínima utilidad; es el primero en
   orden de etiqueta de un empate de 0.673).
@@ -107,7 +107,6 @@ from __future__ import annotations
 import os
 import time
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass
 
 import numpy as np
 
@@ -123,8 +122,8 @@ from ember.core.policies import (
     MinUtility,
     NearestNeighbour,
     NoDecay,
+    Reservoir,
 )
-from ember.core.store import TraceStore
 from ember.envs.lifelong import GOAL_CORNERS, StateEncoder, make_goal_env
 from ember.experiment import ExperimentRun
 
@@ -150,35 +149,6 @@ PRIMEROS = 5
 """Episodios al inicio de una fase sobre los que se mide la retención funcional."""
 N_BOOT = 10_000
 SIN_LIMITE = 10**7
-
-
-# ════════════════════════════════════════════════════ reservorio (política local)
-
-
-@dataclass(frozen=True, slots=True)
-class Reservoir:
-    """Muestreo de reservorio (Vitter 1985) como política de desalojo.
-
-    Tras `n` escrituras cada experiencia vista sigue en memoria con
-    probabilidad `C / n`, sin importar cuándo llegó. Se implementa sobre el
-    motor único: la traza nueva ya fue agregada (es la última), y la víctima es
-    ella misma con probabilidad `1 - C/n`, o una traza vieja uniforme si no.
-    `store.t` cuenta las escrituras porque `PolicyMemory.write` hace un `tick`
-    por escritura.
-
-    Vive acá y no en `core/policies.py` para no chocar con otro frente que
-    agrega políticas externas; al integrar hay que moverla allá (fuera del
-    espacio de búsqueda).
-    """
-
-    label: str = "reservoir"
-
-    def victim(self, store: TraceStore, rng: np.random.Generator) -> int:
-        n = max(store.t, 1)
-        nueva = len(store) - 1
-        if rng.random() < store.capacity / n:
-            return int(rng.integers(nueva))
-        return nueva
 
 
 FRONTIER_GENOTYPE = Genotype(
@@ -555,8 +525,8 @@ def main() -> int:
             "predicción de retorno |G - Q̂| calculado en línea por el agente."
         )
         run.note(
-            "Escenario tipo e-MDB, no el e-MDB real. El reservorio es una política local de "
-            "este experimento: unificar con core/policies.py al integrar."
+            "Escenario tipo e-MDB, no el e-MDB real. El reservorio es `Reservoir` de "
+            "ember.core.policies, la misma política que evalúa exp09."
         )
         flujos = correr_todo()
         n_tareas = len(GOAL_CORNERS)
