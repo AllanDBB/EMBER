@@ -1,11 +1,11 @@
 {
  "experiment": "exp13_downstream_learning",
  "ember_version": "0.1.0",
- "git_sha": "cac5ab42b28679edbc9326d62642635c8be65756",
- "git_branch": "rev/exp13-downstream-learning",
+ "git_sha": "ad1a0e97b8b68efc71aa217b445a85b502c7fd07",
+ "git_branch": "revision/bip2026-reviews",
  "git_dirty": true,
- "timestamp_utc": "2026-09-29T22:44:57.164986+00:00",
- "duration_s": 860.9,
+ "timestamp_utc": "2026-09-29T23:47:09.283974+00:00",
+ "duration_s": 230.06,
  "python": "3.12.13",
  "platform": "Linux-7.2.3-1-cachyos-x86_64-with-glibc2.44",
  "packages": {
@@ -30,9 +30,9 @@
  ],
  "notes": [
   "Control epis\u00f3dico (MFEC) cuya \u00fanica fuente de experiencia es la memoria, sobre 4 variantes de una habitaci\u00f3n MiniGrid ((1, 1), (7, 1), (1, 7), (7, 7)) (meta en cada esquina), fases de 30 episodios en orden A B C D x 3 ciclos, max_steps=60, gamma=0.95, epsilon=0.1. Saliencia: error de predicci\u00f3n de retorno |G - Q\u0302| calculado en l\u00ednea por el agente.",
-  "Escenario tipo e-MDB, no el e-MDB real. El reservorio es una pol\u00edtica local de este experimento: unificar con core/policies.py al integrar.",
+  "Escenario tipo e-MDB, no el e-MDB real. El reservorio es `Reservoir` de ember.core.policies, la misma pol\u00edtica que eval\u00faa exp09.",
   "H1 (reaparicion) con C=300: frontera \u2212 FIFO = +0.038 IC95 [+0.005, +0.071], 7/10 semillas a favor \u2192 sostenida.",
   "H2 (auc) con C=300: frontera \u2212 FIFO = -0.075 IC95 [-0.098, -0.053], 0/10 semillas a favor \u2192 refutada (IC incluye 0 o negativo).",
-  "duraci\u00f3n total 861 s"
+  "duraci\u00f3n total 230 s"
  ]
 }
