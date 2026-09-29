@@ -195,11 +195,12 @@ interacción cuantifican la dependencia: strength×evict 4.3 % y write×evict
 ### R1.10 — Liberar código y configuraciones durante la revisión
 
 La sección "Code and data availability" dice ahora que el código, las
-configuraciones, los resultados y los manifiestos de procedencia están
-disponibles para los revisores en un repositorio anonimizado.
+configuraciones, los resultados y los manifiestos de procedencia se publicarán
+en un repositorio público con licencia abierta. No se promete un repositorio
+anonimizado durante la revisión.
 
-**Pendiente de los autores:** crear ese repositorio anonimizado y poner la URL
-en `main.tex` (marcado `% TODO(autores)`). El texto ya afirma que existe.
+**Pendiente de los autores:** crear el repositorio público (y limpiarlo) antes
+de la versión final, y agregar su URL al paper.
 
 ### R1.11 — Mejoras recomendadas (resumen)
 
