@@ -1,12 +1,36 @@
 # Estado del trabajo — EMBER
 
-**Última actualización:** 2026-08-20
-**Rama:** `feat/ember-foundation` (aún no mergeada a `main`)
+**Última actualización:** 2026-09-01
+**Rama:** `main`
 
 Retomar leyendo, en este orden:
 1. `docs/superpowers/specs/2026-08-11-ember-repo-design.md` — el diseño y por qué.
 2. `docs/superpowers/plans/2026-08-11-ember-foundation.md` — las 23 tareas.
 3. `docs/notas/2026-08-11-numeros-movidos.md` — **qué resultados del draft no sobrevivieron.**
+
+## El paper, hoy
+
+El paper está en inglés (traducido el 27 ago, commit `aea0fa1`), 8 páginas,
+`verify_paper` limpio. Dos pases editoriales encima de esa traducción:
+
+- `a9e5b2f` — contribuciones alineadas a cuatro ítems, conexión con repetición
+  priorizada y Neural Episodic Control, sección de disponibilidad de código.
+- `d8ac51b` (28 ago, Nick Florez) — dos afirmaciones sin sustento corregidas
+  (el 14.41× era del régimen de compresión, no de selección; el FIFO no está
+  "en el piso en toda condición", su reconstrucción es 0.907), abstract a 248
+  palabras, nueva §III-E (arquitectura de frontera), `tab:two-knobs`,
+  `fig:write`.
+- **2026-09-01** — pase sobre comentarios de una revisión anotada
+  (`paper/BIP2026_EMBER_revised.pdf`, con highlights y 2 comentarios de texto,
+  no versionada — es material de revisión, no un artefacto del repo). El
+  comentario central: siglas usadas antes de definirse. Corregido en
+  `main.tex`: `e-MDB`, `FIFO`, `LIF`, `STDP`, `ENN` (Engram Neural Network),
+  `PoC`, `LTP`, `PCA` ahora se expanden en su primer uso real, no donde
+  aparecían por casualidad más definidos que usados. También se glosó
+  `incumbent`/`frontier` en la pregunta falsificable de la intro, antes de su
+  definición formal en §III-B/§III-E. Sigue en 8 páginas, `verify_paper`
+  limpio, 256 tests pasan. `paper/EMBER-overleaf.zip` (export de Overleaf, no
+  versionado) se comparó contra el repo: es idéntico, no traía cambios.
 
 ## Hecho
 
