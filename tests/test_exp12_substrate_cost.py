@@ -43,15 +43,15 @@ class TestContabilidad:
 
     def test_la_sdm_por_defecto_paga_131_kib_fijos(self):
         """El punto de la crítica: 512 direcciones y 512 contadores de d = 32 en float32."""
-        assert costo_fijo_y_por_traza("SDM", 32) == (2 * 512 * 32 * 4, 152.0)
-        assert costo_fijo_y_por_traza("FIFO", 32) == (0, 152.0)
+        assert costo_fijo_y_por_traza("SDM", 32) == (2 * 512 * 32 * 4, 160.0)
+        assert costo_fijo_y_por_traza("FIFO", 32) == (0, 160.0)
 
     @pytest.mark.parametrize("B", [3000, 4096, 150_000])
     def test_la_capacidad_derivada_es_la_maxima_que_entra(self, B):
         for n in ("FIFO", "SDM", "SpikingSDM"):
             C = capacidad_para_presupuesto(n, B, 32)
             if C == 0:
-                assert costo_fijo_y_por_traza(n, 32)[0] > B - 152
+                assert costo_fijo_y_por_traza(n, 32)[0] > B - 160
                 continue
             assert bytes_analiticos(n, C, 32)["total"] <= B
             assert bytes_analiticos(n, C + 1, 32)["total"] > B
@@ -60,7 +60,7 @@ class TestContabilidad:
 class TestDerivacion:
     def test_con_valores_por_defecto_la_sdm_no_entra_en_4_kib(self):
         assert not derivar_config("SDM", 4096, "defaults")["factible"]
-        assert derivar_config("FIFO", 4096, "defaults")["capacity"] == 4096 // 152
+        assert derivar_config("FIFO", 4096, "defaults")["capacity"] == 4096 // 160
 
     def test_el_modo_escalado_reserva_a_lo_sumo_la_mitad_para_el_sustrato(self):
         for B in (4096, 65536, 524288):
