@@ -114,3 +114,93 @@ def figura_comparacion_dominios(
     fig.savefig(ruta, dpi=200, bbox_inches="tight")
     plt.close(fig)
     return ruta
+
+
+def figura_aprendizaje_downstream(
+    resumen: dict[str, Any], destino: str | Path, *, capacidad: int, n_tareas: int = 4
+) -> Path:
+    """Figura de exp13: desempeño a lo largo del flujo de por vida, por memoria.
+
+    Panel izquierdo: retorno medio por fase (IC95 sobre semillas) a la capacidad
+    principal; las líneas verticales separan los ciclos, así que lo que pasa
+    justo después de cada línea es la reaparición de una tarea ya vista.
+    Panel derecho: retorno en los primeros episodios de una tarea que reaparece,
+    por capacidad. Es la pregunta de si retener mejor ayuda a actuar mejor.
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    ruta = _preparar(destino)
+    estilos = {
+        "frontera": ("EMBER frontier", COLORES[0], "-"),
+        "FIFO": ("FIFO (e-MDB buffer)", COLORES[1], "-"),
+        "reservorio": ("reservoir sampling", COLORES[2], "-"),
+        "sin_saliencia": ("best without salience", COLORES[3], "-"),
+        "sin_limite": ("unbounded (ceiling)", GRIS, "--"),
+        "frontera_decay0.995": ("frontier, decay 0.995", COLORES[0], "--"),
+        "frontera_decay0.98": ("frontier, decay 0.98", COLORES[0], ":"),
+    }
+    fig, (ax, bx) = plt.subplots(1, 2, figsize=(11, 4.0), gridspec_kw={"width_ratios": [1.6, 1]})
+
+    bloque = resumen[f"C{capacidad}"]
+    for cond, (etiqueta, color, linea) in estilos.items():
+        if cond not in bloque:
+            continue
+        c = bloque[cond]["curva_por_fase"]
+        x = np.arange(1, len(c["media"]) + 1)
+        ax.plot(
+            x,
+            c["media"],
+            linea,
+            color=color,
+            label=etiqueta,
+            linewidth=1.6,
+            marker="o",
+            markersize=3,
+        )
+        ax.fill_between(x, c["ci_low"], c["ci_high"], color=color, alpha=0.15, linewidth=0)
+    n_fases = len(bloque["FIFO"]["curva_por_fase"]["media"])
+    for borde in range(n_tareas, n_fases, n_tareas):
+        ax.axvline(borde + 0.5, color=GRIS, linestyle=":", linewidth=1.0)
+    ax.set_xlabel("phase (tasks A B C D, repeated)")
+    ax.set_ylabel("mean episode return")
+    ax.set_title(f"Lifelong stream, capacity C = {capacidad}", fontsize=10)
+    ax.grid(alpha=0.25)
+    ax.legend(fontsize=7, frameon=False)
+
+    capacidades = sorted(int(k[1:]) for k in resumen)
+    ancho = 0.8 / len(estilos)
+    for i, (cond, (etiqueta, color, linea)) in enumerate(estilos.items()):
+        if cond not in resumen[f"C{capacidades[0]}"]:
+            continue
+        medias, errs = [], [[], []]
+        for cap in capacidades:
+            d = resumen[f"C{cap}"][cond]["reaparicion"]
+            medias.append(d["media"])
+            errs[0].append(d["media"] - d["ci_low"])
+            errs[1].append(d["ci_high"] - d["media"])
+        pos = np.arange(len(capacidades)) + (i - (len(estilos) - 1) / 2) * ancho
+        bx.bar(
+            pos,
+            medias,
+            ancho,
+            color=color,
+            yerr=errs,
+            capsize=2,
+            label=etiqueta,
+            error_kw={"linewidth": 0.8},
+            hatch={"-": None, "--": "//", ":": ".."}[linea],
+            edgecolor="white" if linea != "-" else None,
+        )
+    bx.set_xticks(np.arange(len(capacidades)), [f"C = {c}" for c in capacidades])
+    bx.set_ylabel("return, first episodes of a reappearing task")
+    bx.set_title("Functional retention", fontsize=10)
+    bx.grid(alpha=0.25, axis="y")
+
+    fig.tight_layout()
+    fig.savefig(ruta, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    return ruta
