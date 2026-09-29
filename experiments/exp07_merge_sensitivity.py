@@ -667,6 +667,15 @@ def main() -> int:
         )
         print(f"\nCIFAR-100: umbrales viables = {viables or 'ninguno'}")
         print(f"CIFAR-100: umbrales con cruce = {con_cruce or 'ninguno'}")
+        for c in con_cruce:
+            if c["efecto_merge_r_min"] < 0:
+                run.note(
+                    f"CIFAR-100 con umbral {c['umbral']}: el cruce reaparece (r nominal "
+                    f"{c['r_nominal']:.2f}), pero la escritura domina porque fusionar DAÑA "
+                    f"(efecto {c['efecto_merge_r_min']:+.3f} en r mínimo; pureza "
+                    f"{c['pureza_fusion_r_min']:.2f}, raros absorbidos "
+                    f"{c['raros_absorbidos_r_min']:.2f}). No es un régimen de compresión."
+                )
         if not viables:
             run.note(
                 "CIFAR-100: ningún umbral de la grilla hace alcanzable la fusión con "
