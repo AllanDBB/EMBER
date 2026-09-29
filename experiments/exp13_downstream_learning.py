@@ -73,6 +73,33 @@ refutación.
 Se reporta también contra reservorio y la configuración sin saliencia, sin
 hipótesis direccional: el reservorio es un baseline fuerte conocido de
 aprendizaje continuo, y puede ganarle a la frontera.
+
+Extensión: ¿la pérdida de plasticidad es por la falta de decaimiento?
+---------------------------------------------------------------------
+La primera corrida sostuvo H1 y refutó H2: la frontera recuerda mejor la
+tarea que vuelve, pero integra menos retorno que el FIFO. La explicación
+propuesta es que sin decaimiento (`decay=1.0`) el desalojo por mínima fuerza
+congela la memoria en trazas viejas de fuerza alta. Se prueba directamente con
+genotipos **del mismo espacio de 576**: la frontera con `decay=0.995` y
+`decay=0.98` (los únicos valores < 1 que admite `ember.nas.space`; un 0.9 no
+existe en el espacio y no se agrega), todo lo demás igual. El decaimiento es,
+dentro del espacio, la única forma de combinar saliencia con recencia en el
+desalojo: `min_strength` sobre una fuerza que decae desaloja lo débil *y*
+viejo. `evict=fifo` con saliencia no combina nada: ignora la fuerza y es el
+FIFO.
+
+H3 (plasticidad): con decaimiento, la frontera sube su AUC respecto de la
+frontera sin decaimiento. Se refuta si el IC95 de la diferencia pareada
+incluye el 0 o es negativo.
+
+Predicción registrada antes de correr: con 0.98 la ventaja de saliencia (un
+factor ≤ ~3 de fuerza inicial) se borra en ~55 escrituras y con 0.995 en ~220,
+ambas muy por debajo de las ~1500 escrituras entre reapariciones de una tarea.
+Se espera que el decaimiento recupere AUC pero pierda la ventaja en
+reaparición: un intercambio, no una configuración que gane en las dos.
+
+Pregunta abierta: ¿algún genotipo del espacio gana a la vez en reaparición y
+en AUC contra el FIFO? Se responde con los IC pareados, tal cual salgan.
 """
 
 from __future__ import annotations
@@ -182,6 +209,8 @@ CONDICIONES: dict[str, tuple[Genotype, bool]] = {
     "reservorio": (RESERVOIR_GENOTYPE, False),
     "sin_saliencia": (NO_SALIENCE_GENOTYPE, False),
     "sin_limite": (FIFO_GENOTYPE, True),
+    "frontera_decay0.995": (FRONTIER_GENOTYPE.with_axis("decay", ExponentialDecay(0.995)), False),
+    "frontera_decay0.98": (FRONTIER_GENOTYPE.with_axis("decay", ExponentialDecay(0.98)), False),
 }
 """nombre -> (genotipo, sin límite de capacidad)."""
 
@@ -457,6 +486,10 @@ def resumir(flujos: list[dict], *, episodios_por_fase: int, n_tareas: int) -> di
             ("frontera", "sin_saliencia"),
             ("reservorio", "FIFO"),
             ("sin_limite", "frontera"),
+            ("frontera_decay0.995", "FIFO"),
+            ("frontera_decay0.98", "FIFO"),
+            ("frontera_decay0.995", "frontera"),
+            ("frontera_decay0.98", "frontera"),
         ):
             if a not in conds or b not in conds:
                 continue

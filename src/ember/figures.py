@@ -140,6 +140,8 @@ def figura_aprendizaje_downstream(
         "reservorio": ("reservoir sampling", COLORES[2], "-"),
         "sin_saliencia": ("best without salience", COLORES[3], "-"),
         "sin_limite": ("unbounded (ceiling)", GRIS, "--"),
+        "frontera_decay0.995": ("frontier, decay 0.995", COLORES[0], "--"),
+        "frontera_decay0.98": ("frontier, decay 0.98", COLORES[0], ":"),
     }
     fig, (ax, bx) = plt.subplots(1, 2, figsize=(11, 4.0), gridspec_kw={"width_ratios": [1.6, 1]})
 
@@ -171,7 +173,9 @@ def figura_aprendizaje_downstream(
 
     capacidades = sorted(int(k[1:]) for k in resumen)
     ancho = 0.8 / len(estilos)
-    for i, (cond, (etiqueta, color, _)) in enumerate(estilos.items()):
+    for i, (cond, (etiqueta, color, linea)) in enumerate(estilos.items()):
+        if cond not in resumen[f"C{capacidades[0]}"]:
+            continue
         medias, errs = [], [[], []]
         for cap in capacidades:
             d = resumen[f"C{cap}"][cond]["reaparicion"]
@@ -188,6 +192,8 @@ def figura_aprendizaje_downstream(
             capsize=2,
             label=etiqueta,
             error_kw={"linewidth": 0.8},
+            hatch={"-": None, "--": "//", ":": ".."}[linea],
+            edgecolor="white" if linea != "-" else None,
         )
     bx.set_xticks(np.arange(len(capacidades)), [f"C = {c}" for c in capacidades])
     bx.set_ylabel("return, first episodes of a reappearing task")

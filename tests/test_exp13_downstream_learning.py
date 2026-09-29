@@ -11,6 +11,7 @@ pytest.importorskip("minigrid")
 
 from ember.envs.lifelong import GOAL_CORNERS, StateEncoder, make_goal_env  # noqa: E402
 from experiments.exp13_downstream_learning import (  # noqa: E402
+    CONDICIONES,
     RESERVOIR_GENOTYPE,
     EpisodicControlAgent,
     correr_todo,
@@ -93,7 +94,7 @@ def test_la_meta_esta_en_su_esquina():
 def test_experimento_en_tamano_reducido():
     kw = {"ciclos": 2, "episodios_por_fase": 3, "max_steps": 12}
     flujos = correr_todo((0, 1), (20,), n_jobs=1, **kw)
-    assert len(flujos) == 2 * 5
+    assert len(flujos) == 2 * len(CONDICIONES)
     for f in flujos:
         assert len(f["retornos"]) == 2 * 4 * 3
         m = metricas_por_semilla(f, episodios_por_fase=3, n_tareas=4)
