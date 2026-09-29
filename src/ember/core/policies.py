@@ -136,6 +136,51 @@ class Merge:
         return None
 
 
+# ════════════════════════════════════════════════════════ compuerta de admisión
+
+
+@runtime_checkable
+class AdmissionPolicy(Protocol):
+    """Decide si una experiencia entra a la memoria o se descarta sin escribirse.
+
+    No es un eje del espacio de búsqueda: ninguna de las 576 configuraciones la
+    usa, y ninguna arquitectura registrada la aplica. Existe para el análisis de
+    sensibilidad de `exp12_substrate_cost`, que barre un umbral de admisión
+    sobre la SDM a través de `ember.memories.sdm_ablation.AdmissionGated`.
+    """
+
+    label: str
+
+    def admit(self, pred_error: float) -> bool: ...
+
+
+@dataclass(frozen=True, slots=True)
+class AdmitAll:
+    """Toda experiencia se escribe. Es lo que hacen todas las memorias hoy."""
+
+    label: str = "all"
+
+    def admit(self, pred_error: float) -> bool:
+        return True
+
+
+@dataclass(frozen=True, slots=True)
+class PredErrorAdmission:
+    """Solo se escribe lo que llega con error de predicción `>= threshold`.
+
+    Con `threshold=0` equivale a `AdmitAll`.
+    """
+
+    threshold: float = 0.0
+
+    @property
+    def label(self) -> str:
+        return f"pe>={self.threshold:g}"
+
+    def admit(self, pred_error: float) -> bool:
+        return pred_error >= self.threshold
+
+
 # ═════════════════════════════════════════════════════════════ modo de lectura
 
 
