@@ -856,6 +856,11 @@ def ablacion_sdm(
 # ═══════════════════════════════════════════════════════ 5 · sensibilidad
 
 
+def _k(x: float) -> str:
+    """Etiqueta de un real apta para claves de `\\result{}`: sin puntos ni barras."""
+    return f"{x:g}".replace(".", "p")
+
+
 def sensibilidad_sdm(
     *,
     m_grid: tuple[int, ...] = M_GRID,
@@ -899,18 +904,18 @@ def sensibilidad_sdm(
     out: dict[str, Any] = {
         "n_hard": {f"M{M}": fila(f"M{M}|f0.05", {"n_hard": M}) for M in m_grid},
         "activation_frac": {
-            f"f{f:g}": fila(f"M512|f{f:g}", {"activation_frac": f}) for f in frac_grid
+            f"f{_k(f)}": fila(f"M512|f{f:g}", {"activation_frac": f}) for f in frac_grid
         },
         "grilla_2d": {
-            f"M{M}|f{f:g}": fila(f"M{M}|f{f:g}", {"n_hard": M, "activation_frac": f})
+            f"M{M}_f{_k(f)}": fila(f"M{M}|f{f:g}", {"n_hard": M, "activation_frac": f})
             for M in grid_2d_m
             for f in grid_2d_frac
         },
-        "admision": {f"tau{t:g}": fila(f"adm{t:g}", {}) for t in admision_grid},
+        "admision": {f"tau{_k(t)}": fila(f"adm{t:g}", {}) for t in admision_grid},
     }
     bm = [out["n_hard"][f"M{M}"]["battery_mean"] for M in m_grid]
     out["rango_battery_n_hard"] = float(max(bm) - min(bm))
-    bf = [out["activation_frac"][f"f{f:g}"]["battery_mean"] for f in frac_grid]
+    bf = [out["activation_frac"][f"f{_k(f)}"]["battery_mean"] for f in frac_grid]
     out["rango_battery_activation_frac"] = float(max(bf) - min(bf))
     b2 = [v["battery_mean"] for v in out["grilla_2d"].values()]
     out["rango_battery_grilla_2d"] = float(max(b2) - min(b2))
@@ -931,7 +936,7 @@ def sensibilidad_sdm(
             print(
                 f"    {M:<6}"
                 + "".join(
-                    f"{out['grilla_2d'][f'M{M}|f{f:g}']['battery_mean']:>8.3f}"
+                    f"{out['grilla_2d'][f'M{M}_f{_k(f)}']['battery_mean']:>8.3f}"
                     for f in grid_2d_frac
                 )
             )
