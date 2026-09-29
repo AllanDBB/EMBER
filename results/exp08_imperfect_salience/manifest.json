@@ -1,0 +1,32 @@
+{
+ "experiment": "exp08_imperfect_salience",
+ "ember_version": "0.1.0",
+ "git_sha": "63d8448dcffc8dd09fb7aeefc91d75717c8bea0e",
+ "git_branch": "rev/exp08-imperfect-salience",
+ "git_dirty": true,
+ "timestamp_utc": "2026-09-29T22:39:59.455008+00:00",
+ "duration_s": 1668.61,
+ "python": "3.12.13",
+ "platform": "Linux-7.2.3-1-cachyos-x86_64-with-glibc2.44",
+ "packages": {
+  "numpy": "2.5.2",
+  "torch": "2.13.0",
+  "scipy": "1.18.0",
+  "matplotlib": "3.11.1",
+  "gymnasium": "1.3.0",
+  "minigrid": "3.1.0"
+ },
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "notes": [
+  "Recall de la frontera en la condici\u00f3n limpia de main con semillas 0-2: 0.9833 (exp01 reporta 0.9833 de rare_retention).",
+  "no_salience_best y pe_blind_best se eligen en cada condici\u00f3n sobre las mismas semillas que se reportan: sesgo optimista a favor del baseline, conservador para EMBER. no_salience_fixed se elige una vez, en la condici\u00f3n limpia.",
+  "precision/recall_set/f1 miran las trazas guardadas al final del flujo; recall es el puntaje de T1 (recuperaci\u00f3n con acierto). En main (20 raros, C = 20, memoria llena) la precisi\u00f3n es id\u00e9ntica a recall_set por aritm\u00e9tica.",
+  "El r\u00e9gimen selection se agreg\u00f3 tras una corrida reducida de prueba; ver el docstring de SETTINGS."
+ ]
+}
