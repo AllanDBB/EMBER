@@ -1,11 +1,11 @@
 {
  "experiment": "exp12_substrate_cost",
  "ember_version": "0.1.0",
- "git_sha": "f4d5afacf79ffbe1c893f5d63120dd47f6fa2f42",
+ "git_sha": "090f1d9de75c1f5f5a7053520fc88241d8e3ad58",
  "git_branch": "rev/exp12-substrate-cost",
  "git_dirty": true,
- "timestamp_utc": "2026-09-29T22:45:06.597764+00:00",
- "duration_s": 1110.98,
+ "timestamp_utc": "2026-09-29T23:45:29.473699+00:00",
+ "duration_s": 171.6,
  "python": "3.12.13",
  "platform": "Linux-7.2.3-1-cachyos-x86_64-with-glibc2.44",
  "packages": {
@@ -29,7 +29,7 @@
   9
  ],
  "notes": [
-  "hardware: 12th Gen Intel(R) Core(TM) i5-12450H, 12 CPU l\u00f3gicas, numpy 2.5.2 con scipy-openblas 0.3.34.0.0; loadavg al inicio [65.6220703125, 73.7978515625, 67.39697265625]. La m\u00e1quina se compart\u00eda con otros experimentos: los tiempos se midieron en serie e intercalados, pero los \u00b5s absolutos tienen ruido de carga.",
+  "hardware: 12th Gen Intel(R) Core(TM) i5-12450H, 12 CPU l\u00f3gicas, numpy 2.5.2 con scipy-openblas 0.3.34.0.0; loadavg al inicio [10.34765625, 16.97509765625, 21.95068359375]. La m\u00e1quina se compart\u00eda con otros experimentos: los tiempos se midieron en serie e intercalados, pero los \u00b5s absolutos tienen ruido de carga.",
   "Spiking-SDM: a d = 32 ninguna neurona LIF cruza el umbral en la ventana (fracci\u00f3n de respaldo 1.00, potencial m\u00e1ximo 0.37 < v_th 0.50): la activaci\u00f3n es siempre el top-k de potencial integrado, no un disparo.",
   "Spiking se excluye del modo sustrato_escalado: no pasa el gate con sus valores por defecto, y escalar n_neurons eleva su write O(P\u00b7L\u00b7n\u00b2) fuera del presupuesto de c\u00f3mputo. En modo defaults entra con 5 semillas y solo gate.",
   "La SDM no tiene umbral de admisi\u00f3n propio: se barre con una compuerta externa (AdmissionGated + PredErrorAdmission) que no entra al espacio de b\u00fasqueda. El umbral de fusi\u00f3n lo barre exp07."
