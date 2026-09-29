@@ -37,7 +37,8 @@ robot learning, discards the oldest entry whatever its value. We present EMBER
 a six-axis search space: how a trace is read, written, weighted by surprise,
 decayed, evicted, and reinforced. Their combinations give
 \result{exp03_axis_liveness:n_genotipos|int}{576} \emph{configurations} of one
-engine; we evaluate every one, including the e-MDB buffer. Each is
+engine; we evaluate every one, including a nearest-neighbour proxy of the
+e-MDB buffer. Each is
 scored on how many important-marked experiences survive a stream overrunning the
 memory many times over. The memory never sees the marks, only a surprise
 signal. We report four results. First, which mechanism matters depends on $r = K_{proto}/C$, recurring
@@ -45,12 +46,12 @@ situations divided by capacity. Below $r=1$ the write axis explains
 \result{exp02_threshold_grid:regimenes.compression.eta2_write|pct}{73.0}\,\% of
 the variance in retention; above it,
 \result{exp02_threshold_grid:regimenes.selection.eta2_write|pct}{1.6}\,\%, and
-eviction takes over. The same $r$ marks the switch at three capacities:
-the ratio governs, not capacity itself. Second, the best configuration retains
+eviction takes over. The switch falls at the same $r$ for three capacities, which
+we state as a hypothesis for the conditions tested, not a general law. Second, the best configuration retains
 \result{exp01_nas_full:frontier.scores.rare_retention|f3}{0.983} of the marked
 experiences against
-\result{exp01_nas_full:incumbent.scores.rare_retention|f3}{0.050} for the e-MDB
-buffer, differing on two axes only: surprise-weighted encoding and
+\result{exp01_nas_full:incumbent.scores.rare_retention|f3}{0.050} for that
+proxy, differing on two axes only: surprise-weighted encoding and
 weakest-trace eviction. Neither alone changes anything. Third, a
 purely spiking circuit fails the reconstruction test the others pass: it was
 built for discrete patterns, not continuous vectors. Fourth, two preconditions
@@ -119,7 +120,8 @@ investigation of long-term episodic memory for cognitive robots, and it
 inverts the usual approach. Rather than proposing a new architecture and arguing
 that it beats a simple baseline, we define a discrete design space
 in which each bioinspired mechanism is an axis, and we traverse it
-exhaustively. The e-MDB FIFO is not an external baseline but one more point
+exhaustively. The e-MDB FIFO ---more precisely, a FIFO-NN proxy of it that adds
+nearest-neighbour retrieval--- is not an external baseline but one more point
 inside that space, which turns a potentially circular comparison into a
 falsifiable question: where does the deployed \emph{incumbent} land, and which
 combination of mechanisms defines the \emph{performance frontier}, the space's
@@ -128,19 +130,20 @@ best-scoring point?
 We then evaluate the bioinspired architectures that emerge from that analysis
 with a two-phase benchmark separating the ability to reconstruct a degraded cue
 ---a prerequisite of any associative memory--- from retaining the right episodes
-under continuous capacity pressure. Finally, we instrument the law and the
+under continuous capacity pressure. Finally, we instrument the regime hypothesis and the
 salience mechanism on two real domains ---image embeddings from CIFAR-100
 \cite{krizhevsky2009}, a 100-class benchmark of natural images, and the MiniGrid
 \cite{minigrid} navigation environment under partial observability--- exposing
 preconditions no synthetic design reveals, one of which we correct.
 
-Three terms recur throughout. A \emph{surprise signal} is a scalar in $[0,1]$
+Three terms recur throughout. A \emph{surprise signal} is a scalar
 attached to an experience when it is written: either \emph{novelty}, which the
-memory computes as one minus the similarity to the closest thing it holds, or
-\emph{prediction error}, from a model of what was expected. The \emph{salience
+memory computes as one minus the cosine similarity to the closest thing it
+holds, or \emph{prediction error} in $[0,1]$, from a model of what was
+expected. The \emph{salience
 gate} turns that signal into an encoding weight. \emph{Rare-event retention} is
-the fraction of importance-tagged episodes still recoverable after a stream that
-exceeds capacity by more than an order of magnitude; the tag is ground truth
+the fraction of importance-tagged episodes still recoverable after a stream
+longer than the capacity (sixteen times longer in the main search); the tag is ground truth
 used only for scoring, never visible to the memory, which is what keeps the
 measurement from being circular and why eviction by age is worst placed under
 it.
@@ -159,10 +162,11 @@ streams and estimated on real ones (Section \ref{sec:real}).
 The main contributions of this work are:
 
 \begin{itemize}
-  \item A \emph{threshold law}: the ratio $r = K_{proto}/C$ between recurring
-  experience prototypes and memory capacity determines which family of
-  mechanisms governs performance, with a regime transition that reproduces
-  independently across three distinct capacities.
+  \item A \emph{regime hypothesis}, supported under the conditions evaluated: the
+  ratio $r = K_{proto}/C$ between recurring experience prototypes and memory
+  capacity determines which family of mechanisms governs performance, with a
+  regime transition that reproduces at three distinct capacities of one
+  stationary synthetic generator.
   \item A demonstration that in a design space of gated mechanisms, main
   effects mislead. Modulating encoding strength by novelty and prediction
   error ---the most-cited mechanism in the bioinspired-memory literature---
@@ -309,6 +313,59 @@ Section \ref{sec:nas} its eviction and weighting correspond to the configuration
 reinforce: 0.0\}}, one point among 576; because that point retrieves by nearest
 neighbour, which the real buffer cannot, we call it the \emph{FIFO-NN proxy} of
 the e-MDB buffer and treat it as an optimistic stand-in, not the deployed code.
+Fig.~\ref{fig:integration} shows where EMBER would enter the architecture.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[font=\scriptsize,
+  blk/.style={draw, rounded corners=1.5pt, align=center, inner sep=2pt},
+  emb/.style={draw, align=center, inner sep=1.5pt, fill=black!6,
+              text width=11.5mm, minimum height=10.5mm},
+  ar/.style={-{Latex[length=1.4mm]}}
+]
+% fila superior: e-MDB
+\node[blk, text width=13.5mm, minimum height=13mm] (world) at (0,0)
+  {robot and\\environment};
+\node[blk, text width=46mm, minimum height=13mm, anchor=west] (ltm) at (2.05,0)
+  {\textbf{e-MDB long-term memory}\\[1pt] cognitive nodes: P-nodes, C-nodes,
+   goals,\\ world and utility models, policies};
+\node[blk, text width=46mm, anchor=south] (mot) at ([yshift=3mm]ltm.north)
+  {motivational engine: needs and drives};
+\draw[ar] (mot) -- (ltm);
+\draw[ar] ([yshift=2mm]world.east) -- node[above]{percept} ([yshift=2mm]ltm.west);
+\draw[ar] ([yshift=-2mm]ltm.west) -- node[below]{action} ([yshift=-2mm]world.east);
+% fila inferior: EMBER
+\node[emb, anchor=north west] (rd) at (2.05,-2.05) {\textbf{read}\\by content};
+\node[emb, right=2.2mm of rd] (w)  {\textbf{write}\\gate $s$,\\append/\\merge};
+\node[emb, right=2.2mm of w]  (st) {\textbf{store}\\$C$ traces};
+\node[emb, right=4mm of st] (ev) {\textbf{evict}\\weakest\\trace};
+\node[draw, dashed, rounded corners=2pt, inner sep=3pt, fit=(rd)(w)(st)(ev)]
+  (box) {};
+\node[anchor=north, font=\scriptsize\itshape] at (box.south)
+  {EMBER, in place of the FIFO \texttt{EpisodicBuffer}};
+% conexiones
+\draw[ar] (w.north |- ltm.south) -- node[right, align=left, font=\tiny]
+  {episode +\\surprise} (w.north);
+\draw[ar] ([xshift=-2.5mm]rd.north |- ltm.south) -- node[left, font=\tiny]
+  {query} ([xshift=-2.5mm]rd.north);
+\draw[ar] ([xshift=2.5mm]rd.north) -- node[right, align=left, font=\tiny]
+  {similar\\episodes} ([xshift=2.5mm]rd.north |- ltm.south);
+\draw[ar] (w) -- (st);
+\draw[ar] (st) -- node[above, font=\tiny, inner sep=1pt]{full} (ev);
+\draw[ar] (st.south) -- ++(0,-1.5mm) -| (rd.south);
+\end{tikzpicture}
+\caption{Where EMBER would sit in e-MDB (schematic; not implemented here).
+e-MDB activates cognitive nodes in its long-term memory from the current
+perception and selects actions under its motivational engine
+\cite{romero2022thesis,becerra2021}; each step yields an \texttt{Episode} that
+the public implementation appends to a FIFO \texttt{EpisodicBuffer} from which
+world and utility models are trained \cite{emdbnodes}. EMBER would replace that
+buffer: \emph{write} weights each episode by a surprise signal supplied by
+e-MDB's own world or utility models, \emph{evict} discards the weakest trace
+when the store is full, and \emph{read} returns the stored episodes most
+similar to a query, feeding model training and deliberation.}
+\label{fig:integration}
+\end{figure}
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Search over a bioinspired design space}
@@ -433,6 +490,100 @@ does.}
 \end{figure}
 
 
+\subsection{Experimental protocol}
+\label{sec:protocol}
+
+Every detail below is taken from the code that produced the results. Keys live in $\mathbb{R}^{32}$ and are normalized to
+unit length at the memory boundary; every random draw derives from an explicit
+seed, and within a seed all configurations receive the identical stream.
+
+\emph{Stream generator.} A synthetic stream with $K_{proto}$ prototypes draws
+$K_{proto}$ centres as i.i.d.\ Gaussian vectors normalized to the unit sphere
+(nearly orthogonal at this dimension). Each routine experience picks a prototype
+uniformly at random, adds isotropic Gaussian noise ($\sigma=0.05$ per
+dimension) to its centre and renormalizes; its payload is the prototype
+identity. Rare experiences have fresh independent random keys and unique
+payloads, and are inserted at uniformly random positions. The generator also
+supports correlated centres, power-law visit frequencies and drift; all three
+are off in every reported experiment. CIFAR-100 streams (Section \ref{sec:real})
+replace centre plus noise by a different image of one of $K_{proto}$ classes per
+visit, draw rare experiences from disjoint classes, and keep the same
+prediction-error ranges.
+% TODO(exp10): familias de streams held-out (frecuencias desiguales, deriva,
+% similitud ruidosa, prevalencia de raros) y resultados de robustez.
+
+\emph{Surprise signals and importance labels.} Each experience carries a
+prediction error drawn from a clipped normal: $\mathcal{N}(0.10,0.05)$ clipped
+to $[0,0.35]$ for routine experiences and $\mathcal{N}(0.90,0.05)$ clipped to
+$[0.65,1]$ for rare ones, so the two ranges do not overlap by construction.
+Novelty is computed by the memory at write time as one minus the highest
+cosine similarity to a stored trace (1 on an empty memory). The strength gate
+assigns $s=1$ (\texttt{constant}), $1+2\nu$ (\texttt{novelty}), $1+2e$
+(\texttt{pred\_error}) or $1+2\nu+2e$ (\texttt{both}). The importance label is
+the generator's rare flag: it is used only to score and is never passed to the
+memory, which sees key, payload and prediction error.
+
+\emph{Phase 1, reconstruction gate} (capacity never binding). R1: 10 patterns,
+cues keeping 30/50/70\,\% of the dimensions (the rest zeroed), scored by the
+cosine similarity of the returned trace when its identity is correct and 0
+otherwise. R2: 15 patterns under additive Gaussian noise
+$\sigma\in\{0.1,0.2,0.3,0.4\}$, scored by identity accuracy. R3: capacity 2,
+write $A$ then $B$, read $A$; 10 pairs, scored as R1. R4: accuracy at noise
+$\sigma=0.15$ for loads $\{2,5,10,15,20,30\}$ with capacity equal to load,
+averaged. The gate is the mean of R1--R4, with admission at $\geq 0.50$.
+
+\emph{Phase 2, battery} ($C=20$). T1, rare-event retention: a stream with
+$K_{proto}=5$, 300 routine and 20 rare experiences; every 5 writes the memory is
+queried with a uniformly chosen, already written key (so read reinforcement can
+act); at the end each rare experience is queried with its exact key, and counts
+as retained if its payload is returned at similarity $\geq 0.85$. T2, noisy
+retrieval under pressure: 60 independent random keys with prediction error
+$\sim\mathcal{U}(0.05,0.95)$ are written into 20 slots; 120 queries pick an item
+with probability proportional to its prediction error and add noise
+$\sigma=0.30$; the score is the fraction returning the right payload. T3,
+sequential interference: 4 blocks of 8 keys, each key written 3 times within
+its block, prediction error 0.9 in the first block and 0.1 afterwards; the
+score is the fraction of first-block keys retained as in T1. The
+\emph{aggregate score} of a configuration is the unweighted mean of T1, T2 and
+T3, each averaged over seeds.
+
+\emph{Seeds and effect sizes.} The search and the axis audit use 3 seeds per
+configuration; the threshold grid, 3 capacities $\times$ 8 ratios $\times$ 5
+seeds on T1 alone, with 20 visits per prototype and $\max(5, C/2)$ rare
+experiences; the substrate benchmark, 4 seeds; CIFAR-100, 5 ratios $\times$ 3
+seeds at $C=20$. For an axis, $\eta^2 = SS_{between}/SS_{total}$ over the 576
+configuration scores (the seed-averaged aggregate score in the search; T1 per
+seed in the grid; seed-averaged T1 on CIFAR-100): a one-way, marginal decomposition that
+averages over every other axis. The design is a full balanced factorial, so main
+effects are orthogonal; two-way interactions are computed separately as
+cell-mean residuals ($SS_{ab}/SS_{total}$) and are not folded into any axis's
+$\eta^2$. Scores are deterministic given the seed, so there is no residual error
+term and no significance test: $\eta^2$ is descriptive. In the grid, $\eta^2$ is
+computed per seed and the reported band is a 95\,\% percentile bootstrap
+(2000 resamples) over the five seed-level values ---the seed is the bootstrap
+unit. The crossover of one capacity is the geometric mean of the last
+write-dominant and first eviction-dominant $r$; the interval quoted for the mean
+crossover bootstraps the three capacities' crossovers and is only descriptive.
+
+\emph{Structural dependence between axes.} The axes are not functionally
+independent, and the factorial decomposition does not assume they are. Trace
+strength is consumed only by \texttt{min\_strength} eviction, so the
+\texttt{strength} and \texttt{reinforce} axes are inert in the three quarters of
+the space whose eviction never reads strength; \texttt{merge} acts only when the
+merge threshold is reached; and under a constant gate without reinforcement
+\texttt{min\_strength} reduces exactly to \texttt{fifo} (Section
+\ref{sec:interaction}). A main effect therefore averages a mechanism over
+configurations where it cannot act, and a small $\eta^2$ is not evidence that
+the mechanism is weak. We read main effects only as attribution over the whole
+space, and wherever a dependence is known we also report the conditional effect
+within the configurations that consume the mechanism's output. The two-way
+shares locate the dependence: \texttt{strength}$\times$\texttt{evict} explains
+\result{exp01_nas_full:variance_share.strength×evict|pct}{4.3}\,\% of the
+variance, three times the main effect of \texttt{strength}, and
+\texttt{write}$\times$\texttt{evict}
+\result{exp01_nas_full:variance_share.write×evict|pct}{7.8}\,\%.
+
+
 \subsection{Axis observability}
 \label{sec:axes}
 
@@ -460,7 +611,7 @@ positive observability does not say the mechanism does not matter, only that its
 effect is not a main effect ---Section \ref{sec:interaction} shows exactly that
 case for initial strength.
 
-The e-MDB FIFO ---configuration
+The FIFO-NN proxy of the e-MDB buffer ---configuration
 \texttt{\{read: nn, write: append, strength: constant, decay: 1.0, evict: fifo,
 reinforce: 0.0\}}--- scores
 \result{exp01_nas_full:incumbent.score|f3}{0.106}, in the range
@@ -487,8 +638,9 @@ The transition from ``the write axis explains most of the variance'' to ``the
 eviction axis does'' falls abruptly near $r=1$ across the three evaluated
 capacities (10, 20 and 40),
 independently of $K_{proto}$: the estimated crossover (geometric mean over the
-transition cell) is
-\result{exp02_threshold_grid:r_umbral_medio|f2}{0.88}, with interval
+transition cell, averaged over capacities) is
+\result{exp02_threshold_grid:r_umbral_medio|f2}{0.88}, with a descriptive
+bootstrap interval over the three capacities of
 [\result{exp02_threshold_grid:r_umbral_ci.0|f2}{0.87},
 \result{exp02_threshold_grid:r_umbral_ci.1|f2}{0.89}]. The mechanism is simpler than the statistics that localize it. Eviction never
 runs while the memory has room: a trace is discarded only when a write would
@@ -497,9 +649,26 @@ compresses it into fewer slots, and the freed slots become available for the
 rare, so what matters is how one writes. Above $r=1$ there is nothing to
 compress, memory is saturated, eviction runs on nearly every write, and the
 question reduces to which policy best preserves what matters. We call
-these the \emph{compression} and \emph{selection} regimes, and the claim of this
-section is that which of the two a memory is operating in, rather than any
+these the \emph{compression} and \emph{selection} regimes, and the hypothesis of
+this section is that which of the two a memory is operating in, rather than any
 property of the mechanisms themselves, determines which mechanism matters.
+
+That mechanism also shows why the transition is expected where it falls: it is
+close to a restatement of what capacity means. When the prototypes fit,
+consolidation can hold them without displacing anything; when they do not, some
+form of selection is unavoidable. What the grid adds is that the switch in
+attribution is abrupt and lands at the same $r$ for three capacities, not that a
+switch exists. It is established for one stationary generator with equal
+prototype frequencies, fixed recurrence, isotropic noise, a fixed share of rare
+events and one merge threshold (0.85); whether $r$ is the governing variable or
+one component of a broader capacity-pressure relationship under unequal
+frequencies, drift, noisier similarity, other rare-event prevalences, merge
+thresholds, stream lengths and a wider capacity range is untested here, and we
+state it as a hypothesis supported under the evaluated conditions.
+% TODO(exp10): resultados de robustez de la hipótesis de régimen (frecuencias
+% desiguales, deriva, similitud ruidosa, prevalencia de raros, umbral de
+% fusión, largo del flujo, rango de capacidades) y familias held-out.
+% TODO(exp07): sensibilidad al umbral de fusión (0.85) y dónde cae el cruce.
 
 Figure \ref{fig:threshold} plots attribution, not activity: $\eta^2$ is how much
 of the spread in retention across the
@@ -517,13 +686,14 @@ gate, decay and their interaction with eviction, which Section
   \caption{Where the regime transition falls. Share of the variance in
   rare-event retention, across the 576 configurations, attributable to the write
   axis and to the eviction axis, as a function of $r = K_{proto}/C$. This is a
-  falsification test rather than a performance plot: if absolute capacity
+  test that could have failed rather than a performance plot: if absolute capacity
   governed the transition the three curves would cross at three different
   points, and if stream redundancy governed it, holding visits per prototype
   fixed would have flattened the effect. Neither happens. Note that $\eta^2$ is
   direction-blind --- it identifies which axis moves the outcome, not which
   setting is preferable: the frontier architecture uses \texttt{append}, not
-  \texttt{merge}. Bands: bootstrap confidence interval over seeds.}
+  \texttt{merge}. Bands: 95\,\% percentile bootstrap over the five seed-level
+  $\eta^2$ values.}
   \label{fig:threshold}
 \end{figure*}
 
@@ -541,10 +711,19 @@ novelty and prediction error together make it selective
 (\result{exp01_nas_full:salience_conditional.both|pct}{52.0}\,\%): a conditional
 improvement of
 \result{exp01_nas_full:salience_conditional_ratio|f2}{14.41}$\times$, entirely
-attributable to this interaction.
+attributable to this interaction. The factor should be read for what it is. On
+this benchmark the prediction errors of routine and rare experiences come from
+non-overlapping ranges (Section \ref{sec:protocol}), so once an eviction rule
+reads strength, keeping the rare events follows almost directly from the
+construction: the number shows that the salience signal has no effect until
+something consumes it, not that selecting what matters from a realistic signal
+is solved. How much of the gain survives overlapping, noisy or misleading
+signals is a separate question.
+% TODO(exp08): retención condicional con saliencia imperfecta; reemplazar la
+% última oración por el resultado.
 
 The same interaction can be shown without statistics, on four concrete
-configurations. The frontier differs from the e-MDB incumbent on exactly two of
+configurations. The frontier differs from the incumbent proxy on exactly two of
 the six axes: the strength gate (\texttt{constant} $\to$ \texttt{both}) and the
 eviction policy (\texttt{fifo} $\to$ \texttt{min\_strength}). Changing either
 alone leaves the architecture \emph{bit-identical} to the incumbent, in every
@@ -563,7 +742,7 @@ strength computes a weight nothing consumes.
 \hline
 Configuration & mean & T1 & T2 & T3 \\
 \hline
-e-MDB incumbent
+FIFO-NN proxy (incumbent)
  & \result{exp01_nas_full:incumbent.score|f3}{0.106}
  & \result{exp01_nas_full:incumbent.scores.rare_retention|f3}{0.050}
  & \result{exp01_nas_full:incumbent.scores.noise_under_pressure|f3}{0.269}
@@ -626,13 +805,23 @@ cue. This section runs a two-phase benchmark that first admits substrates by
 reconstruction fidelity (R1--R4, no capacity pressure) and then re-tests them
 under continuous pressure (T1--T3). The four are SDM, ENN (pure Hebbian memory),
 Spiking-SDM (SDM with LIF-neuron activation) and a pure spiking circuit
-(LIF + STDP), with the e-MDB FIFO again included as a point in the same space.
+(LIF + STDP), with the FIFO-NN proxy (``FIFO'' in Table \ref{tab:benchmark})
+again included as a point in the same space.
 Table \ref{tab:benchmark} summarizes both phases: R1 recovers a masked pattern,
 R2 a noisy one, R3 checks whether $B$ overwrites $A$, R4 traces accuracy against
 load; T1 is rare-event retention, T2 noisy retrieval under pressure, T3 how much
 of an early block survives later ones.
 
 \input{tables/tab_benchmark}
+
+Capacity here counts traces, which is not the same budget for every substrate:
+SDM also keeps 512 hard locations with distributed counters next to its explicit
+trace list, so equal $C$ does not mean equal bytes or equal read/write cost, and
+the benchmark does not separate the contribution of the counters from that of
+the trace list.
+% TODO(exp12): costo por sustrato (bytes totales, complejidad de lectura y
+% escritura, tiempo) y aporte separado de contadores y lista de trazas;
+% sensibilidad de SDM a hard locations y fracción de activación.
 
 Every architecture except the pure spiking circuit clears the admission
 threshold of 0.50
@@ -663,8 +852,13 @@ problem. Retrieval is what the score tests independently ---each trace must
 still be recovered from the distributed superposition at similarity
 $\geq 0.85$--- so the informative comparison is SDM against ENN, which shares
 the gate and eviction policy, not SDM against the FIFO. The threshold grid of
-Section \ref{sec:nas}, with rare count at half the capacity, has no such
-ceiling.
+Section \ref{sec:nas} puts the rare count at half the capacity, which removes
+the exact-fit ceiling but not the separability: its prediction-error ranges are
+the same, so it measures which axis carries the variance, not how hard
+selection is.
+% TODO(exp08): versión con señales imperfectas (rangos solapados, ruido,
+% retraso, correlación débil o engañosa con la importancia), con precisión y
+% recall de retención por calidad de señal.
 
 In phase 2, SDM achieves perfect rare-event retention
 (\result{exp04_arch_benchmark:architectures.SDM.battery.per_task.rare_retention}{1.000},
@@ -729,12 +923,14 @@ traces as nominal $K$ rises from 5 to 80, with capacity fixed at 20. The
 synthetic domain in the same run crosses normally
 ($r \approx \result{exp05_real_embeddings:dominios.synthetic.r_umbral|f2}{0.77}$),
 so the null result is specific to this extractor, not a failure of the grid.
+% TODO(exp07): sensibilidad del resultado de CIFAR-100 al umbral de fusión
+% (barrido por debajo de 0.85, cerca de la similitud intra-clase medida).
 
 Intra-prototype similarity is not a term in $r$; what it decides is whether $r$
 is well defined at all. Where consolidation is reachable but only partial, it
 acts on the ratio through $K_{effective}$: sub-threshold visits fragment a
 prototype into several traces, so the effective ratio exceeds the nominal one
-and the law holds when stated over it. Where consolidation is unreachable
+and the hypothesis holds when stated over it. Where consolidation is unreachable
 $K_{effective}$ has no stable value ---it grows with stream length instead of
 converging--- so this precondition is not a special case of an effective ratio
 but a separate binary check that comes first, and on CIFAR-100 it already fails:
@@ -761,7 +957,7 @@ involved--- as the robust diagnostic, rather than a derived $\hat K$.
 \section{Validation in a real environment under partial observability}
 \label{sec:minigrid}
 
-CIFAR-100 validates the threshold law on real data, but it is still a
+CIFAR-100 tests the regime hypothesis on real data, but it is still a
 hand-built stream from static embeddings. A robot does not receive a stream: it
 receives the consequences of its own actions, with partial observation and
 temporal structure that no generator reproduces. We instrument the
@@ -814,7 +1010,12 @@ while the FIFO ---which does not read the strength signal at all--- stays at
 ([\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.FIFO.ci_low|pct}{0.5}\,\%,
 \result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.FIFO.ci_high|pct}{13.5}\,\%]),
 just as in the baseline. The two intervals do not overlap despite the small
-sample. That only the architecture consulting the strength signal improves rules out an
+sample, but they treat each rewarded event as an independent trial, whereas
+events from the same rollout may be correlated; the rollout is the more
+defensible unit.
+% TODO(exp11): intervalos con el rollout (o la semilla) como unidad, más
+% entornos, políticas y definiciones de relevancia (recompensa demorada,
+% objetivos intrínsecos). That only the architecture consulting the strength signal improves rules out an
 artifact of the predictor change: it is the salience gate working, now given a
 signal correlated with what matters.
 
@@ -826,7 +1027,7 @@ matters, which in an environment with reward is reward itself.
 % ═══════════════════════════════════════════════════════════════════════
 \section{Discussion}
 
-\subsection{The threshold law and its practical implication}
+\subsection{The regime hypothesis and its practical implication}
 
 The ratio $r = K_{proto}/C$ has a direct operational reading. In an early,
 structured environment ---a warehouse, a lab--- the robot sees the same things
@@ -847,12 +1048,22 @@ continuous-to-distributed mapping with ENN for the trace lifecycle, as a single
 
 \subsection{The FIFO contrast, and the precondition as a diagnostic}
 
-Mapping the e-MDB FIFO to a configuration is deliberately generous ---the real
-\texttt{EpisodicBuffer} has no content-addressable retrieval at all--- and even
-so it lands in the bottom quartile of the space and is the floor at retaining
-rare events, though not at reconstruction. This is not a criticism of e-MDB,
-built for a different primary goal, but a specific claim: the episodic buffer as
-implemented is inadequate for the LOLA regime, with a quantified gap.
+Mapping the e-MDB FIFO to a configuration is deliberately generous, so the
+FIFO-NN proxy is an optimistic stand-in and not the deployed buffer: the real
+\texttt{EpisodicBuffer} has no content-addressable retrieval at all, and returns
+episodes by position or as training batches. We chose nearest-neighbour reads to
+isolate eviction and weighting, the two axes on which the frontier differs.
+Even so the proxy ranks
+\result{exp01_nas_full:incumbent.rank_optimistic|int}{416}--%
+\result{exp01_nas_full:incumbent.rank_pessimistic|int}{469} of 576 and is the
+floor at retaining rare events among substrates, though not at reconstruction.
+% TODO(exp09): comparación con el buffer real de e-MDB (recuperación secuencial,
+% sin búsqueda por contenido) como baseline adicional; reportar aquí su
+% retención y reconstrucción frente al proxy FIFO-NN.
+This is not a criticism of e-MDB, built for a different primary goal ---its
+buffer feeds model training, not recall--- but a specific claim: as a store of
+what to remember, the buffer as implemented is inadequate for the LOLA regime,
+with a quantified gap for its most favourable proxy.
 
 The finding of Section \ref{sec:real} gives the robot a check it can run online:
 intra-prototype similarity, measured on the vectors the memory already receives
@@ -884,6 +1095,17 @@ fine-tuned extractor or a per-domain merge threshold could change it. The
 MiniGrid validation likewise uses one environment and one exploration policy
 besides the forward-biased one.
 
+Three further limits are not addressed by any experiment in this revision.
+EMBER has not been integrated into the running e-MDB: Fig.~\ref{fig:integration}
+is a design, the incumbent is a proxy rather than the deployed buffer, and
+whether better retention improves the world and utility models e-MDB trains from
+its buffer is untested. All real-data evidence comes from a single visual
+extractor. And no experiment ran on a physical robot.
+% TODO(exp13): efecto de la memoria retenida sobre aprendizaje o desempeño
+% posterior (calidad de modelos/decisiones); citar aquí.
+% TODO(exp09): comparación con el buffer real de e-MDB con recuperación
+% secuencial (ver también la Discusión).
+
 The most consequential open question is a tension between our strongest result
 and the setting that motivates the work. Section \ref{sec:minigrid} resolves the
 salience precondition by anchoring surprise in reward ---but LOLA is defined by
@@ -892,38 +1114,49 @@ stretches with no reward to predict. The available signal then falls back to
 perceptual novelty, which is precisely where we measured retention at the floor.
 The fix is valid where a reward exists and unproven where it does not, which is
 the regime e-MDB is ultimately built for. Intrinsic motivation, learning
-progress, or e-MDB's own goal-babbling objectives are testable substitutes
-within the same protocol; none is evaluated here. Finally, no result in this work was
-obtained on a physical robot: real sensor noise, continuous control and lifelong
-non-stationarity remain untested, and the generator's distributional-drift
-parameter is never activated.
+progress, or the needs and drives of e-MDB's motivational engine
+\cite{becerra2021} are testable substitutes
+within the same protocol; none is evaluated here. How to define salience when
+importance is delayed, ambiguous or unrelated to any external reward remains
+open, and it is the question on which the usefulness of the salience gate for
+LOLA ultimately rests. Finally, because no result was obtained on a physical
+robot, real sensor noise, continuous control and lifelong non-stationarity
+remain untested, and the generator's distributional-drift parameter is never
+activated in the reported experiments.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Conclusion}
 
 We present EMBER, an investigation of bioinspired episodic memory for cognitive
-robots. Exhaustive architecture search shows that which memory mechanism matters
-is not fixed but set by the operating regime $r = K_{proto}/C$: below a
-threshold near 1 the write axis governs retention, above it eviction does. The
+robots. On the synthetic streams evaluated, exhaustive architecture search
+indicates that which memory mechanism matters is not fixed but set by the
+operating regime $r = K_{proto}/C$: below a threshold near 1 the write axis
+governs retention, above it eviction does ---a hypothesis tied to how capacity
+is defined, whose robustness beyond this generator remains to be shown. The
 encoding-salience mechanism the literature most motivates has a negligible main
 effect, yet conditioned on the one eviction policy that reads its signal it
 recovers fourteen times the rare-event retention ---not weak, but gated. The
 benchmark adds that SDM with a prediction-error gate is the only substrate
-pairing reconstruction fidelity with perfect retention, that the e-MDB FIFO
+pairing reconstruction fidelity with perfect retention on a stream whose rare
+events are separable by construction, that the FIFO-NN proxy of the e-MDB buffer
 reconstructs well but is the floor at retention ---its deficiency is choosing,
 not remembering--- and that the pure spiking circuit does not transfer to
 continuous vectors, marking PoC-5 as the next milestone. Real data adds two
 preconditions: consolidation needs intra-prototype similarity above the merge
-threshold, which CIFAR-100 never reaches, making the law an online-measurable
-check rather than weakening it; and salience needs surprise anchored in reward,
+threshold, which CIFAR-100 never reaches, turning a condition of the regime
+hypothesis into an online-measurable check; and salience needs surprise anchored in reward,
 under which retention rises from the floor to more than half with no change of
 configuration or policy. What the salience mechanism needs is the right signal.
 
 \section*{Code and data availability}
 
-The design space, evaluation tasks, six experiments and measured results
-(\texttt{results/**/*.json}, versioned alongside the code) backing every number
-in this paper will be released under an open license after review.
+The code and configuration files for the design space, evaluation tasks and all
+experiments, together with the measured results (\texttt{results/**/*.json},
+with a provenance manifest per experiment) backing every number in this paper,
+are available to the reviewers through an anonymized repository, and will be
+released under an open license after review.
+% TODO(autores): insertar aquí la URL anónima (p. ej. anonymous.4open.science)
+% antes de enviar; el texto afirma que existe.
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
