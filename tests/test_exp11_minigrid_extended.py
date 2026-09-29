@@ -265,3 +265,5 @@ class TestConEntorno:
         assert 0.0 <= f["tasa"] <= 1.0
         res = resumen_matriz(m)
         assert res["recompensa"]["reward_pe"]["n_celdas"] == 1
+        assert "frontera_menos_azar" in celda["recompensa"]["senales"]["reward_pe"]
+        assert sum(t["n_celdas"] for t in res["por_auc"].values()) == res["n_celdas_total"]

@@ -468,6 +468,12 @@ def resumir_celda(filas: list[dict[str, Any]], *, seed: int = 0) -> dict[str, An
             celda["frontera_menos_sin_saliencia"] = cluster_bootstrap_diff(
                 h["frontera"], h["sin_saliencia"], n, seed=seed + 2
             )
+            # Contra la misma frontera con una señal nula: aísla lo que aporta la
+            # señal de lo que aporta cualquier desalojo que no sea por edad.
+            h_azar = np.array([f["hits"]["azar"][imp] for f in filas])
+            celda["frontera_menos_azar"] = cluster_bootstrap_diff(
+                h["frontera"], h_azar, n, seed=seed + 3
+            )
             bloque_imp["senales"][sig] = celda
         out[imp] = bloque_imp
     return out
@@ -498,18 +504,24 @@ def resumen_matriz(matriz: dict[str, Any]) -> dict[str, Any]:
 
     Una celda (entorno, política) cuenta como "gana" si el IC por clúster de
     frontera − FIFO está entero por encima de 0, "pierde" si está entero por
-    debajo, y "empata" si no. La correlación de Spearman entre la AUC de la
-    señal y la ganancia, sobre todas las celdas, es la prueba directa de H2.
+    debajo, y "empata" si no. Lo mismo contra la frontera alimentada con la
+    señal nula `azar` (`*_vs_azar`): el FIFO desaloja por edad y por eso pierde
+    casi todo lo que ocurre temprano en el rollout, así que ganarle al FIFO no
+    prueba que la señal sirva; ganarle a `azar` sí. La correlación de Spearman
+    entre la AUC de la señal y la ganancia sobre `azar`, sobre todas las celdas,
+    es la prueba directa de H2, y `por_auc` la muestra por tramos.
     """
     from ember.envs.salience import IMPORTANCE, SIGNALS
 
     resumen: dict[str, Any] = {}
     aucs_todas, ganancias_todas = [], []
+    puntos: list[tuple[float, float, float, float]] = []
     for imp in IMPORTANCE:
         resumen[imp] = {}
         for sig in SIGNALS:
             gana = pierde = empata = 0
-            tasas_f, tasas_fifo, tasas_ss, difs, aucs = [], [], [], [], []
+            gana_a = pierde_a = empata_a = 0
+            tasas_f, tasas_fifo, tasas_ss, difs, aucs, difs_a = [], [], [], [], [], []
             for e in matriz:
                 for p in matriz[e]:
                     bloque = matriz[e][p][imp]
@@ -527,10 +539,29 @@ def resumen_matriz(matriz: dict[str, Any]) -> dict[str, Any]:
                     tasas_fifo.append(bloque["FIFO"]["tasa"])
                     tasas_ss.append(bloque["sin_saliencia"]["tasa"])
                     difs.append(d["dif"])
-                    if celda["auc"]["media"] is not None:
+                    da = celda["frontera_menos_azar"]
+                    difs_a.append(da["dif"])
+                    if sig != "azar":
+                        if da["ci_low"] > 0:
+                            gana_a += 1
+                        elif da["ci_high"] < 0:
+                            pierde_a += 1
+                        else:
+                            empata_a += 1
+                    if celda["auc"]["media"] is not None and sig != "azar":
                         aucs.append(celda["auc"]["media"])
                         aucs_todas.append(celda["auc"]["media"])
-                        ganancias_todas.append(d["dif"])
+                        ganancias_todas.append(da["dif"])
+                        puntos.append(
+                            (
+                                celda["auc"]["media"],
+                                celda["frontera"]["tasa"],
+                                da["dif"],
+                                celda["frontera"]["tasa"] / bloque["techo"],
+                            )
+                        )
+                    elif celda["auc"]["media"] is not None:
+                        aucs.append(celda["auc"]["media"])
             if not difs:
                 resumen[imp][sig] = {"n_celdas": 0}
                 continue
@@ -546,10 +577,40 @@ def resumen_matriz(matriz: dict[str, Any]) -> dict[str, Any]:
                 "ganancia_min": float(np.min(difs)),
                 "ganancia_max": float(np.max(difs)),
                 "auc_media": float(np.mean(aucs)) if aucs else None,
+                "gana_vs_azar": gana_a,
+                "empata_vs_azar": empata_a,
+                "pierde_vs_azar": pierde_a,
+                "ganancia_vs_azar_media": float(np.mean(difs_a)),
             }
     resumen["spearman_auc_ganancia"] = spearman(np.array(aucs_todas), np.array(ganancias_todas))
     resumen["n_celdas_total"] = len(aucs_todas)
+    resumen["por_auc"] = por_tramo_de_auc(puntos)
     return resumen
+
+
+TRAMOS_AUC = ((0.0, 0.45), (0.45, 0.55), (0.55, 0.75), (0.75, 0.9), (0.9, 0.97), (0.97, 1.01))
+
+
+def por_tramo_de_auc(puntos: list[tuple[float, float, float, float]]) -> dict[str, Any]:
+    """Retención de la frontera y ganancia sobre `azar`, agrupadas por AUC de la señal.
+
+    `puntos` = (auc, tasa_frontera, ganancia_vs_azar, tasa/techo) por celda.
+    Las claves son `t0`..`t5` (sin puntos, para `\\result{}`), con los límites
+    en `desde`/`hasta`.
+    """
+    salida: dict[str, Any] = {}
+    arr = np.array(puntos, dtype=np.float64).reshape(-1, 4)
+    for i, (lo, hi) in enumerate(TRAMOS_AUC):
+        m = (arr[:, 0] >= lo) & (arr[:, 0] < hi)
+        salida[f"t{i}"] = {
+            "desde": lo,
+            "hasta": min(hi, 1.0),
+            "n_celdas": int(m.sum()),
+            "tasa_frontera_media": float(arr[m, 1].mean()) if m.any() else None,
+            "ganancia_vs_azar_media": float(arr[m, 2].mean()) if m.any() else None,
+            "fraccion_del_techo_media": float(arr[m, 3].mean()) if m.any() else None,
+        }
+    return salida
 
 
 # ══════════════════════════════════════════════════════════════════ main
