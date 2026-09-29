@@ -32,6 +32,7 @@ honestamente que uno entrenado hasta el sobreajuste.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -117,6 +118,74 @@ class RewardPredictionError:
         self.w += self.lr * err * x
         self._escala = 0.99 * self._escala + 0.01 * abs(err)
         return float(np.clip(abs(err) / (2.0 * self._escala + 1e-8), 0.0, 1.0))
+
+
+@dataclass(frozen=True, slots=True)
+class RolloutTrace:
+    """Registro completo de un rollout, antes de decidir qué es sorpresa y qué importa.
+
+    `rollout` fija en el momento de correr qué señal de sorpresa se calcula y
+    qué cuenta como raro (la recompensa inmediata). Eso obliga a correr el
+    entorno una vez por combinación. La traza guarda todo lo necesario para
+    calcular *después*, sobre exactamente la misma experiencia, cualquier señal
+    de saliencia y cualquier definición de importancia (ver
+    `ember.envs.salience`): las celdas de la matriz importancia × señal difieren
+    solo en eso, nunca en lo que el agente vivió.
+
+    El ítem `t` es la transición desde la observación `keys[t]` con la acción
+    `actions[t]` hacia `next_keys[t]`, con recompensa `rewards[t]`; su clave en
+    memoria es `keys[t]`, igual que en `rollout`.
+    """
+
+    env_id: str
+    seed: int
+    n_actions: int
+    keys: NDArray[np.float32]
+    next_keys: NDArray[np.float32]
+    actions: NDArray[np.int64]
+    rewards: NDArray[np.float64]
+    """float64 a propósito: la recompensa se guarda tal cual la entrega el entorno, y
+    redondearla a float32 movería en el último bit la señal de `exp06`."""
+    terminated: NDArray[np.bool_]
+    truncated: NDArray[np.bool_]
+    episode: NDArray[np.int64]
+    obs_id: NDArray[np.int64]
+    """Identificador de la observación parcial (entero por orden de aparición en el rollout)."""
+    next_obs_id: NDArray[np.int64]
+    agent_pos: NDArray[np.int64]
+    """Celda del agente en el ítem `t` (información privilegiada, solo para etiquetar)."""
+    key_pickup: NDArray[np.bool_]
+    """El paso `t` recogió una llave."""
+    door_unlocked: NDArray[np.bool_]
+    """El paso `t` abrió una puerta que estaba cerrada con llave."""
+
+    def __len__(self) -> int:
+        return len(self.actions)
+
+    def to_stream(
+        self, pred_error: NDArray, is_rare: NDArray, *, capacity: int, source: str = ""
+    ) -> Stream:
+        """Arma el `Stream` con una señal de sorpresa y una definición de importancia."""
+        items = [
+            StreamItem(
+                key=self.keys[t],
+                value=t,
+                pred_error=float(pred_error[t]),
+                is_rare=bool(is_rare[t]),
+            )
+            for t in range(len(self))
+        ]
+        return Stream(
+            items=items,
+            spec=StreamSpec(
+                n_prototypes=0,
+                capacity=capacity,
+                dim=int(self.keys.shape[1]),
+                source=source or f"minigrid:{self.env_id}",
+                n_prototypes_ci=(0, 0),
+            ),
+            rare_items=[it for it in items if it.is_rare],
+        )
 
 
 class MiniGridStreamAdapter:
@@ -222,4 +291,97 @@ class MiniGridStreamAdapter:
                 n_prototypes_ci=(0, 0),
             ),
             rare_items=[it for it in items if it.is_rare],
+        )
+
+    def rollout_trace(self, n_steps: int, policy: Any = None) -> RolloutTrace:
+        """Como `rollout`, pero devuelve la traza completa en vez de un `Stream`.
+
+        Consume el generador del adaptador exactamente igual que `rollout`
+        (proyección primero, después una acción por paso si `policy` es None),
+        así que con la misma semilla la experiencia es idéntica y la señal
+        `prediction`/`reward` calculada sobre la traza reproduce `rollout`.
+
+        `policy` puede ser None (uniforme con el generador del adaptador), un
+        invocable `policy(obs)` como en `exp06`, o un objeto con
+        `act(obs, env)` y, opcionalmente, `observe(obs, a, r, obs2, term, trunc)`.
+        """
+        env = self._make_env()
+        obs, _ = env.reset(seed=self.seed)
+        u = env.unwrapped
+        n_acciones = int(env.action_space.n)
+
+        ids: dict[bytes, int] = {}
+
+        def id_de(o: dict[str, Any]) -> int:
+            b = np.asarray(o["image"], dtype=np.uint8).tobytes()
+            return ids.setdefault(b, len(ids))
+
+        clave = self._codificar(obs)
+        oid = id_de(obs)
+        episodio = 0
+
+        keys, next_keys, acciones, recompensas = [], [], [], []
+        terminados, truncados, episodios, oids, next_oids = [], [], [], [], []
+        posiciones, llaves, puertas = [], [], []
+
+        actuar = getattr(policy, "act", None)
+        observar = getattr(policy, "observe", None)
+        for _ in range(n_steps):
+            if policy is None:
+                accion = int(self.rng.integers(n_acciones))
+            elif actuar is not None:
+                accion = int(actuar(obs, env))
+            else:
+                accion = int(policy(obs))
+
+            pos = (int(u.agent_pos[0]), int(u.agent_pos[1]))
+            fx, fy = (int(v) for v in u.front_pos)
+            dentro = 0 <= fx < u.width and 0 <= fy < u.height
+            enfrente = u.grid.get(fx, fy) if dentro else None
+            llevaba = u.carrying
+            con_llave = enfrente is not None and enfrente.type == "door" and enfrente.is_locked
+
+            siguiente, recompensa, terminado, truncado, _ = env.step(accion)
+            if observar is not None:
+                observar(obs, accion, float(recompensa), siguiente, terminado, truncado)
+
+            clave_siguiente = self._codificar(siguiente)
+            keys.append(clave)
+            next_keys.append(clave_siguiente)
+            acciones.append(accion)
+            recompensas.append(float(recompensa))
+            terminados.append(bool(terminado))
+            truncados.append(bool(truncado))
+            episodios.append(episodio)
+            oids.append(oid)
+            next_oids.append(id_de(siguiente))
+            posiciones.append(pos)
+            llaves.append(llevaba is None and u.carrying is not None and u.carrying.type == "key")
+            puertas.append(bool(con_llave and enfrente.is_open))
+
+            if terminado or truncado:
+                obs, _ = env.reset()
+                clave = self._codificar(obs)
+                oid = id_de(obs)
+                episodio += 1
+            else:
+                obs, clave, oid = siguiente, clave_siguiente, next_oids[-1]
+
+        env.close()
+        return RolloutTrace(
+            env_id=self.env_id,
+            seed=self.seed,
+            n_actions=n_acciones,
+            keys=np.stack(keys).astype(np.float32),
+            next_keys=np.stack(next_keys).astype(np.float32),
+            actions=np.asarray(acciones, dtype=np.int64),
+            rewards=np.asarray(recompensas, dtype=np.float64),
+            terminated=np.asarray(terminados, dtype=bool),
+            truncated=np.asarray(truncados, dtype=bool),
+            episode=np.asarray(episodios, dtype=np.int64),
+            obs_id=np.asarray(oids, dtype=np.int64),
+            next_obs_id=np.asarray(next_oids, dtype=np.int64),
+            agent_pos=np.asarray(posiciones, dtype=np.int64),
+            key_pickup=np.asarray(llaves, dtype=bool),
+            door_unlocked=np.asarray(puertas, dtype=bool),
         )
