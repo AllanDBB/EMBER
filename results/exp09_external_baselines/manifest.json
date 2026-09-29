@@ -1,11 +1,11 @@
 {
  "experiment": "exp09_external_baselines",
  "ember_version": "0.1.0",
- "git_sha": "200143b832bce217c5c29cf440a4d813df7355e1",
+ "git_sha": "4a0817fec62336fc785631aa1e5127223b6a33c6",
  "git_branch": "rev/exp09-external-baselines",
  "git_dirty": true,
- "timestamp_utc": "2026-09-29T22:16:17.837456+00:00",
- "duration_s": 485.11,
+ "timestamp_utc": "2026-09-29T22:26:56.717038+00:00",
+ "duration_s": 590.95,
  "python": "3.12.13",
  "platform": "Linux-7.2.3-1-cachyos-x86_64-with-glibc2.44",
  "packages": {

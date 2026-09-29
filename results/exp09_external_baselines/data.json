@@ -4402,7 +4402,7 @@
   }
  ],
  "emdb_threshold_sensitivity": {
-  "emdb_sequential_tau0.5": {
+  "tau_050": {
    "rare_retention": {
     "mean": 0.030000000000000006,
     "std": 0.04,
@@ -4479,7 +4479,7 @@
     ]
    }
   },
-  "emdb_sequential_tau0.85": {
+  "tau_085": {
    "rare_retention": {
     "mean": 0.030000000000000006,
     "std": 0.04,
@@ -4556,7 +4556,7 @@
     ]
    }
   },
-  "emdb_sequential_tau0.95": {
+  "tau_095": {
    "rare_retention": {
     "mean": 0.030000000000000006,
     "std": 0.04,
