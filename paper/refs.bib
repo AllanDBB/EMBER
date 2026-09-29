@@ -1,140 +1,394 @@
-  @book{kanerva1988,
-    author    = {Kanerva, Pentti},
-    title     = {Sparse Distributed Memory},
-    publisher = {MIT Press},
-    address   = {Cambridge, MA},
-    year      = {1988}
-  }
+% Bibliografía de EMBER. Cada entrada se verificó contra una fuente primaria
+% (DOI vía Crossref, página del editor, PubMed, PMLR/NeurIPS/AAAI/USENIX, o el
+% repositorio público). Revisión del 2026-09-29, en respuesta a BIP2026.
+% El campo `verified` guarda la URL contra la que se verificó la entrada;
+% IEEEtran.bst lo ignora, así que no ocupa espacio en el PDF.
 
-  @article{liu2012,
-    author  = {Liu, Xu and Ramirez, Steve and others},
-    title   = {Optogenetic stimulation of a hippocampal engram activates fear memory recall},
-    journal = {Nature},
-    volume  = {484},
-    pages   = {381--385},
-    year    = {2012}
-  }
+% ── e-MDB y el problema LOLA ────────────────────────────────────────────────
 
-  @article{cole2015,
-    author  = {Cole, Michael T. R. and others},
-    title   = {Prediction error in the neocortex: The role of dopamine in memory encoding},
-    journal = {Neuroscience and Biobehavioral Reviews},
-    volume  = {48},
-    pages   = {9--18},
-    year    = {2015}
-  }
+@phdthesis{romero2022thesis,
+  author = {Alejandro Romero},
+  title  = {{e-MDB}: A Cognitive Architecture for Lifelong Open-Ended Learning
+            Autonomy in Robotic Systems},
+  school = {Universidade da Coru{\~n}a},
+  year   = {2022},
+  url    = {http://hdl.handle.net/2183/31717}
+}
 
-  @article{murdock1962,
-    author  = {Murdock, Bennet B.},
-    title   = {The serial position effect of free recall},
-    journal = {Journal of Experimental Psychology},
-    volume  = {64},
-    number  = {5},
-    pages   = {482--488},
-    year    = {1962}
-  }
+@article{romero2023ica,
+  author  = {Alejandro Romero and Bla{\v z} Meden and Francisco Bellas and
+             Richard J. Duro},
+  title   = {Using perceptual classes to dream policies in open-ended learning
+             robotics},
+  journal = {Integrated Computer-Aided Engineering},
+  volume  = {30},
+  number  = {3},
+  pages   = {205--222},
+  year    = {2023},
+  doi     = {10.3233/ICA-230707}
+}
 
-  @inproceedings{emdb2021,
-    author    = {Salido-Monz{\'u}, B. and Wennersteen, A.},
-    title     = {{e-MDB}: An epistemic multilevel {Darwinist} brain for lifelong open-ended learning},
-    booktitle = {Proc. IEEE Int. Conf. Development and Learning (ICDL)},
-    year      = {2021}
-  }
+@article{romero2023sensors,
+  author  = {Alejandro Romero and Francisco Bellas and Richard J. Duro},
+  title   = {A Perspective on Lifelong Open-Ended Learning Autonomy for Robotics
+             through Cognitive Architectures},
+  journal = {Sensors},
+  volume  = {23},
+  number  = {3},
+  pages   = {1611},
+  year    = {2023},
+  doi     = {10.3390/s23031611}
+}
 
-  @inproceedings{munkhdalai2017,
-    author    = {Munkhdalai, Tsendsuren and Yu, Hong},
-    title     = {Meta networks},
-    booktitle = {Proc. ICML},
-    year      = {2017}
-  }
+@article{becerra2021,
+  author  = {Jos{\'e} A. Becerra and Alejandro Romero and Francisco Bellas and
+             Richard J. Duro},
+  title   = {Motivational engine and long-term memory coupling within a
+             cognitive architecture for lifelong open-ended learning},
+  journal = {Neurocomputing},
+  volume  = {452},
+  pages   = {341--354},
+  year    = {2021},
+  doi     = {10.1016/j.neucom.2019.10.124}
+}
 
-  @article{elsken2019,
-    author  = {Elsken, Thomas and Metzen, Jan Hendrik and Hutter, Frank},
-    title   = {Neural architecture search: A survey},
-    journal = {Journal of Machine Learning Research},
-    volume  = {20},
-    number  = {55},
-    pages   = {1--21},
-    year    = {2019}
-  }
+@article{duro2019,
+  author  = {Richard J. Duro and Jose A. Becerra and Juan Monroy and Francisco
+             Bellas},
+  title   = {Perceptual Generalization and Context in a Network Memory Inspired
+             Long-Term Memory for Artificial Cognition},
+  journal = {International Journal of Neural Systems},
+  volume  = {29},
+  number  = {6},
+  pages   = {1850053},
+  year    = {2019},
+  doi     = {10.1142/S0129065718500533}
+}
 
-  @article{graves2014,
-    author  = {Graves, Alex and Wayne, Greg and Danihelka, Ivo},
-    title   = {Neural Turing machines},
-    journal = {arXiv:1410.5401},
-    year    = {2014}
-  }
+@article{bellas2010,
+  author  = {Francisco Bellas and Richard J. Duro and Andr{\'e}s Fai{\~n}a and
+             Daniel Souto},
+  title   = {Multilevel {Darwinist} Brain ({MDB}): Artificial Evolution in a
+             Cognitive Architecture for Real Robots},
+  journal = {IEEE Transactions on Autonomous Mental Development},
+  volume  = {2},
+  number  = {4},
+  pages   = {340--354},
+  year    = {2010},
+  doi     = {10.1109/TAMD.2010.2086453}
+}
 
-  @book{semon1904,
-    author    = {Semon, Richard},
-    title     = {Die Mneme},
-    publisher = {Wilhelm Engelmann},
-    address   = {Leipzig},
-    year      = {1904}
-  }
+@misc{emdbnodes,
+  author       = {{Integrated Group for Engineering Research (GII), Universidade da
+                  Coru{\~n}a}},
+  title        = {{e-MDB} reference implementation for cognitive nodes
+                  (\texttt{emdb\_cognitive\_nodes\_gii})},
+  howpublished = {\url{https://github.com/GII/emdb_cognitive_nodes_gii}},
+  note         = {Software, Apache-2.0. \texttt{EpisodicBuffer} in
+                  \texttt{cognitive\_nodes/episodic\_buffer.py}, commit d15f96a,
+                  accessed Sep.\ 2026}
+}
 
-  @book{hebb1949,
-    author    = {Hebb, Donald O.},
-    title     = {The Organization of Behavior},
-    publisher = {Wiley},
-    address   = {New York},
-    year      = {1949}
-  }
+% ── Neurociencia y psicología de la memoria ─────────────────────────────────
 
-  @article{bipoo1998,
-    author  = {Bi, Guo-qiang and Poo, Mu-ming},
-    title   = {Synaptic modifications in cultured hippocampal neurons: Dependence on
-              spike timing, synaptic strength, and postsynaptic cell type},
-    journal = {Journal of Neuroscience},
-    volume  = {18},
-    number  = {24},
-    pages   = {10464--10472},
-    year    = {1998}
-  }
+@book{kanerva1988,
+  author    = {Pentti Kanerva},
+  title     = {Sparse Distributed Memory},
+  publisher = {MIT Press},
+  address   = {Cambridge, MA},
+  year      = {1988},
+  isbn      = {0-262-11132-2}
+}
 
-  @article{kanerva2009,
-    author  = {Kanerva, Pentti},
-    title   = {Hyperdimensional computing: An introduction to computing in
-              distributed representation with high-dimensional random vectors},
-    journal = {Cognitive Computation},
-    volume  = {1},
-    number  = {2},
-    pages   = {139--159},
-    year    = {2009}
-  }
+@article{liu2012,
+  author  = {Xu Liu and Steve Ramirez and Petti T. Pang and Corey B. Puryear and
+             Arvind Govindarajan and Karl Deisseroth and Susumu Tonegawa},
+  title   = {Optogenetic stimulation of a hippocampal engram activates fear
+             memory recall},
+  journal = {Nature},
+  volume  = {484},
+  number  = {7394},
+  pages   = {381--385},
+  year    = {2012},
+  doi     = {10.1038/nature11028}
+}
 
-  @techreport{krizhevsky2009,
-    author      = {Krizhevsky, Alex},
-    title       = {Learning multiple layers of features from tiny images},
-    institution = {University of Toronto},
-    year        = {2009}
-  }
+@book{hebb1949,
+  author    = {Donald O. Hebb},
+  title     = {The Organization of Behavior: A Neuropsychological Theory},
+  publisher = {Wiley},
+  address   = {New York},
+  year      = {1949}
+}
 
-  @inproceedings{he2016,
-    author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
-    title     = {Deep residual learning for image recognition},
-    booktitle = {Proc. IEEE CVPR},
-    year      = {2016}
-  }
+@book{semon1904,
+  author    = {Richard Semon},
+  title     = {Die Mneme als erhaltendes Prinzip im Wechsel des organischen
+               Geschehens},
+  publisher = {Wilhelm Engelmann},
+  address   = {Leipzig},
+  year      = {1904}
+}
 
-  @inproceedings{schaul2016,
-    author    = {Schaul, Tom and Quan, John and Antonoglou, Ioannis and Silver, David},
-    title     = {Prioritized experience replay},
-    booktitle = {Proc. ICLR},
-    year      = {2016}
-  }
+@article{bipoo1998,
+  author  = {Bi, Guo-qiang and Poo, Mu-ming},
+  title   = {Synaptic Modifications in Cultured Hippocampal Neurons: Dependence
+             on Spike Timing, Synaptic Strength, and Postsynaptic Cell Type},
+  journal = {The Journal of Neuroscience},
+  volume  = {18},
+  number  = {24},
+  pages   = {10464--10472},
+  year    = {1998},
+  doi     = {10.1523/JNEUROSCI.18-24-10464.1998}
+}
 
-  @inproceedings{pritzel2017,
-    author    = {Pritzel, Alexander and Uria, Benigno and Srinivasan, Sriram and others},
-    title     = {Neural episodic control},
-    booktitle = {Proc. ICML},
-    year      = {2017}
-  }
+@article{kanerva2009,
+  author  = {Pentti Kanerva},
+  title   = {Hyperdimensional Computing: An Introduction to Computing in
+             Distributed Representation with High-Dimensional Random Vectors},
+  journal = {Cognitive Computation},
+  volume  = {1},
+  number  = {2},
+  pages   = {139--159},
+  year    = {2009},
+  doi     = {10.1007/s12559-009-9009-8}
+}
 
-  @article{minigrid,
-    author  = {Chevalier-Boisvert, Maxime and others},
-    title   = {{Minigrid} \& {Miniworld}: {RL} environments for goal-oriented tasks},
-    journal = {NeurIPS},
-    volume  = {36},
-    year    = {2023}
-  }
+@article{lisman2005,
+  author  = {John E. Lisman and Anthony A. Grace},
+  title   = {The Hippocampal-{VTA} Loop: Controlling the Entry of Information
+             into Long-Term Memory},
+  journal = {Neuron},
+  volume  = {46},
+  number  = {5},
+  pages   = {703--713},
+  year    = {2005},
+  doi     = {10.1016/j.neuron.2005.05.002}
+}
+
+@article{shohamy2010,
+  author  = {Daphna Shohamy and R. Alison Adcock},
+  title   = {Dopamine and adaptive memory},
+  journal = {Trends in Cognitive Sciences},
+  volume  = {14},
+  number  = {10},
+  pages   = {464--472},
+  year    = {2010},
+  doi     = {10.1016/j.tics.2010.08.002}
+}
+
+@article{rouhani2018,
+  author  = {Nina Rouhani and Kenneth A. Norman and Yael Niv},
+  title   = {Dissociable effects of surprising rewards on learning and memory},
+  journal = {Journal of Experimental Psychology: Learning, Memory, and
+             Cognition},
+  volume  = {44},
+  number  = {9},
+  pages   = {1430--1443},
+  year    = {2018},
+  doi     = {10.1037/xlm0000518}
+}
+
+@article{schultz1997,
+  author  = {Wolfram Schultz and Peter Dayan and P. Read Montague},
+  title   = {A Neural Substrate of Prediction and Reward},
+  journal = {Science},
+  volume  = {275},
+  number  = {5306},
+  pages   = {1593--1599},
+  year    = {1997},
+  doi     = {10.1126/science.275.5306.1593}
+}
+
+@article{anderson1991,
+  author  = {John R. Anderson and Lael J. Schooler},
+  title   = {Reflections of the Environment in Memory},
+  journal = {Psychological Science},
+  volume  = {2},
+  number  = {6},
+  pages   = {396--408},
+  year    = {1991},
+  doi     = {10.1111/j.1467-9280.1991.tb00174.x}
+}
+
+@article{richards2017,
+  author  = {Blake A. Richards and Paul W. Frankland},
+  title   = {The Persistence and Transience of Memory},
+  journal = {Neuron},
+  volume  = {94},
+  number  = {6},
+  pages   = {1071--1084},
+  year    = {2017},
+  doi     = {10.1016/j.neuron.2017.04.037}
+}
+
+% ── Aprendizaje automático, búsqueda de arquitecturas y replay ─────────────
+
+@article{elsken2019,
+  author  = {Thomas Elsken and Jan Hendrik Metzen and Frank Hutter},
+  title   = {Neural Architecture Search: A Survey},
+  journal = {Journal of Machine Learning Research},
+  volume  = {20},
+  number  = {55},
+  pages   = {1--21},
+  year    = {2019},
+  verified     = {https://jmlr.org/papers/v20/18-598.html}
+}
+
+@misc{graves2014,
+  author        = {Alex Graves and Greg Wayne and Ivo Danihelka},
+  title         = {Neural {Turing} Machines},
+  year          = {2014},
+  eprint        = {1410.5401},
+  archivePrefix = {arXiv},
+  doi           = {10.48550/arXiv.1410.5401},
+  howpublished  = {arXiv:1410.5401}
+}
+
+@inproceedings{munkhdalai2017,
+  author    = {Tsendsuren Munkhdalai and Hong Yu},
+  title     = {Meta Networks},
+  booktitle = {Proc. 34th Int. Conf. Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {70},
+  pages     = {2554--2563},
+  year      = {2017},
+  verified       = {https://proceedings.mlr.press/v70/munkhdalai17a.html}
+}
+
+@inproceedings{schaul2016,
+  author    = {Tom Schaul and John Quan and Ioannis Antonoglou and David Silver},
+  title     = {Prioritized Experience Replay},
+  booktitle = {Proc. 4th Int. Conf. Learning Representations (ICLR)},
+  address   = {San Juan, Puerto Rico},
+  year      = {2016},
+  verified       = {https://arxiv.org/abs/1511.05952}
+}
+
+@inproceedings{pritzel2017,
+  author    = {Alexander Pritzel and Benigno Uria and Sriram Srinivasan and
+               Adri{\`a} Puigdom{\`e}nech Badia and Oriol Vinyals and Demis
+               Hassabis and Daan Wierstra and Charles Blundell},
+  title     = {Neural Episodic Control},
+  booktitle = {Proc. 34th Int. Conf. Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {70},
+  pages     = {2827--2836},
+  year      = {2017},
+  verified       = {https://proceedings.mlr.press/v70/pritzel17a.html}
+}
+
+@techreport{krizhevsky2009,
+  author      = {Alex Krizhevsky},
+  title       = {Learning Multiple Layers of Features from Tiny Images},
+  institution = {University of Toronto},
+  address     = {Toronto, ON, Canada},
+  year        = {2009},
+  verified         = {https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf}
+}
+
+@inproceedings{he2016,
+  author    = {Kaiming He and Xiangyu Zhang and Shaoqing Ren and Jian Sun},
+  title     = {Deep Residual Learning for Image Recognition},
+  booktitle = {Proc. IEEE Conf. Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {770--778},
+  year      = {2016},
+  doi       = {10.1109/CVPR.2016.90}
+}
+
+@inproceedings{minigrid,
+  author    = {Maxime Chevalier-Boisvert and Bolun Dai and Mark Towers and
+               Rodrigo Perez-Vicente and Lucas Willems and Salem Lahlou and Suman
+               Pal and Pablo Samuel Castro and Jordan Terry},
+  title     = {{Minigrid} \& {Miniworld}: Modular \& Customizable Reinforcement
+               Learning Environments for Goal-Oriented Tasks},
+  booktitle = {Advances in Neural Information Processing Systems 36 (NeurIPS
+               2023), Datasets and Benchmarks Track},
+  pages     = {73383--73394},
+  year      = {2023},
+  doi       = {10.52202/075280-3209}
+}
+
+% ── Gestión de memoria no biológica ─────────────────────────────────────────
+
+@article{vitter1985,
+  author  = {Jeffrey S. Vitter},
+  title   = {Random Sampling with a Reservoir},
+  journal = {ACM Transactions on Mathematical Software},
+  volume  = {11},
+  number  = {1},
+  pages   = {37--57},
+  year    = {1985},
+  doi     = {10.1145/3147.3165}
+}
+
+@inproceedings{isele2018,
+  author    = {David Isele and Akansel Cosgun},
+  title     = {Selective Experience Replay for Lifelong Learning},
+  booktitle = {Proc. AAAI Conf. Artificial Intelligence},
+  volume    = {32},
+  number    = {1},
+  year      = {2018},
+  doi       = {10.1609/aaai.v32i1.11595}
+}
+
+@misc{chaudhry2019,
+  author        = {Arslan Chaudhry and Marcus Rohrbach and Mohamed Elhoseiny and
+                   Thalaiyasingam Ajanthan and Puneet K. Dokania and Philip H. S.
+                   Torr and Marc'Aurelio Ranzato},
+  title         = {On Tiny Episodic Memories in Continual Learning},
+  year          = {2019},
+  eprint        = {1902.10486},
+  archivePrefix = {arXiv},
+  doi           = {10.48550/arXiv.1902.10486},
+  howpublished  = {arXiv:1902.10486}
+}
+
+@inproceedings{aljundi2019,
+  author    = {Rahaf Aljundi and Min Lin and Baptiste Goujaud and Yoshua Bengio},
+  title     = {Gradient based sample selection for online continual learning},
+  booktitle = {Advances in Neural Information Processing Systems 32 (NeurIPS
+               2019)},
+  year      = {2019},
+  verified       = {https://proceedings.neurips.cc/paper_files/paper/2019/hash/e562cd9c0768d5464b64cf61da7fc6bb-Abstract.html}
+}
+
+@inproceedings{rebuffi2017,
+  author    = {Sylvestre-Alvise Rebuffi and Alexander Kolesnikov and Georg Sperl
+               and Christoph H. Lampert},
+  title     = {{iCaRL}: Incremental Classifier and Representation Learning},
+  booktitle = {Proc. IEEE Conf. Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {5533--5542},
+  year      = {2017},
+  doi       = {10.1109/CVPR.2017.587}
+}
+
+@inproceedings{rolnick2019,
+  author    = {David Rolnick and Arun Ahuja and Jonathan Schwarz and Timothy
+               Lillicrap and Gregory Wayne},
+  title     = {Experience Replay for Continual Learning},
+  booktitle = {Advances in Neural Information Processing Systems 32 (NeurIPS
+               2019)},
+  year      = {2019},
+  verified       = {https://proceedings.neurips.cc/paper_files/paper/2019/hash/fa7cdfad1a5aaf8370ebeda47a1ff1c3-Abstract.html}
+}
+
+@article{oneil1993,
+  author  = {Elizabeth J. O'Neil and Patrick E. O'Neil and Gerhard Weikum},
+  title   = {The {LRU-K} page replacement algorithm for database disk buffering},
+  journal = {ACM SIGMOD Record},
+  volume  = {22},
+  number  = {2},
+  pages   = {297--306},
+  year    = {1993},
+  doi     = {10.1145/170036.170081}
+}
+
+@inproceedings{megiddo2003,
+  author    = {Nimrod Megiddo and Dharmendra S. Modha},
+  title     = {{ARC}: A Self-Tuning, Low Overhead Replacement Cache},
+  booktitle = {Proc. 2nd USENIX Conf. File and Storage Technologies (FAST)},
+  address   = {San Francisco, CA},
+  year      = {2003},
+  verified       = {https://www.usenix.org/conference/fast-03/arc-self-tuning-low-overhead-replacement-cache}
+}
