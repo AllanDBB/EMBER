@@ -365,7 +365,9 @@ def comparar(
 
     # ── 4. sensibilidad del buffer real al umbral de coincidencia ──────────
     variantes = {
-        f"emdb_sequential_tau{tau}": FIFO_GENOTYPE.with_axis("read", SequentialScan(threshold=tau))
+        f"tau_{round(100 * tau):03d}": FIFO_GENOTYPE.with_axis(
+            "read", SequentialScan(threshold=tau)
+        )
         for tau in umbrales
     }
     sens = evaluar_metodos(variantes, seeds=seeds, n_jobs=n_jobs)
