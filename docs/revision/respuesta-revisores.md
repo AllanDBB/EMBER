@@ -425,8 +425,6 @@ selección fuerte (ρ = −0.03 en r = 4), aunque la frontera sigue en el 10 %
 superior salvo con 0.1 % de raros, donde los empates estiran su intervalo
 pesimista hasta 297; lo dejamos registrado en `docs/notas/`.
 
-Queda PENDIENTE(exp11).
-
 ### R3.2 — Esquema de la integración EMBER/e-MDB
 
 Agregamos la **Figura 1** en §II-D, en TikZ. Muestra:
