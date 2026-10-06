@@ -46,8 +46,10 @@ situations divided by capacity. Below $r=1$ the write axis explains
 \result{exp02_threshold_grid:regimenes.compression.eta2_write|pct}{73.0}\,\% of
 the variance in retention; above it,
 \result{exp02_threshold_grid:regimenes.selection.eta2_write|pct}{1.6}\,\%, and
-eviction takes over. The switch falls at the same $r$ for three capacities, which
-we state as a hypothesis for the conditions tested, not a general law. Second, the best configuration retains
+eviction takes over. The switch falls at the same $r$ for three capacities, but
+across 23 stream families it is located by the effective ratio, counting the
+traces consolidation actually leaves, not by nominal $r$; we state it as a
+hypothesis, not a law. Second, the best configuration retains
 \result{exp01_nas_full:frontier.scores.rare_retention|f3}{0.983} of the marked
 experiences against
 \result{exp01_nas_full:incumbent.scores.rare_retention|f3}{0.050} for that
@@ -163,10 +165,12 @@ The main contributions of this work are:
 
 \begin{itemize}
   \item A \emph{regime hypothesis}, supported under the conditions evaluated: the
-  ratio $r = K_{proto}/C$ between recurring experience prototypes and memory
-  capacity determines which family of mechanisms governs performance, with a
-  regime transition that reproduces at three distinct capacities of one
-  stationary synthetic generator.
+  ratio between the traces recurring experience occupies after consolidation
+  and memory capacity determines which family of mechanisms governs
+  performance. The transition reproduces at three capacities in nominal
+  $r = K_{proto}/C$, but across stream families with unequal frequencies,
+  drift, noise or more rare events the effective ratio $r_{eff}$ places it far
+  more tightly.
   \item A demonstration that in a design space of gated mechanisms, main
   effects mislead. Modulating encoding strength by novelty and prediction
   error ---the most-cited mechanism in the bioinspired-memory literature---
@@ -523,13 +527,14 @@ uniformly at random, adds isotropic Gaussian noise ($\sigma=0.05$ per
 dimension) to its centre and renormalizes; its payload is the prototype
 identity. Rare experiences have fresh independent random keys and unique
 payloads, and are inserted at uniformly random positions. The generator also
-supports correlated centres, power-law visit frequencies and drift; all three
-are off in every reported experiment. CIFAR-100 streams (Section \ref{sec:real})
+supports correlated centres, power-law visit frequencies and drift, all off
+except in the robustness families of Section \ref{sec:regime}, which each move
+one knob from this generator: Zipf visit frequencies, drift, intra-prototype
+noise, centre similarity, rare-event prevalence, recurrence, and $C$ from 5 to
+160. CIFAR-100 streams (Section \ref{sec:real})
 replace centre plus noise by a different image of one of $K_{proto}$ classes per
 visit, draw rare experiences from disjoint classes, and keep the same
 prediction-error ranges.
-% TODO(exp10): familias de streams held-out (frecuencias desiguales, deriva,
-% similitud ruidosa, prevalencia de raros) y resultados de robustez.
 
 \emph{Surprise signals and importance labels.} Each experience carries a
 prediction error drawn from a clipped normal: $\mathcal{N}(0.10,0.05)$ clipped
@@ -646,6 +651,7 @@ over compressed memory. The frontier of the space scores
 the incumbent.
 
 \subsection{The regime transition}
+\label{sec:regime}
 
 The \result{exp01_nas_full:main_effects.0.eta2|pct}{56.6}\,\% of the write axis is not primarily a property of the merge
 mechanism; it is a property of the relationship between the number of recurring
@@ -677,16 +683,29 @@ close to a restatement of what capacity means. When the prototypes fit,
 consolidation can hold them without displacing anything; when they do not, some
 form of selection is unavoidable. What the grid adds is that the switch in
 attribution is abrupt and lands at the same $r$ for three capacities, not that a
-switch exists. It is established for one stationary generator with equal
-prototype frequencies, fixed recurrence, isotropic noise, a fixed share of rare
-events and one merge threshold (0.85); whether $r$ is the governing variable or
-one component of a broader capacity-pressure relationship under unequal
-frequencies, drift, noisier similarity, other rare-event prevalences, merge
-thresholds, stream lengths and a wider capacity range is untested here, and we
-state it as a hypothesis supported under the evaluated conditions.
-% TODO(exp10): resultados de robustez de la hipótesis de régimen (frecuencias
-% desiguales, deriva, similitud ruidosa, prevalencia de raros, umbral de
-% fusión, largo del flujo, rango de capacidades) y familias held-out.
+switch exists. Repeated on 23 stream families (Section \ref{sec:protocol};
+merge threshold 0.85), the sweep shows that nominal $r$ is not the governing
+variable: its crossover ranges from
+\result{exp10_law_robustness:parte_a.colapso.r_nom.cruce_min|f2}{0.16} to
+\result{exp10_law_robustness:parte_a.colapso.r_nom.cruce_max|f2}{1.32}
+(s.d.\ of its log
+\result{exp10_law_robustness:parte_a.colapso.r_nom.sd_log|f2}{0.46}); drift and
+noise pull it far below 1, and at the noisiest setting eviction dominates at
+every $r$. Over $r_{eff}=K_{effective}/C$, the traces the routine occupies after
+consolidation (Section \ref{sec:real}), crossovers collapse to
+[\result{exp10_law_robustness:parte_a.colapso.r_eff.cruce_min|f2}{0.56},
+\result{exp10_law_robustness:parte_a.colapso.r_eff.cruce_max|f2}{1.28}]
+(s.d.\ \result{exp10_law_robustness:parte_a.colapso.r_eff.sd_log|f2}{0.17}),
+tighter than nominal $r$ in
+\result{exp10_law_robustness:parte_a.colapso.r_eff.frac_bootstrap_mas_colapsada|pct}{99.8}\,\%
+of bootstrap replicates and than four other pressure measures fixed in advance;
+rare-event prevalence and $C=5$ leave the residual spread. The hypothesis is
+therefore stated over $r_{eff}$, which equals nominal $r$ when encounters
+consolidate cleanly, as in Fig.~\ref{fig:threshold}. Re-scored on 14 held-out
+families with fresh seeds, the frontier (Section \ref{sec:frontier}) keeps rank
+interval [1,\,1] in all but one, [\result{exp10_law_robustness:parte_b.familias.raros_01pct.bateria.frontera_rango_optimista|int}{15},\,\result{exp10_law_robustness:parte_b.frontera_peor_rango_pesimista_bateria|int}{20}]
+at 0.1\,\% rares, with Spearman correlation to the standard ranking
+$\geq$\,\result{exp10_law_robustness:parte_b.spearman_min_bateria|f2}{0.77}.
 % TODO(exp07): sensibilidad al umbral de fusión (0.85) y dónde cae el cruce.
 
 Figure \ref{fig:threshold} plots attribution, not activity: $\eta^2$ is how much
@@ -1072,7 +1091,10 @@ matters ---reward when importance is reward, visitation counts when it is novelt
 The ratio $r = K_{proto}/C$ has a direct operational reading. In an early,
 structured environment ---a warehouse, a lab--- the robot sees the same things
 repeatedly, $r < 1$, and consolidation is efficient; in a heterogeneous one $r$
-grows above 1 and selective eviction by relevance dominates. The recommendation
+grows above 1 and selective eviction by relevance dominates. The count that
+matters is $r_{eff}$ (Section \ref{sec:regime}): drift or noisy encounters
+fragment one recurring situation into several traces and push a robot into
+selection earlier than counting kinds of situation suggests. The recommendation
 is not to pick a regime: the frontier architecture works in both, never
 depending on merging (which fails above $r=1$) and always exploiting the
 importance signal.
@@ -1185,8 +1207,8 @@ importance is delayed ---where every causal signal we tried fails---, ambiguous
 or unrelated to any external reward remains open, and it is the question on which the usefulness of the salience gate for
 LOLA ultimately rests. Finally, because no result was obtained on a physical
 robot, real sensor noise, continuous control and lifelong non-stationarity
-remain untested, and the generator's distributional-drift parameter is never
-activated in the reported experiments.
+remain untested; synthetic drift enters only the robustness families of
+Section \ref{sec:regime}.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Conclusion}
@@ -1194,9 +1216,10 @@ activated in the reported experiments.
 We present EMBER, an investigation of bioinspired episodic memory for cognitive
 robots. On the synthetic streams evaluated, exhaustive architecture search
 indicates that which memory mechanism matters is not fixed but set by the
-operating regime $r = K_{proto}/C$: below a threshold near 1 the write axis
-governs retention, above it eviction does ---a hypothesis tied to how capacity
-is defined, whose robustness beyond this generator remains to be shown. The
+operating regime: below a ratio of consolidated recurring traces to capacity
+near 1 the write axis governs retention, above it eviction does ---a hypothesis
+tied to how capacity is defined, which across stream families holds over this
+effective ratio rather than over the nominal $K_{proto}/C$. The
 encoding-salience mechanism the literature most motivates has a negligible main
 effect, yet conditioned on the one eviction policy that reads its signal it
 recovers fourteen times the rare-event retention ---not weak, but gated. The
