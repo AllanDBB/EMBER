@@ -1,12 +1,13 @@
 # Estado del trabajo — EMBER
 
-**Última actualización:** 2026-09-01
-**Rama:** `main`
+**Última actualización:** 2026-10-06
+**Rama:** `revision/bip2026-reviews`
 
 Retomar leyendo, en este orden:
 1. `docs/superpowers/specs/2026-08-11-ember-repo-design.md` — el diseño y por qué.
 2. `docs/superpowers/plans/2026-08-11-ember-foundation.md` — las 23 tareas.
 3. `docs/notas/2026-08-11-numeros-movidos.md` — **qué resultados del draft no sobrevivieron.**
+4. `docs/revision/respuesta-revisores.md` y las notas `docs/notas/2026-10-06-*` — la revisión de BIP2026.
 
 ## El paper, hoy
 
@@ -212,11 +213,45 @@ Esto pasó de ser un párrafo de "trabajo futuro" en Limitaciones a su propia
 sección del paper (§VI, con tabla y subsección de Discusión propia), porque
 ya no es una limitación: es un resultado positivo completo.
 
+## La revisión de BIP2026 (2026-10-06)
+
+Los siete experimentos de la revisión (exp07–exp13) están corridos, fusionados
+en `revision/bip2026-reviews` e integrados al paper. No queda ningún
+`TODO(expNN)` en `main.tex` ni ningún `PENDIENTE` en la respuesta a los
+revisores. `verify_paper` está limpio, pasan 404 tests y `ruff` está limpio.
+**El PDF tiene 12 páginas (~10 800 palabras): hay que recortar.**
+
+Afirmaciones que cambiaron (cada una con su nota en `docs/notas/`):
+
+- **exp07**: el umbral de fusión no mueve el cruce (r ≈ 0.87 entre 0.40 y
+  0.85). La precondición de CIFAR-100 pasa a ser *separabilidad*, no alcanzar
+  0.85: ningún umbral da fusiones frecuentes y puras.
+- **exp08**: el 14.41× vale con una señal perfectamente separable y se
+  desvanece al degradarla. La ventaja aguanta hasta un AUC de ≈ 0.91–0.96 y se
+  pierde con retraso. SDM baja a 0.60 con AUC 0.95, por debajo de ENN.
+- **exp09**: ningún baseline externo supera a la frontera, pero el desalojo
+  voraz por sorpresa queda a 0.035. El buffer real de e-MDB, leído en forma
+  secuencial, no pasa el gate (0.368). Ese resultado depende del criterio de
+  acierto asumido (coseno ≥ 0.85).
+- **exp10**: **r nominal no gobierna la transición; r_eff = K_efectivo/C sí**
+  (23 familias). La hipótesis se enuncia ahora sobre r_eff.
+- **exp11**: con el rollout como unidad, los intervalos de exp06 no cambian. La
+  saliencia transfiere en 4 entornos cuando la señal está alineada con lo
+  importante. La importancia demorada sigue abierta.
+- **exp12**: la retención de SDM viene de su lista de trazas, no de los
+  contadores (41.96× más bytes). A igual presupuesto, el FIFO le gana. Tabla
+  III tiene una columna nueva de KiB.
+- **exp13**: retener mejor no es actuar mejor. La frontera gana al reaparecer
+  una tarea, pero pierde en el retorno acumulado frente al FIFO.
+
 ## Lo siguiente
 
-1. **Revisión editorial del texto**: tono, longitud por sección (el paper
-   quedó en 8 páginas con cuatro contribuciones).
-2. Trabajo futuro ya explícito en el paper, no pendiente de esta sesión:
+1. **Recortar el paper de 12 páginas al límite de BIP2026** y hacer un pase
+   editorial de coherencia sobre las siete integraciones, que se escribieron en
+   paralelo. Revisar el abstract (todavía dice "0.401 against 0.85" y no menciona
+   r_eff ni la señal separable) y decidir qué figuras nuevas entran.
+2. **Pendiente de los autores (R1.10)**: el repositorio público y su URL en el paper.
+3. Trabajo futuro ya explícito en el paper, no pendiente de esta sesión:
    barrer `exp05` en más capacidades y con otro extractor de embeddings;
    extender `exp06` a POPGym y a políticas entrenadas.
 
