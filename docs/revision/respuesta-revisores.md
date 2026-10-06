@@ -182,9 +182,33 @@ En §IV reconocemos que la capacidad cuenta trazas y no bytes. SDM además
 mantiene 512 hard locations con contadores, y el benchmark no separa el aporte
 de los contadores del de la lista de trazas.
 
-Queda PENDIENTE(exp12): bytes totales, complejidad de lectura y escritura,
-tiempo, aporte separado de contadores y trazas, y sensibilidad a hard
-locations, fracción de activación y umbrales.
+Lo medimos (exp12, 10 semillas, IC bootstrap) y el resultado matiza el paper:
+
+- **Bytes.** A C = 20 y d = 32, la SDM ocupa 131.1 KiB contra 3.1 KiB del FIFO
+  y del ENN (×41.96); Spiking-SDM 133.0 y Spiking 105.1. La contabilidad real
+  (`nbytes`) coincide con la fórmula analítica en todas las configuraciones.
+  Agregamos la columna **KiB** a la Tabla III (generada desde `results/`).
+- **Complejidad y tiempo.** Lectura y escritura son O(C·d) en FIFO/ENN y
+  O(M·d + C·d) en SDM; medido a C = 20, la lectura cuesta 28 µs en SDM contra
+  12 µs en FIFO (escritura 57 contra 31 µs). §IV.
+- **Igual presupuesto.** Con los 144 KiB que ocupa la SDM, un FIFO guarda 921
+  trazas y la supera en la batería T1–T3 (0.924 contra 0.745). Escalar las hard
+  locations de la SDM al presupuesto tampoco lo revierte: de 16 KiB a 512 KiB
+  queda por debajo del FIFO, y a 4 KiB lo supera solo sin pasar el gate. §IV.
+- **Contadores frente a lista de trazas.** La lista sola, leída por vecino más
+  cercano, retiene todos los raros y da 0.788 en la batería contra 0.741 de la
+  SDM completa (diferencia pareada −0.047, IC [−0.053, −0.041]); los contadores
+  solos, que no pueden restar una traza desalojada, retienen 0.005 de los raros
+  (1.000 si se les da borrado exacto). La retención de raros de la SDM la
+  sostiene su lista de trazas con compuerta, no la superposición distribuida.
+  Corregimos en consecuencia la frase de §IV que atribuía la recuperación a la
+  superposición y la afirmación de la conclusión (§IX) de que la SDM era "el
+  único sustrato" que combina reconstrucción y retención.
+- **Sensibilidad.** La media de la batería varía 0.091 entre 64 y 2048 hard
+  locations; la retención de raros es perfecta para fracciones de activación
+  entre 0.005 y 0.2 y solo cae a fracción 0.5 (que además no pasa el gate). Un
+  umbral de admisión externo no cambia nada hasta 0.5 y por encima bloquea la
+  reconstrucción. El umbral de fusión lo barre exp07. §IV.
 
 ### R1.6 — El "e-MDB FIFO" es un proxy optimista
 
@@ -312,7 +336,7 @@ de la versión final, y agregar su URL al paper.
 | Hipótesis o más generadores | Reformulado como hipótesis (hecho); exp10 en 23 familias: el cruce lo ordena r_eff ([0.56, 1.28]), no r nominal ([0.16, 1.32]); §III-D (hecho) |
 | Señales imperfectas, precisión y recall | §III-E y §IV (exp08, hecho): la ventaja aguanta hasta AUC ≈ 0.91–0.96 (0.84 a r = 2) y se pierde con retraso; afirmaciones corregidas (ver R1.3) |
 | Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | exp10: rango [1, 1] en 13 de las 14 familias held-out, [15, 20] con 0.1 % de raros; Spearman ≥ 0.77; §III-D (hecho). §II-C (hecho, exp09: ningún baseline externo supera a la frontera; el replay priorizado greedy queda a 0.035) |
-| Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | PENDIENTE(exp12); umbral de fusión y ganancia de fuerza: hecho (exp07, §III-D y §V) |
+| Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | §IV y columna KiB de la Tabla III: bytes, tiempos, igual presupuesto, ablación contadores/lista y sensibilidad de SDM (exp12, hecho); umbral de fusión y ganancia de fuerza: hecho (exp07, §III-D y §V) |
 | MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | §VI y §VIII (exp11, hecho): IC por rollout, 200 rollouts, 4 entornos × 4 políticas × 5 importancias × 5 señales, control nulo; efecto en aprendizaje medido en §VIII (exp13): la frontera retiene mejor la tarea que reaparece pero integra menos retorno que el FIFO, y ningún genotipo probado gana en las dos métricas |
 | Integración en e-MDB real frente a su buffer secuencial | Figura 1 y §VIII (hecho); buffer real con lectura secuencial en §VII-C (hecho, exp09: reprueba el gate, 0.368); la integración completa queda como trabajo futuro declarado |
 
