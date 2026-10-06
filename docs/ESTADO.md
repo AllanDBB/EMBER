@@ -248,8 +248,8 @@ Afirmaciones que cambiaron (cada una con su nota en `docs/notas/`):
 
 1. **Recortar el paper de 12 páginas al límite de BIP2026** y hacer un pase
    editorial de coherencia sobre las siete integraciones, que se escribieron en
-   paralelo. Revisar el abstract (todavía dice "0.401 against 0.85" y no menciona
-   r_eff ni la señal separable) y decidir qué figuras nuevas entran.
+   paralelo. Revisar el abstract (todavía dice "0.401 against 0.85" y no aclara que el 0.983
+   vale con una señal separable) y decidir qué figuras nuevas entran.
 2. **Pendiente de los autores (R1.10)**: el repositorio público y su URL en el paper.
 3. Trabajo futuro ya explícito en el paper, no pendiente de esta sesión:
    barrer `exp05` en más capacidades y con otro extractor de embeddings;
