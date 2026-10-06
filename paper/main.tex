@@ -1002,27 +1002,48 @@ falls to \result{exp06_minigrid:comparacion_aleatoria_recompensa.separacion_de_s
 \result{exp06_minigrid:comparacion_aleatoria_prediccion.resultados.frontera.tasa|pct}{0.0}\,\%
 to
 \result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.frontera.tasa|pct}{52.6}\,\%
----with \result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.frontera.n_raros|int}{38} rare events per condition, a 95\,\% Wilson interval of
-[\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.frontera.ci_low|pct}{37.3}\,\%,
-\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.frontera.ci_high|pct}{67.5}\,\%]---
+---with \result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.frontera.n_raros|int}{38} rare events per condition, a 95\,\% interval of
+[\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.frontera.cluster_low|pct}{37.9}\,\%,
+\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.frontera.cluster_high|pct}{69.0}\,\%]
+by bootstrap over rollouts---
 while the FIFO ---which does not read the strength signal at all--- stays at
 \result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.FIFO.tasa|pct}{2.6}\,\%
-([\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.FIFO.ci_low|pct}{0.5}\,\%,
-\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.FIFO.ci_high|pct}{13.5}\,\%]),
-just as in the baseline. The two intervals do not overlap despite the small
-sample, but they treat each rewarded event as an independent trial, whereas
-events from the same rollout may be correlated; the rollout is the more
-defensible unit.
-% TODO(exp11): intervalos con el rollout (o la semilla) como unidad, más
-% entornos, políticas y definiciones de relevancia (recompensa demorada,
-% objetivos intrínsecos). That only the architecture consulting the strength signal improves rules out an
+([\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.FIFO.cluster_low|pct}{0.0}\,\%,
+\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.FIFO.cluster_high|pct}{8.6}\,\%]),
+just as in the baseline. Taking the rollout rather than the event as the unit
+barely moves the intervals (design effect
+\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.frontera.deff|f2}{0.92}). That only the architecture consulting the strength signal improves rules out an
 artifact of the predictor change: it is the salience gate working, now given a
 signal correlated with what matters.
+
+\textbf{Beyond one environment.} Over 200 rollouts in five independent seed
+blocks the frontier retains
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.tasa|pct}{47.2}\,\%
+([\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.cluster_low|pct}{39.0}\,\%,
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.cluster_high|pct}{56.3}\,\%]) against
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.FIFO.tasa|pct}{0.7}\,\% for the FIFO, and the same
+frontier fed a uniform random signal also retains only
+\result{exp11_minigrid_extended:matriz.MemoryS13.aleatoria.recompensa.senales.azar.frontera.tasa|pct}{0.7}\,\%.
+Against this null control we cross four MiniGrid environments, four policies (random, forward-biased, noisy planner,
+tabular Q-learning), five definitions of importance and five candidate signals,
+\result{exp11_minigrid_extended:resumen.n_celdas_total|int}{350} cells: the gain tracks how well the
+signal separates what matters (Spearman $\rho=\result{exp11_minigrid_extended:resumen.spearman_auc_ganancia|f2}{0.67}$
+against its AUC), averaging
+\result{exp11_minigrid_extended:resumen.por_auc.t5.ganancia_vs_azar_media|pct}{37.3} points where AUC
+$\geq 0.97$ and \result{exp11_minigrid_extended:resumen.por_auc.t1.ganancia_vs_azar_media|pct}{1.8} where it is near 0.5.
+Count-based novelty transfers when importance is itself novelty (it beats the
+null control in \result{exp11_minigrid_extended:resumen.novedad_estado.count_novelty.gana_vs_azar|int}{16} of
+\result{exp11_minigrid_extended:resumen.novedad_estado.count_novelty.n_celdas|int}{16} cells), but no causal
+signal retains the steps that precede a reward: reward-prediction error beats
+the null control in \result{exp11_minigrid_extended:resumen.previa_k.reward_pe.gana_vs_azar|int}{0} of
+\result{exp11_minigrid_extended:resumen.previa_k.reward_pe.n_celdas|int}{15} cells and TD error in
+\result{exp11_minigrid_extended:resumen.previa_k.td_error.gana_vs_azar|int}{2}, while only the non-causal
+discounted return does (\result{exp11_minigrid_extended:resumen.previa_k.retorno.gana_vs_azar|int}{15}).
 
 The salience mechanism does transfer to a real environment under partial
 observability ---not automatically, but under an identifiable and correctable
 precondition: surprise must be anchored in the variable that decides what
-matters, which in an environment with reward is reward itself.
+matters ---reward when importance is reward, visitation counts when it is novelty.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Discussion}
@@ -1092,8 +1113,8 @@ capacity; whether the intra-class similarity of
 \result{exp05_real_embeddings:precondicion_cifar100.similitud_intra_prototipo|f3}{0.401}
 is a property of the visual domain, the extractor, or both is untested, and a
 fine-tuned extractor or a per-domain merge threshold could change it. The
-MiniGrid validation likewise uses one environment and one exploration policy
-besides the forward-biased one.
+MiniGrid validation, though it spans four environments and four policies, stays
+within small discrete grid worlds.
 
 Three further limits are not addressed by any experiment in this revision.
 EMBER has not been integrated into the running e-MDB: Fig.~\ref{fig:integration}
@@ -1113,12 +1134,12 @@ the \emph{absence} of predefined goals, and an open-ended robot may face long
 stretches with no reward to predict. The available signal then falls back to
 perceptual novelty, which is precisely where we measured retention at the floor.
 The fix is valid where a reward exists and unproven where it does not, which is
-the regime e-MDB is ultimately built for. Intrinsic motivation, learning
-progress, or the needs and drives of e-MDB's motivational engine
-\cite{becerra2021} are testable substitutes
-within the same protocol; none is evaluated here. How to define salience when
-importance is delayed, ambiguous or unrelated to any external reward remains
-open, and it is the question on which the usefulness of the salience gate for
+the regime e-MDB is ultimately built for. Count-based novelty helps only when
+importance is itself novelty; learning progress, or the needs and drives of
+e-MDB's motivational engine \cite{becerra2021}, are testable substitutes within
+the same protocol that we do not evaluate. How to define salience when
+importance is delayed ---where every causal signal we tried fails---, ambiguous
+or unrelated to any external reward remains open, and it is the question on which the usefulness of the salience gate for
 LOLA ultimately rests. Finally, because no result was obtained on a physical
 robot, real sensor noise, continuous control and lifelong non-stationarity
 remain untested, and the generator's distributional-drift parameter is never

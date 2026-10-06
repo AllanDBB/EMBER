@@ -145,15 +145,38 @@ baseline adicional.
 
 ### R1.7 — MiniGrid limitado; importancia definida por la tarea; Wilson sobre eventos
 
-En §VI aclaramos que el intervalo de Wilson trata cada evento raro como
-independiente y que la unidad defendible es el rollout.
+Lo resolvimos con un experimento nuevo (exp11), reportado en §VI (párrafo
+"Beyond one environment") y en §VIII.
 
-En §VIII queda explícito que la saliencia con importancia demorada, ambigua o
-sin recompensa externa sigue abierta.
-
-Queda PENDIENTE(exp11): el rollout o la semilla como unidad, y más entornos,
-políticas y definiciones de relevancia (recompensa demorada, objetivos
-intrínsecos).
+- **Unidad estadística.** Re-analizamos exp06 con el rollout como unidad
+  (bootstrap por clúster sobre rollouts). Con los mismos 40 rollouts, la
+  frontera con error de predicción de recompensa retiene 52.6 % con IC 95 %
+  [37.9 %, 69.0 %] (Wilson daba [37.3 %, 67.5 %]) y el FIFO 2.6 % [0.0 %,
+  8.6 %]. El efecto de diseño es 0.92: en la práctica, los eventos de un mismo
+  rollout no estaban correlacionados y la conclusión no cambia. §VI ahora
+  reporta los intervalos por rollout en lugar de los de Wilson.
+- **Más rollouts y semillas.** Con 200 rollouts en 5 bloques de semillas
+  independientes, la frontera retiene 47.2 % [39.0 %, 56.3 %] contra 0.7 % del
+  FIFO (diferencia 46.5 puntos, IC [38.3, 55.7]).
+- **Control con señal nula.** Ganarle al FIFO no basta, porque el FIFO desaloja
+  por edad. La misma frontera alimentada con una señal uniforme al azar retiene
+  0.7 % en esa condición: la ganancia sale de la señal, no del desalojo por
+  fuerza.
+- **Importancia no definida por la tarea.** Cruzamos 4 entornos (MemoryS13,
+  DoorKey-6x6, FourRooms, KeyCorridorS3R2), 4 políticas (uniforme, sesgada,
+  planificador BFS con ruido, Q-learning tabular), 5 definiciones de
+  importancia (recompensa inmediata, los k pasos previos a una recompensa, un
+  evento clave del entorno, estado novedoso, transición sorpresiva) y 5 señales
+  candidatas (más el control nulo): 350 celdas. La ganancia sobre el control
+  nulo sigue a la separación AUC de la señal (Spearman ρ = 0.67): +37.3 puntos
+  en las celdas con AUC ≥ 0.97 y +1.8 cerca de AUC 0.5.
+- **Objetivos intrínsecos.** La novedad por conteo le gana al control nulo en
+  16 de 16 celdas cuando lo importante es el estado novedoso.
+- **Recompensa demorada.** Ninguna señal causal retiene los pasos que preceden
+  a una recompensa: el error de predicción de recompensa le gana al control
+  nulo en 0 de 15 celdas y el error TD en 2 de 15; solo lo logra el retorno
+  descontado, que no es causal (15 de 15). §VIII lo declara como el problema
+  abierto, ahora con evidencia.
 
 ### R1.8 — Estadística insuficientemente explicada
 
@@ -211,7 +234,7 @@ de la versión final, y agregar su URL al paper.
 | Señales imperfectas, precisión y recall | PENDIENTE(exp08) |
 | Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | PENDIENTE(exp10), PENDIENTE(exp09) |
 | Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | PENDIENTE(exp12), PENDIENTE(exp07) |
-| MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | PENDIENTE(exp11), PENDIENTE(exp13) |
+| MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | §VI y §VIII (exp11, hecho): IC por rollout, 200 rollouts, 4 entornos × 4 políticas × 5 importancias × 5 señales, control nulo; PENDIENTE(exp13) |
 | Integración en e-MDB real frente a su buffer secuencial | Figura 1 y §VIII (hecho); PENDIENTE(exp09) para el buffer real; la integración completa queda como trabajo futuro declarado |
 
 ---
@@ -223,7 +246,12 @@ de la versión final, y agregar su URL al paper.
 - §VIII declara explícitamente estos límites y agrega los que ningún
   experimento de esta revisión resuelve: el robot físico, la integración en el
   e-MDB real y un único extractor visual.
-- Queda PENDIENTE(exp11) para más entornos y políticas en MiniGrid.
+- MiniGrid se amplió a 4 entornos (MemoryS13, DoorKey-6x6, FourRooms,
+  KeyCorridorS3R2) y 4 políticas, dos de ellas dirigidas (planificador BFS con
+  ruido y Q-learning tabular), con 200 rollouts y el rollout como unidad
+  (§VI, exp11; detalle en R1.7). La saliencia transfiere cuando la señal está
+  alineada con lo importante y falla para importancia demorada; §VIII lo dice.
+  Siguen siendo mundos de grilla discretos, sin robot físico.
 
 ### R2.2 — Dependencia del umbral de fusión 0.85
 
@@ -246,7 +274,10 @@ de la versión final, y agregar su URL al paper.
 Lo tratamos igual que en R2.1: §VIII ampliada, y además la hipótesis de régimen
 ya no se enuncia como ley (R1.4).
 
-Quedan PENDIENTE(exp10) y PENDIENTE(exp11).
+Para MiniGrid, ver R2.1 y R1.7: 4 entornos, 4 políticas y 5 definiciones de
+importancia, con el rollout como unidad (§VI, exp11).
+
+Queda PENDIENTE(exp10).
 
 ### R3.2 — Esquema de la integración EMBER/e-MDB
 
