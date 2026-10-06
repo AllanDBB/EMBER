@@ -815,13 +815,30 @@ of an early block survives later ones.
 \input{tables/tab_benchmark}
 
 Capacity here counts traces, which is not the same budget for every substrate:
-SDM also keeps 512 hard locations with distributed counters next to its explicit
-trace list, so equal $C$ does not mean equal bytes or equal read/write cost, and
-the benchmark does not separate the contribution of the counters from that of
-the trace list.
-% TODO(exp12): costo por sustrato (bytes totales, complejidad de lectura y
-% escritura, tiempo) y aporte separado de contadores y lista de trazas;
-% sensibilidad de SDM a hard locations y fracción de activación.
+SDM's 512 hard locations make it hold
+\result{exp12_substrate_cost:contabilidad.razon_vs_FIFO_C20.SDM|f2}{41.96}
+times the FIFO's bytes at $C=20$ (Table \ref{tab:benchmark}, KiB) and spend
+\result{exp12_substrate_cost:tiempos.C20_d32.SDM.read_us|int}{28} against
+\result{exp12_substrate_cost:tiempos.C20_d32.FIFO.read_us|int}{12}\,$\mu$s per
+read. At SDM's budget (144\,KiB) a FIFO holds
+\result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.FIFO.capacity|int}{921}
+traces and outscores it on T1--T3
+(\result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.FIFO.battery_mean|f3}{0.924}
+vs.\
+\result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.SDM.battery_mean|f3}{0.745}).
+An ablation locates SDM's retention in its trace list, not its counters: the
+list alone, read by nearest neighbour, keeps every rare event and scores
+\result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-b.battery_mean|f3}{0.788}
+against
+\result{exp12_substrate_cost:ablacion_sdm.variantes.SDM.battery_mean|f3}{0.741}
+for the full SDM, whereas counters that cannot subtract an evicted trace retain
+\result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-a.battery.rare_retention.mean|f3}{0.005}
+of the rare events. SDM is otherwise stable in its own hyperparameters: the T1--T3
+mean moves
+\result{exp12_substrate_cost:sensibilidad_sdm.rango_battery_n_hard|f3}{0.091}
+from 64 to 2048 hard locations, rare retention stays perfect for activation
+fractions 0.005--0.2, and only a 0.5 fraction, or an admission threshold above
+0.5, drops it below the gate.
 
 Every architecture except the pure spiking circuit clears the admission
 threshold of 0.50
@@ -849,8 +866,8 @@ rare experiences drawn from non-overlapping ranges, so an architecture that
 gates on prediction error and evicts by minimum strength should end holding
 exactly the rare set: high retention confirms correct wiring, not a hard
 problem. Retrieval is what the score tests independently ---each trace must
-still be recovered from the distributed superposition at similarity
-$\geq 0.85$--- so the informative comparison is SDM against ENN, which shares
+still be read back at similarity $\geq 0.85$, which for SDM is decided by its
+trace list--- so the informative comparison is SDM against ENN, which shares
 the gate and eviction policy, not SDM against the FIFO. The threshold grid of
 Section \ref{sec:nas} puts the rare count at half the capacity, which removes
 the exact-fit ceiling but not the separability: its prediction-error ranges are
@@ -1136,10 +1153,11 @@ is defined, whose robustness beyond this generator remains to be shown. The
 encoding-salience mechanism the literature most motivates has a negligible main
 effect, yet conditioned on the one eviction policy that reads its signal it
 recovers fourteen times the rare-event retention ---not weak, but gated. The
-benchmark adds that SDM with a prediction-error gate is the only substrate
-pairing reconstruction fidelity with perfect retention on a stream whose rare
-events are separable by construction, that the FIFO-NN proxy of the e-MDB buffer
-reconstructs well but is the floor at retention ---its deficiency is choosing,
+benchmark adds that SDM with a prediction-error gate pairs reconstruction
+fidelity with perfect retention on a stream whose rare events are separable by
+construction, but that the retention comes from its gated trace list, not from
+its distributed counters, which dominate its footprint; that the FIFO-NN
+proxy of the e-MDB buffer reconstructs well but is the floor at retention ---its deficiency is choosing,
 not remembering--- and that the pure spiking circuit does not transfer to
 continuous vectors, marking PoC-5 as the next milestone. Real data adds two
 preconditions: consolidation needs intra-prototype similarity above the merge

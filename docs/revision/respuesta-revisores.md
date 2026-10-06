@@ -129,9 +129,33 @@ En §IV reconocemos que la capacidad cuenta trazas y no bytes. SDM además
 mantiene 512 hard locations con contadores, y el benchmark no separa el aporte
 de los contadores del de la lista de trazas.
 
-Queda PENDIENTE(exp12): bytes totales, complejidad de lectura y escritura,
-tiempo, aporte separado de contadores y trazas, y sensibilidad a hard
-locations, fracción de activación y umbrales.
+Lo medimos (exp12, 10 semillas, IC bootstrap) y el resultado matiza el paper:
+
+- **Bytes.** A C = 20 y d = 32, la SDM ocupa 131.1 KiB contra 3.1 KiB del FIFO
+  y del ENN (×41.96); Spiking-SDM 133.0 y Spiking 105.1. La contabilidad real
+  (`nbytes`) coincide con la fórmula analítica en todas las configuraciones.
+  Agregamos la columna **KiB** a la Tabla III (generada desde `results/`).
+- **Complejidad y tiempo.** Lectura y escritura son O(C·d) en FIFO/ENN y
+  O(M·d + C·d) en SDM; medido a C = 20, la lectura cuesta 28 µs en SDM contra
+  12 µs en FIFO (escritura 57 contra 31 µs). §IV.
+- **Igual presupuesto.** Con los 144 KiB que ocupa la SDM, un FIFO guarda 921
+  trazas y la supera en la batería T1–T3 (0.924 contra 0.745). Escalar las hard
+  locations de la SDM al presupuesto tampoco lo revierte: de 16 KiB a 512 KiB
+  queda por debajo del FIFO, y a 4 KiB lo supera solo sin pasar el gate. §IV.
+- **Contadores frente a lista de trazas.** La lista sola, leída por vecino más
+  cercano, retiene todos los raros y da 0.788 en la batería contra 0.741 de la
+  SDM completa (diferencia pareada −0.047, IC [−0.053, −0.041]); los contadores
+  solos, que no pueden restar una traza desalojada, retienen 0.005 de los raros
+  (1.000 si se les da borrado exacto). La retención de raros de la SDM la
+  sostiene su lista de trazas con compuerta, no la superposición distribuida.
+  Corregimos en consecuencia la frase de §IV que atribuía la recuperación a la
+  superposición y la afirmación de la conclusión (§IX) de que la SDM era "el
+  único sustrato" que combina reconstrucción y retención.
+- **Sensibilidad.** La media de la batería varía 0.091 entre 64 y 2048 hard
+  locations; la retención de raros es perfecta para fracciones de activación
+  entre 0.005 y 0.2 y solo cae a fracción 0.5 (que además no pasa el gate). Un
+  umbral de admisión externo no cambia nada hasta 0.5 y por encima bloquea la
+  reconstrucción. El umbral de fusión lo barre exp07. §IV.
 
 ### R1.6 — El "e-MDB FIFO" es un proxy optimista
 
@@ -210,7 +234,7 @@ de la versión final, y agregar su URL al paper.
 | Hipótesis o más generadores | Reformulado como hipótesis (hecho) + PENDIENTE(exp10) |
 | Señales imperfectas, precisión y recall | PENDIENTE(exp08) |
 | Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | PENDIENTE(exp10), PENDIENTE(exp09) |
-| Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | PENDIENTE(exp12), PENDIENTE(exp07) |
+| Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | §IV y columna KiB de la Tabla III: bytes, tiempos, igual presupuesto, ablación contadores/lista y sensibilidad de SDM (exp12, hecho); PENDIENTE(exp07) |
 | MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | PENDIENTE(exp11), PENDIENTE(exp13) |
 | Integración en e-MDB real frente a su buffer secuencial | Figura 1 y §VIII (hecho); PENDIENTE(exp09) para el buffer real; la integración completa queda como trabajo futuro declarado |
 
