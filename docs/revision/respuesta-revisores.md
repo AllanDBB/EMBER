@@ -116,12 +116,25 @@ sostenida bajo las condiciones evaluadas. §III-D agrega dos cosas:
 - que la transición es casi una reformulación de la definición de capacidad;
   lo nuevo es que el cambio sea abrupto y caiga en el mismo r para tres
   capacidades, no que exista;
-- qué queda sin probar: frecuencias desiguales, deriva, similitud ruidosa,
-  prevalencia de raros, umbral de fusión, largo del flujo y rango de
-  capacidades.
+- la prueba de robustez que pedía (exp10), cuyo resultado cambia el
+  enunciado.
 
-Quedan PENDIENTE(exp10), la robustez y las familias held-out, y
-PENDIENTE(exp07), el umbral de fusión.
+Repetimos el barrido en 23 familias de flujos que mueven una perilla por vez
+(frecuencias de Zipf, deriva, ruido intra-prototipo, similitud entre centros,
+prevalencia de raros, recurrencia y C de 5 a 160; §III-B). **El revisor tenía
+razón en sospechar de r nominal: no es la variable que gobierna.** Su cruce va
+de 0.16 a 1.32 entre familias (desvío de su logaritmo 0.46): la deriva y el
+ruido lo bajan muy por debajo de 1, y con el ruido más alto el desalojo domina
+en todo r. En cambio, con r_eff = K_efectivo/C —las trazas que deja la
+consolidación— los cruces se agrupan en [0.56, 1.28] (desvío 0.17), más
+colapsados que con r nominal en el 99.8 % de las réplicas bootstrap y mejor que
+otras cuatro medidas de presión declaradas antes de correr. La dispersión
+residual viene de la prevalencia de raros y de C = 5. En el generador original
+r_eff = r, así que la Figura 3 no cambia. El paper enuncia ahora la hipótesis
+sobre r_eff (abstract, contribuciones, §III-D, §VII-A, conclusión) y lo dice
+explícitamente en §III-D.
+
+Queda PENDIENTE(exp07), el umbral de fusión.
 
 ### R1.5 — Sustratos con presupuestos de almacenamiento y cómputo no equivalentes
 
@@ -207,9 +220,9 @@ de la versión final, y agregar su URL al paper.
 | Recomendación | Respuesta |
 |---|---|
 | Protocolo consolidado | §III-B (hecho) |
-| Hipótesis o más generadores | Reformulado como hipótesis (hecho) + PENDIENTE(exp10) |
+| Hipótesis o más generadores | Reformulado como hipótesis (hecho); exp10 en 23 familias: el cruce lo ordena r_eff ([0.56, 1.28]), no r nominal ([0.16, 1.32]); §III-D (hecho) |
 | Señales imperfectas, precisión y recall | PENDIENTE(exp08) |
-| Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | PENDIENTE(exp10), PENDIENTE(exp09) |
+| Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | exp10: rango [1, 1] en 13 de las 14 familias held-out, [15, 20] con 0.1 % de raros; Spearman ≥ 0.77; §III-D (hecho). PENDIENTE(exp09) |
 | Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | PENDIENTE(exp12), PENDIENTE(exp07) |
 | MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | PENDIENTE(exp11), PENDIENTE(exp13) |
 | Integración en e-MDB real frente a su buffer secuencial | Figura 1 y §VIII (hecho); PENDIENTE(exp09) para el buffer real; la integración completa queda como trabajo futuro declarado |
@@ -246,7 +259,20 @@ de la versión final, y agregar su URL al paper.
 Lo tratamos igual que en R2.1: §VIII ampliada, y además la hipótesis de régimen
 ya no se enuncia como ley (R1.4).
 
-Quedan PENDIENTE(exp10) y PENDIENTE(exp11).
+Sobre la generalización fuera del generador (exp10, §III-D): la transición de
+régimen se sostiene en 23 familias de flujos (frecuencias desiguales, deriva,
+ruido, prevalencia de raros, C de 5 a 160) siempre que se enuncie sobre
+r_eff = K_efectivo/C, no sobre r nominal (ver R1.4). La frontera elegida en el
+flujo estándar, re-evaluada en 14 familias held-out con semillas nuevas,
+conserva el intervalo de rango [1, 1] en todas salvo una ([15, 20] de 576 con
+0.1 % de raros), y el ranking de las 576 configuraciones correlaciona con el
+estándar con Spearman ≥ 0.77 (el mínimo, en selección fuerte, r = 4). Con la
+tarea de retención de raros sola el resto del ranking sí se reordena en
+selección fuerte (ρ = −0.03 en r = 4), aunque la frontera sigue en el 10 %
+superior salvo con 0.1 % de raros, donde los empates estiran su intervalo
+pesimista hasta 297; lo dejamos registrado en `docs/notas/`.
+
+Queda PENDIENTE(exp11).
 
 ### R3.2 — Esquema de la integración EMBER/e-MDB
 
