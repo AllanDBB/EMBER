@@ -140,8 +140,17 @@ Renombramos el baseline a **FIFO-NN proxy of the e-MDB buffer** en §I, §II-D,
 buffer real recupera por posición o por lotes, sin búsqueda por contenido, y
 por qué elegimos NN: para aislar el desalojo y la ponderación.
 
-Queda PENDIENTE(exp09): el buffer real con recuperación secuencial como
-baseline adicional.
+Además evaluamos el buffer real (exp09). Reimplementamos su lectura tal como
+está en el código público de GII (`episodic_buffer.py`): un barrido en orden de
+inserción que devuelve el primer episodio con coseno ≥ 0.85. Esa traducción de
+una consulta es un supuesto, porque el buffer no responde consultas. Con el
+mismo desalojo retiene exactamente las mismas trazas que el proxy, pero
+**reprueba el gate de reconstrucción**: 0.368 contra 0.903 del proxy. Su puntaje
+agregado es 0.010 y queda último entre 577. Con un umbral de coincidencia de 0.5
+el gate se recupera (0.826), pero el puntaje no (0.067). El ranking del proxy es,
+entonces, una cota superior para el buffer desplegado. Esto quedó en §VII-C,
+§VIII y la conclusión, que ahora aclara que el buffer real falla también en
+reconstrucción, no solo en elegir.
 
 ### R1.7 — MiniGrid limitado; importancia definida por la tarea; Wilson sobre eventos
 
@@ -191,6 +200,9 @@ interacción cuantifican la dependencia: strength×evict 4.3 % y write×evict
   - GSS (Aljundi et al. 2019);
   - selective experience replay (Isele y Cosgun 2018);
   - experience replay para aprendizaje continuo (Rolnick et al. 2019).
+- Ese párrafo ahora también compara contra esos métodos de forma empírica
+  (exp09; ver R2.3). Ninguno supera a la frontera. El más cercano, el desalojo
+  priorizado greedy por sorpresa, coincide con un punto del espacio.
 
 ### R1.10 — Liberar código y configuraciones durante la revisión
 
@@ -209,10 +221,10 @@ de la versión final, y agregar su URL al paper.
 | Protocolo consolidado | §III-B (hecho) |
 | Hipótesis o más generadores | Reformulado como hipótesis (hecho) + PENDIENTE(exp10) |
 | Señales imperfectas, precisión y recall | PENDIENTE(exp08) |
-| Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | PENDIENTE(exp10), PENDIENTE(exp09) |
+| Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | PENDIENTE(exp10); §II-C (hecho, exp09: ningún baseline externo supera a la frontera; el replay priorizado greedy queda a 0.035) |
 | Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | PENDIENTE(exp12), PENDIENTE(exp07) |
 | MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | PENDIENTE(exp11), PENDIENTE(exp13) |
-| Integración en e-MDB real frente a su buffer secuencial | Figura 1 y §VIII (hecho); PENDIENTE(exp09) para el buffer real; la integración completa queda como trabajo futuro declarado |
+| Integración en e-MDB real frente a su buffer secuencial | Figura 1 y §VIII (hecho); buffer real con lectura secuencial en §VII-C (hecho, exp09: reprueba el gate, 0.368); la integración completa queda como trabajo futuro declarado |
 
 ---
 
@@ -235,7 +247,19 @@ de la versión final, y agregar su URL al paper.
 
 - §II-C incluye ahora la literatura no biológica: caché, reservoir y
   selección para replay.
-- Queda PENDIENTE(exp09) para la comparación empírica.
+- En la misma §II-C reportamos la comparación empírica (exp09). Evaluamos siete
+  políticas externas al espacio, cada una cambiando solo el desalojo del proxy
+  FIFO-NN, con T1–T3 y cinco semillas. La frontera puntúa 0.824. LRU, LFU y una
+  caché de utilidad (frecuencia × recencia) quedan al nivel del proxy: 0.106,
+  0.096 y 0.106. Reservoir llega a 0.306, la selección por cobertura (Isele y
+  Cosgun 2018) a 0.439 y el replay priorizado estocástico a 0.500.
+- El desalojo priorizado greedy por sorpresa llega a 0.789, en el rango 4–5 de
+  577. Coincide exactamente con una configuración que ya está en el espacio
+  (compuerta por error de predicción con `min_strength`). La frontera le gana
+  por 0.035 [0.028, 0.043], y toda esa diferencia está en T3.
+- Lo decimos así en el paper: la ventaja de la frontera viene de leer la
+  sorpresa al desalojar, un principio que el replay priorizado ya usa, y no de
+  un mecanismo exclusivo de la memoria bioinspirada.
 
 ---
 

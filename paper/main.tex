@@ -281,10 +281,29 @@ for lifelong reinforcement learning \cite{isele2018}; replay itself mitigates fo
 that setting \cite{rolnick2019}. These methods optimize downstream learning with
 a fixed selection rule; EMBER instead measures retention across a space of rules.
 Our \texttt{fifo}, \texttt{min\_utility} (least-read, LFU-like) and
-\texttt{random} eviction options are the simplest members of these families; the
-design space does not contain reservoir, LRU or prioritized-sampling rules.
-% TODO(exp09): comparación contra reservoir, LRU/LFU y replay priorizado fuera
-% del espacio de diseño; citar aquí la sección/tabla donde quede.
+\texttt{random} eviction options are the simplest members of these families.
+We also evaluated seven rules from outside the space, each replacing only the
+eviction of the FIFO-NN proxy (T1--T3, five seeds). Against the frontier's
+aggregate score of \result{exp09_external_baselines:exp01_cell.frontier.battery_mean.mean|f3}{0.824},
+LRU, LFU and a frequency--recency utility cache stay at the proxy's level
+(\result{exp09_external_baselines:exp01_cell.lru.battery_mean.mean|f3}{0.106},
+\result{exp09_external_baselines:exp01_cell.lfu.battery_mean.mean|f3}{0.096},
+\result{exp09_external_baselines:exp01_cell.utility_cache.battery_mean.mean|f3}{0.106}), and reservoir
+sampling, coverage selection \cite{isele2018} and stochastic prioritized
+replay reach only \result{exp09_external_baselines:exp01_cell.reservoir.battery_mean.mean|f3}{0.306},
+\result{exp09_external_baselines:exp01_cell.coverage.battery_mean.mean|f3}{0.439} and
+\result{exp09_external_baselines:exp01_cell.per_stoch.battery_mean.mean|f3}{0.500}. Greedy
+surprise-prioritized eviction scores
+\result{exp09_external_baselines:exp01_cell.per_min.battery_mean.mean|f3}{0.789} (rank
+\result{exp09_external_baselines:rank_in_space.per_min.rank_optimistic|int}{4}--\result{exp09_external_baselines:rank_in_space.per_min.rank_pessimistic|int}{5}
+of 577) because it coincides exactly with an in-space configuration (prediction-error
+gate with \texttt{min\_strength}); the frontier's margin of
+\result{exp09_external_baselines:advantage_of_frontier.per_min.battery_mean.mean|f3}{0.035}
+[\result{exp09_external_baselines:advantage_of_frontier.per_min.battery_mean.ci.0|f3}{0.028},
+\result{exp09_external_baselines:advantage_of_frontier.per_min.battery_mean.ci.1|f3}{0.043}] lies
+entirely in T3. What the frontier exploits is thus surprise read at eviction ---a
+principle prioritized replay already uses--- not a mechanism unique to
+bioinspired memory.
 
 \subsection{The e-MDB architecture and the LOLA problem}
 
@@ -1047,6 +1066,7 @@ continuous-to-distributed mapping with ENN for the trace lifecycle, as a single
 \emph{Cognitive Node}.
 
 \subsection{The FIFO contrast, and the precondition as a diagnostic}
+\label{sec:fifo}
 
 Mapping the e-MDB FIFO to a configuration is deliberately generous, so the
 FIFO-NN proxy is an optimistic stand-in and not the deployed buffer: the real
@@ -1057,13 +1077,21 @@ Even so the proxy ranks
 \result{exp01_nas_full:incumbent.rank_optimistic|int}{416}--%
 \result{exp01_nas_full:incumbent.rank_pessimistic|int}{469} of 576 and is the
 floor at retaining rare events among substrates, though not at reconstruction.
-% TODO(exp09): comparación con el buffer real de e-MDB (recuperación secuencial,
-% sin búsqueda por contenido) como baseline adicional; reportar aquí su
-% retención y reconstrucción frente al proxy FIFO-NN.
+We also re-implemented the buffer's actual read: a scan in insertion order
+returning the first episode with cosine $\geq 0.85$, an assumption since the
+buffer answers no queries. It keeps exactly the proxy's traces but fails the
+reconstruction gate (\result{exp09_external_baselines:exp01_cell.emdb_sequential.gate_mean.mean|f3}{0.368}
+against \result{exp09_external_baselines:exp01_cell.fifo_nn_proxy.gate_mean.mean|f3}{0.903}) and scores
+\result{exp09_external_baselines:exp01_cell.emdb_sequential.battery_mean.mean|f3}{0.010}, last of
+\result{exp09_external_baselines:rank_in_space.emdb_sequential.rank_optimistic|int}{577}; a match
+threshold of 0.5 restores the gate
+(\result{exp09_external_baselines:emdb_threshold_sensitivity.tau_050.gate_mean.mean|f3}{0.826}) but not
+the score (\result{exp09_external_baselines:emdb_threshold_sensitivity.tau_050.battery_mean.mean|f3}{0.067}),
+so the proxy's rank is an upper bound for the deployed buffer.
 This is not a criticism of e-MDB, built for a different primary goal ---its
 buffer feeds model training, not recall--- but a specific claim: as a store of
 what to remember, the buffer as implemented is inadequate for the LOLA regime,
-with a quantified gap for its most favourable proxy.
+with a quantified gap even for its most favourable proxy.
 
 The finding of Section \ref{sec:real} gives the robot a check it can run online:
 intra-prototype similarity, measured on the vectors the memory already receives
@@ -1097,14 +1125,13 @@ besides the forward-biased one.
 
 Three further limits are not addressed by any experiment in this revision.
 EMBER has not been integrated into the running e-MDB: Fig.~\ref{fig:integration}
-is a design, the incumbent is a proxy rather than the deployed buffer, and
+is a design, the deployed buffer's read was re-implemented rather than run
+(Section \ref{sec:fifo}), and
 whether better retention improves the world and utility models e-MDB trains from
 its buffer is untested. All real-data evidence comes from a single visual
 extractor. And no experiment ran on a physical robot.
 % TODO(exp13): efecto de la memoria retenida sobre aprendizaje o desempeño
 % posterior (calidad de modelos/decisiones); citar aquí.
-% TODO(exp09): comparación con el buffer real de e-MDB con recuperación
-% secuencial (ver también la Discusión).
 
 The most consequential open question is a tension between our strongest result
 and the setting that motivates the work. Section \ref{sec:minigrid} resolves the
@@ -1140,7 +1167,8 @@ benchmark adds that SDM with a prediction-error gate is the only substrate
 pairing reconstruction fidelity with perfect retention on a stream whose rare
 events are separable by construction, that the FIFO-NN proxy of the e-MDB buffer
 reconstructs well but is the floor at retention ---its deficiency is choosing,
-not remembering--- and that the pure spiking circuit does not transfer to
+not remembering, while the buffer's actual sequential read fails reconstruction
+too--- and that the pure spiking circuit does not transfer to
 continuous vectors, marking PoC-5 as the next milestone. Real data adds two
 preconditions: consolidation needs intra-prototype similarity above the merge
 threshold, which CIFAR-100 never reaches, turning a condition of the regime
