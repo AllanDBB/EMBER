@@ -219,7 +219,12 @@ Los siete experimentos de la revisión (exp07–exp13) están corridos, fusionad
 en `revision/bip2026-reviews` e integrados al paper. No queda ningún
 `TODO(expNN)` en `main.tex` ni ningún `PENDIENTE` en la respuesta a los
 revisores. `verify_paper` está limpio, pasan 404 tests y `ruff` está limpio.
-**El PDF tiene 12 páginas (~10 800 palabras): hay que recortar.**
+Una auditoría independiente (`docs/revision/auditoria-2026-10-06.md`) encontró
+3 afirmaciones falsas, 14 de alcance mal enunciado y 11 menores; todas están
+corregidas. Después el paper se reestructuró de 12 a **8 páginas** con
+referencias (~7 300 palabras en el PDF): Discusión y Limitaciones fusionadas
+(§VIII), la comparación contra e-MDB como eje (§IV), Related Work comprimido y
+la tabla de MiniGrid eliminada (sus números están en el texto).
 
 Afirmaciones que cambiaron (cada una con su nota en `docs/notas/`):
 
@@ -238,18 +243,19 @@ Afirmaciones que cambiaron (cada una con su nota en `docs/notas/`):
 - **exp11**: con el rollout como unidad, los intervalos de exp06 no cambian. La
   saliencia transfiere en 4 entornos cuando la señal está alineada con lo
   importante. La importancia demorada sigue abierta.
-- **exp12**: la retención de SDM viene de su lista de trazas, no de los
-  contadores (41.96× más bytes). A igual presupuesto, el FIFO le gana. Tabla
-  III tiene una columna nueva de KiB.
+- **exp12**: la retención de SDM la decide el desalojo con compuerta y borrado
+  exacto, no la superposición: la lista sola retiene todo, y los contadores
+  también si restan exactamente lo desalojado (41.96× más bytes). A igual
+  presupuesto, sin presión de capacidad, el FIFO le gana. Tabla III tiene una
+  columna nueva de KiB.
 - **exp13**: retener mejor no es actuar mejor. La frontera gana al reaparecer
   una tarea, pero pierde en el retorno acumulado frente al FIFO.
 
 ## Lo siguiente
 
-1. **Recortar el paper de 12 páginas al límite de BIP2026** y hacer un pase
-   editorial de coherencia sobre las siete integraciones, que se escribieron en
-   paralelo. Revisar el abstract (todavía dice "0.401 against 0.85" y no aclara que el 0.983
-   vale con una señal separable) y decidir qué figuras nuevas entran.
+1. Revisión de los autores del texto recortado a 8 páginas. Ninguna figura
+   nueva entró al cuerpo (las de exp07, exp08, exp10 y exp13 quedan en
+   `paper/figures/`).
 2. **Pendiente de los autores (R1.10)**: el repositorio público y su URL en el paper.
 3. Trabajo futuro ya explícito en el paper, no pendiente de esta sesión:
    barrer `exp05` en más capacidades y con otro extractor de embeddings;

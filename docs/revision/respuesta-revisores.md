@@ -1,9 +1,13 @@
 # Respuesta a los revisores — BIP2026, EMBER (borrador)
 
-Estado: borrador de la rama `rev/text-refs`. Las secciones citadas son las del
-`paper/main.tex` revisado (numeración romana del PDF). Los puntos que dependen
-de experimentos nuevos llevan `PENDIENTE(expNN)`; en el LaTeX hay un
-`% TODO(expNN)` en el lugar exacto donde va el resultado.
+Estado: borrador de la rama `revision/bip2026-reviews`. Las secciones citadas
+son las del `paper/main.tex` recortado a 8 páginas (numeración romana del PDF):
+I Introducción, II Background and related work, III Method (A espacio de
+diseño, B protocolo), IV The e-MDB proxy and the frontier (A dónde cae el
+proxy, B los dos ejes, C hasta dónde aguanta la ventaja), V The regime
+transition, VI Memory substrates, VII Real data (A CIFAR-100, B MiniGrid),
+VIII Discussion and limitations, IX Conclusion. Todos los experimentos de la
+revisión están corridos e integrados; no queda ningún `PENDIENTE`.
 
 Experimentos de la revisión:
 
@@ -47,14 +51,14 @@ revisamos que cada cita sostenga lo que se le atribuye.
   por lotes de entrenamiento) no aparece en ninguna publicación. Sale del
   repositorio público `GII/emdb_cognitive_nodes_gii` (archivo
   `episodic_buffer.py`, commit d15f96a), que citamos como software. El texto de
-  §II-D lo dice explícitamente.
+  §II lo dice explícitamente.
 - **[5] `cole2015` → eliminada.** La compuerta por error de predicción ahora se
   sostiene con literatura primaria:
   - §I: Lisman y Grace 2005 (*Neuron*) y Shohamy y Adcock 2010 (*TiCS*), sobre
     la modulación dopaminérgica de la codificación hipocampal.
   - §I: Rouhani, Norman y Niv 2018 (*JEP:LMC*), donde errores de predicción de
     recompensa más grandes mejoran la memoria episódica.
-  - §VI: Schultz, Dayan y Montague 1997 (*Science*) sostiene la afirmación
+  - §VII-B: Schultz, Dayan y Montague 1997 (*Science*) sostiene la afirmación
     "la cuenta dopaminérgica es sobre error de predicción de recompensa", junto
     con Rouhani et al.
 - **[6] `murdock1962` → eliminada.** Trata el efecto de posición serial y no se
@@ -96,11 +100,11 @@ resultado. Cada detalle está sacado del código que produjo los resultados:
 
 Estamos de acuerdo y lo decimos explícitamente en el texto:
 
-- En **§III-E**, el 14.41× muestra que la señal de saliencia no tiene efecto
+- En **§IV-B**, el 14.41× muestra que la señal de saliencia no tiene efecto
   hasta que una regla de desalojo la lee. Con rangos de sorpresa no solapados,
   retener los raros sale casi directamente de la construcción; el factor no
   demuestra que seleccionar desde una señal realista esté resuelto.
-- En **§IV**, la retención perfecta confirma el cableado. Aclaramos además que
+- En **§VI**, la retención perfecta confirma el cableado. Aclaramos además que
   la grilla de umbral saca el techo de "20 raros en 20 ranuras", pero mantiene
   la separabilidad.
 
@@ -109,7 +113,7 @@ sorpresa se degrada por solapamiento de rangos, ruido aditivo, retraso en la
 asignación de crédito e inversión parcial (señal engañosa), y en un eje aparte
 se agregan distractores novedosos, porque la novedad también separa
 perfectamente lo raro por construcción. El resultado matiza la afirmación y la
-corregimos donde aparece (contribuciones, §III-E, §III-F, §IV y conclusión):
+corregimos donde aparece (abstract, contribuciones, §IV-B, §IV-C, §VI, §VIII y conclusión):
 
 - **El 14.41× depende de la señal.** Con solo error de predicción como
   compuerta, el cociente condicional cae de 16.27× (señal limpia) a 0.80×
@@ -125,13 +129,13 @@ corregimos donde aparece (contribuciones, §III-E, §III-F, §IV y conclusión):
   en AUC ≈ 0.5 se vuelve desventaja (0.60 contra 0.76). En el régimen r = 2,
   donde fusionar no libera espacio, la ventaja aguanta hasta AUC 0.84. Contra
   el FIFO gana en todas las condiciones de r = 0.25.
-- **La retención perfecta de SDM en §IV es de señal limpia.** SDM baja a 0.81
+- **La retención perfecta de SDM en §VI es de señal limpia.** SDM baja a 0.81
   con AUC 0.99 y a 0.60 con AUC 0.95, por debajo de ENN, que se queda en 0.75
   bajo toda degradación del error de predicción porque su retención viene de
   la fusión. Eso vale solo en el flujo r = 0.25: en r = 2 la ENN cae a
   0.04–0.10 y la SDM la iguala o supera, y con un 25 % de distractores
   novedosos la ENN cae a 0.16–0.17.
-- **Precisión y recall.** En el flujo de §IV (20 raros en 20 ranuras, memoria
+- **Precisión y recall.** En el flujo de §VI (20 raros en 20 ranuras, memoria
   llena) la precisión de retención es igual al recall por aritmética; en el
   flujo r = 2 (10 raros en 20 ranuras) la precisión está acotada en 0.5 y
   sigue al recall. SDM supera al FIFO ahí hasta AUC 0.74.
@@ -145,8 +149,8 @@ espacio). Nota de los números movidos: `docs/notas/2026-10-06-exp08-saliencia-i
 ### R1.4 — "Threshold law" prematura
 
 Tenía razón. Reformulamos todo el paper, incluidos el abstract, las
-contribuciones, §III-D, §VII-A y la conclusión, como una **regime hypothesis**
-sostenida bajo las condiciones evaluadas. §III-D agrega dos cosas:
+contribuciones, §V, §VIII y la conclusión, como una **regime hypothesis**
+sostenida bajo las condiciones evaluadas. §V agrega dos cosas:
 
 - que la transición es casi una reformulación de la definición de capacidad;
   lo nuevo es que el cambio sea abrupto, no que exista. En la grilla original
@@ -168,11 +172,11 @@ colapsados que con r nominal en el 99.8 % de las réplicas bootstrap y mejor que
 otras cuatro medidas de presión declaradas antes de correr. La dispersión
 residual viene de la prevalencia de raros y de C = 5. En el generador original
 r_eff = r, así que la Figura 3 no cambia. El paper enuncia ahora la hipótesis
-sobre r_eff (abstract, contribuciones, §III-D, §VII-A, conclusión) y lo dice
-explícitamente en §III-D.
+sobre r_eff (abstract, contribuciones, §V, §VIII, conclusión) y lo dice
+explícitamente en §V.
 
 El umbral de fusión ya no figura entre las condiciones no probadas (exp07,
-§III-D). Barrimos el umbral de 0.30 a 0.97 (C = 20, cinco semillas, los 576
+§V). Barrimos el umbral de 0.30 a 0.97 (C = 20, cinco semillas, los 576
 genotipos). Entre 0.40 y 0.85 el cruce queda exactamente en r ≈ 0.87 para todos
 los umbrales. A 0.90 la fusión pierde parte de las visitas y el cruce nominal
 baja a 0.61. A 0.30 la fusión absorbe el 38 % de los raros. Desde 0.95 la
@@ -185,7 +189,7 @@ cambia el patrón de régimen.
 
 ### R1.5 — Sustratos con presupuestos de almacenamiento y cómputo no equivalentes
 
-En §IV reconocemos que la capacidad cuenta trazas y no bytes. SDM además
+En §VI reconocemos que la capacidad cuenta trazas y no bytes. SDM además
 mantiene 512 hard locations con contadores, y el benchmark no separa el aporte
 de los contadores del de la lista de trazas.
 
@@ -196,12 +200,12 @@ Lo medimos (exp12, 10 semillas, IC bootstrap) y el resultado matiza el paper:
   (`nbytes`) coincide con la fórmula analítica en todas las configuraciones.
   Agregamos la columna **KiB** a la Tabla III (generada desde `results/`).
 - **Complejidad y tiempo.** Medido a C = 20, la lectura cuesta 28 µs en SDM
-  contra 12 µs en FIFO; el paper (§IV) da este número. Por espacio, el resto
+  contra 12 µs en FIFO; el paper (§VI) da este número. Por espacio, el resto
   queda en esta respuesta y en `results/exp12_substrate_cost/`: lectura y
   escritura son O(C·d) en FIFO/ENN y O(M·d + C·d) en SDM, y la escritura cuesta
   57 contra 31 µs.
 - **Igual presupuesto.** Con los 144 KiB que ocupa la SDM, un FIFO guarda 921
-  trazas y la supera en la batería T1–T3 (0.924 contra 0.745); el paper (§IV)
+  trazas y la supera en la batería T1–T3 (0.924 contra 0.745); el paper (§VI)
   aclara que a ese presupuesto el flujo de T1 entra entero y ya no hay presión
   de capacidad. Escalar las hard locations de la SDM al presupuesto tampoco lo
   revierte: de 16 KiB a 512 KiB queda por debajo del FIFO, y a 4 KiB lo supera
@@ -216,19 +220,19 @@ Lo medimos (exp12, 10 semillas, IC bootstrap) y el resultado matiza el paper:
   [−0.001, 0.013]). La SDM real resta exactamente, así que lo que sostiene la
   retención no es "lista frente a contadores": es el desalojo con compuerta más
   un borrado exacto, que la lista sola provee con 1/42 de los bytes. Corregimos
-  en consecuencia la frase de §IV que atribuía la recuperación a la
+  en consecuencia la frase de §VI que atribuía la recuperación a la
   superposición y la afirmación de la conclusión de que la SDM era "el único
   sustrato" que combina reconstrucción y retención.
 - **Sensibilidad.** La media de la batería varía 0.091 entre 64 y 2048 hard
   locations; la retención de raros es perfecta para fracciones de activación
   entre 0.005 y 0.2 y solo cae a fracción 0.5 (que además no pasa el gate). Un
   umbral de admisión externo no cambia nada hasta 0.5 y por encima bloquea la
-  reconstrucción. El umbral de fusión lo barre exp07. §IV.
+  reconstrucción. El umbral de fusión lo barre exp07. §VI.
 
 ### R1.6 — El "e-MDB FIFO" es un proxy optimista
 
-Renombramos el baseline a **FIFO-NN proxy of the e-MDB buffer** en §I, §II-D,
-§III-C, la Tabla II, §IV, §VII-C y la conclusión. Decimos explícitamente que el
+Renombramos el baseline a **FIFO-NN proxy of the e-MDB buffer** en §I, §II,
+§IV-A, la Tabla II, §VI, §IV-C, §VIII y la conclusión. Decimos explícitamente que el
 buffer real recupera por posición o por lotes, sin búsqueda por contenido, y
 por qué elegimos NN: para aislar el desalojo y la ponderación.
 
@@ -240,22 +244,22 @@ mismo desalojo retiene exactamente las mismas trazas que el proxy, pero
 **reprueba el gate de reconstrucción**: 0.368 contra 0.903 del proxy. Su puntaje
 agregado es 0.010 y queda último entre 577. Con un umbral de coincidencia de 0.5
 el gate se recupera (0.826), pero el puntaje no (0.067). El ranking del proxy es,
-entonces, una cota superior para el buffer desplegado. Esto quedó en §VII-C,
+entonces, una cota superior para el buffer desplegado. Esto quedó en §IV-C,
 §VIII y la conclusión. Que el buffer real repruebe también la reconstrucción
 depende del criterio de coincidencia supuesto; lo que no depende de él es el
 puntaje (0.010–0.067), y así lo dice la conclusión.
 
 ### R1.7 — MiniGrid limitado; importancia definida por la tarea; Wilson sobre eventos
 
-Lo resolvimos con un experimento nuevo (exp11), reportado en §VI (párrafo
-"Beyond one environment") y en §VIII.
+Lo resolvimos con un experimento nuevo (exp11), reportado en §VII-B y, para
+la importancia demorada, en §VIII.
 
 - **Unidad estadística.** Re-analizamos exp06 con el rollout como unidad
   (bootstrap por clúster sobre rollouts). Con los mismos 40 rollouts, la
   frontera con error de predicción de recompensa retiene 52.6 % con IC 95 %
   [37.9 %, 69.0 %] (Wilson daba [37.3 %, 67.5 %]) y el FIFO 2.6 % [0.0 %,
   8.6 %]. El efecto de diseño es 0.92: en la práctica, los eventos de un mismo
-  rollout no estaban correlacionados y la conclusión no cambia. §VI ahora
+  rollout no estaban correlacionados y la conclusión no cambia. §VII-B ahora
   reporta los intervalos por rollout en lugar de los de Wilson.
 - **Más rollouts y semillas.** Con 200 rollouts en 5 bloques de semillas
   independientes, la frontera retiene 47.2 % [39.0 %, 56.3 %] contra 0.7 % del
@@ -300,7 +304,7 @@ En §III-B definimos:
   intervalo del cruce es un bootstrap sobre tres capacidades y es solo
   descriptivo.
 
-Un párrafo nuevo, "Structural dependence between axes", explica que la fuerza y
+Un párrafo nuevo de §III-B, "Structural dependence", explica que la fuerza y
 el refuerzo son inertes bajo tres de cuatro desalojos. Por eso los efectos
 principales se leen como atribución sobre todo el espacio, y los efectos
 condicionales se reportan donde la dependencia se conoce. Las fracciones de
@@ -311,7 +315,7 @@ interacción cuantifican la dependencia: strength×evict 4.3 % y write×evict
 
 - Ampliamos §VIII: la integración con e-MDB no está hecha, y la Figura 1 es un
   diseño, no una implementación.
-- Medimos el efecto sobre el desempeño (exp13, §VIII, con una frase en §VII y
+- Medimos el efecto sobre el desempeño (exp13, §VIII, con una frase en el abstract y
   en la Conclusión). Un agente de control episódico cuya única experiencia es
   la memoria enfrenta cuatro variantes de MiniGrid que se alternan y
   reaparecen (10 semillas, IC95 bootstrap pareado). Con C=300 la frontera
@@ -327,9 +331,9 @@ interacción cuantifican la dependencia: strength×evict 4.3 % y write×evict
   supera al reservoir en AUC en ambas capacidades. La memoria sin límite
   (AUC 0.566 contra 0.144) muestra cuánto falta. Conclusión honesta:
   retener mejor no es todavía actuar mejor. Lo dice el paper, y matizamos en
-  §VII la afirmación sobre el buffer de e-MDB. El efecto sobre los modelos que
+  §VIII la afirmación sobre el buffer de e-MDB. El efecto sobre los modelos que
   e-MDB entrena desde su buffer sigue sin probarse.
-- Agregamos en §II-C un párrafo de gestión de memoria no biológica:
+- Agregamos en §II un párrafo de gestión de memoria no biológica:
   - LRU-K (O'Neil et al. 1993) y ARC (Megiddo y Modha 2003);
   - reservoir sampling (Vitter 1985);
   - Chaudhry et al. 2019;
@@ -356,12 +360,12 @@ de la versión final, y agregar su URL al paper.
 | Recomendación | Respuesta |
 |---|---|
 | Protocolo consolidado | §III-B (hecho) |
-| Hipótesis o más generadores | Reformulado como hipótesis (hecho); exp10 en 23 familias: el cruce lo ordena r_eff ([0.56, 1.28]), no r nominal ([0.16, 1.32]); §III-D (hecho) |
-| Señales imperfectas, precisión y recall | §III-E y §IV (exp08, hecho): la ventaja aguanta hasta AUC ≈ 0.91–0.96 (0.84 a r = 2) y se pierde con retraso; afirmaciones corregidas (ver R1.3) |
-| Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | exp10: rango [1, 1] en 13 de las 14 familias held-out, [15, 20] con 0.1 % de raros; Spearman ≥ 0.77; §III-D (hecho). §II-C (hecho, exp09: ningún baseline externo supera a la frontera; el replay priorizado greedy queda a 0.035) |
-| Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | §IV y columna KiB de la Tabla III: bytes, tiempos, igual presupuesto, ablación contadores/lista y sensibilidad de SDM (exp12, hecho); umbral de fusión y ganancia de fuerza: hecho (exp07, §III-D y §V) |
-| MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | §VI y §VIII (exp11, hecho): IC por rollout, 200 rollouts, 4 entornos × 4 políticas × 5 importancias × 5 señales, control nulo; efecto en aprendizaje medido en §VIII (exp13): la frontera retiene mejor la tarea que reaparece pero integra menos retorno que el FIFO, y ningún genotipo probado gana en las dos métricas |
-| Integración en e-MDB real frente a su buffer secuencial | Figura 1 y §VIII (hecho); buffer real con lectura secuencial en §VII-C (hecho, exp09: reprueba el gate, 0.368); la integración completa queda como trabajo futuro declarado |
+| Hipótesis o más generadores | Reformulado como hipótesis (hecho); exp10 en 23 familias: el cruce lo ordena r_eff ([0.56, 1.28]), no r nominal ([0.16, 1.32]); §V (hecho) |
+| Señales imperfectas, precisión y recall | §IV-B, §IV-C y §VI (exp08, hecho): la ventaja aguanta hasta AUC ≈ 0.91–0.96 (0.84 a r = 2) y se pierde con retraso; afirmaciones corregidas (ver R1.3) |
+| Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | exp10: rango [1, 1] en 13 de las 14 familias held-out, [15, 20] con 0.1 % de raros; Spearman ≥ 0.77; §V (hecho). §IV-C (hecho, exp09: ningún baseline externo supera a la frontera; el replay priorizado greedy queda a 0.035) |
+| Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | §VI y columna KiB de la Tabla III: bytes, tiempos, igual presupuesto, ablación contadores/lista y sensibilidad de SDM (exp12, hecho); umbral de fusión y ganancia de fuerza: hecho (exp07, §V y §VII-A) |
+| MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | §VII-B y §VIII (exp11, hecho): IC por rollout, 200 rollouts, 4 entornos × 4 políticas × 5 importancias × 5 señales, control nulo; efecto en aprendizaje medido en §VIII (exp13): la frontera retiene mejor la tarea que reaparece pero integra menos retorno que el FIFO, y ningún genotipo probado gana en las dos métricas |
+| Integración en e-MDB real frente a su buffer secuencial | Figura 1 y §VIII (hecho); buffer real con lectura secuencial en §IV-C (hecho, exp09: reprueba el gate, 0.368); la integración completa queda como trabajo futuro declarado |
 
 ---
 
@@ -375,7 +379,7 @@ de la versión final, y agregar su URL al paper.
 - MiniGrid se amplió a 4 entornos (MemoryS13, DoorKey-6x6, FourRooms,
   KeyCorridorS3R2) y 4 políticas, dos de ellas dirigidas (planificador BFS con
   ruido y Q-learning tabular), con 200 rollouts y el rollout como unidad
-  (§VI, exp11; detalle en R1.7). La saliencia transfiere cuando la señal está
+  (§VII-B, exp11; detalle en R1.7). La saliencia transfiere cuando la señal está
   alineada con lo importante y falla para importancia demorada; §VIII lo dice.
   Siguen siendo mundos de grilla discretos, sin robot físico.
 
@@ -385,7 +389,7 @@ Tenía razón en que había que probarlo. Lo barrimos de 0.30 a 0.97 en ambos
 dominios (exp07). El resultado de CIFAR-100 no depende de la calibración de
 0.85:
 
-- **CIFAR-100 (§V).** La similitud intra-clase (mediana 0.38) se solapa con la
+- **CIFAR-100 (§VII-A).** La similitud intra-clase (mediana 0.38) se solapa con la
   inter-clase (percentil 95: 0.42). Por eso ningún umbral de la grilla da
   fusiones a la vez frecuentes y puras: a 0.85 se fusiona el 6 % de las
   escrituras, y desde 0.40 el desalojo domina en todo r. A 0.30 el eje de
@@ -399,21 +403,21 @@ dominios (exp07). El resultado de CIFAR-100 no depende de la calibración de
 - **Corrección del paper.** La precondición deja de enunciarse como "similitud
   intra-prototipo por encima del umbral". Ahora es de *separabilidad*: hace
   falta un umbral que superen los encuentros repetidos y no los distintos. Lo
-  corregimos en el abstract, las contribuciones, §V, §VII, la conclusión y las
+  corregimos en el abstract, las contribuciones, §VII-A, §VIII, la conclusión y las
   limitaciones. El abstract ya no compara la mediana 0.401 con 0.85, sino la
   mediana intra-clase (0.38) con el percentil 95 inter-clase (0.42). La
   separabilidad se midió con las etiquetas de clase; un estimador en línea, sin
   etiquetas, queda sin probar y el paper lo dice. Retiramos la frase de §VIII que sugería que "un umbral por
   dominio podría cambiarlo"; un extractor ajustado sí podría.
-- **Sintético (§III-D).** El cruce es robusto al umbral entre 0.40 y 0.85
+- **Sintético (§V).** El cruce es robusto al umbral entre 0.40 y 0.85
   (r ≈ 0.87). Sobre K_effective queda entre 0.86 y 1.02 para todo umbral
   entre 0.30 y 0.90. Ver R1.4.
 
 ### R2.3 — Más baselines de gestión de memoria
 
-- §II-C incluye ahora la literatura no biológica: caché, reservoir y
+- §II incluye ahora la literatura no biológica: caché, reservoir y
   selección para replay.
-- En la misma §II-C reportamos la comparación empírica (exp09). Evaluamos siete
+- En la misma §IV-C reportamos la comparación empírica (exp09). Evaluamos siete
   políticas externas al espacio, cada una cambiando solo el desalojo del proxy
   FIFO-NN, con T1–T3 y cinco semillas. La frontera puntúa 0.824. LRU, LFU y una
   caché de utilidad (frecuencia × recencia) quedan al nivel del proxy: 0.106,
@@ -437,9 +441,9 @@ Lo tratamos igual que en R2.1: §VIII ampliada, y además la hipótesis de régi
 ya no se enuncia como ley (R1.4).
 
 Para MiniGrid, ver R2.1 y R1.7: 4 entornos, 4 políticas y 5 definiciones de
-importancia, con el rollout como unidad (§VI, exp11).
+importancia, con el rollout como unidad (§VII-B, exp11).
 
-Sobre la generalización fuera del generador (exp10, §III-D): la transición de
+Sobre la generalización fuera del generador (exp10, §V): la transición de
 régimen se sostiene en 23 familias de flujos (frecuencias desiguales, deriva,
 ruido, prevalencia de raros, C de 5 a 160) siempre que se enuncie sobre
 r_eff = K_efectivo/C, no sobre r nominal (ver R1.4). La frontera elegida en el
@@ -454,7 +458,7 @@ pesimista hasta 297; lo dejamos registrado en `docs/notas/`.
 
 ### R3.2 — Esquema de la integración EMBER/e-MDB
 
-Agregamos la **Figura 1** en §II-D, en TikZ. Muestra:
+Agregamos la **Figura 1** en §II, en TikZ. Muestra:
 
 - la memoria de largo plazo de e-MDB, con sus nodos cognitivos (P-nodes,
   C-nodes, objetivos, modelos de mundo y de utilidad, políticas) y el motor
