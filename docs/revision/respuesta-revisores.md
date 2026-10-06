@@ -104,8 +104,39 @@ Estamos de acuerdo y lo decimos explícitamente en el texto:
   la grilla de umbral saca el techo de "20 raros en 20 ranuras", pero mantiene
   la separabilidad.
 
-Queda PENDIENTE(exp08): la versión con señales imperfectas, que reportará
-precisión y recall por calidad de señal.
+Además corrimos la versión con señales imperfectas (exp08, 5 semillas): la
+sorpresa se degrada por solapamiento de rangos, ruido aditivo, retraso en la
+asignación de crédito e inversión parcial (señal engañosa), y en un eje aparte
+se agregan distractores novedosos, porque la novedad también separa
+perfectamente lo raro por construcción. El resultado matiza la afirmación y la
+corregimos donde aparece (contribuciones, §III-E, §III-F, §IV y conclusión):
+
+- **El 14.41× depende de la señal.** Con solo error de predicción como
+  compuerta, el cociente condicional cae de 16.27× (señal limpia) a 0.80×
+  (IC 95 % 0.17–2.82) con rangos totalmente solapados. La compuerta combinada
+  conserva más solo por la novedad; con un 25 % de distractores novedosos cae a
+  3.10×.
+- **La ventaja de la frontera tiene un umbral de calidad de señal.** Contra la
+  mejor configuración sin saliencia (que a r = 0.25 ya retiene 0.76
+  fusionando), la diferencia pareada excluye el 0 hasta un AUC empírico de la
+  sorpresa de 0.95 (solapamiento), 0.96 (ruido) y 0.91 (10 % de señal
+  invertida); se pierde cuando la mitad de la sorpresa llega un paso tarde, y
+  en AUC ≈ 0.5 se vuelve desventaja (0.60 contra 0.76). En el régimen r = 2,
+  donde fusionar no libera espacio, la ventaja aguanta hasta AUC 0.84. Contra
+  el FIFO gana en todas las condiciones de r = 0.25.
+- **La retención perfecta de SDM en §IV es de señal limpia.** SDM baja a 0.81
+  con AUC 0.99 y a 0.60 con AUC 0.95, por debajo de ENN, que se queda en 0.75
+  porque su retención viene de la fusión y no de la señal.
+- **Precisión y recall.** En el flujo de §IV (20 raros en 20 ranuras, memoria
+  llena) la precisión de retención es igual al recall por aritmética; en el
+  flujo r = 2 (10 raros en 20 ranuras) la precisión está acotada en 0.5 y
+  sigue al recall. SDM supera al FIFO ahí hasta AUC 0.74.
+
+El retraso es la degradación más dañina: con la sorpresa corrida un paso, la
+frontera retiene 0.21, peor de lo que su AUC sugiere. Todos los números están
+con `\result{exp08_imperfect_salience:...}` en el LaTeX; la figura por eje está
+en `paper/figures/fig_exp08_imperfect_salience.pdf` (no entra al cuerpo por
+espacio). Nota de los números movidos: `docs/notas/2026-10-06-exp08-saliencia-imperfecta.md`.
 
 ### R1.4 — "Threshold law" prematura
 
@@ -279,7 +310,7 @@ de la versión final, y agregar su URL al paper.
 |---|---|
 | Protocolo consolidado | §III-B (hecho) |
 | Hipótesis o más generadores | Reformulado como hipótesis (hecho); exp10 en 23 familias: el cruce lo ordena r_eff ([0.56, 1.28]), no r nominal ([0.16, 1.32]); §III-D (hecho) |
-| Señales imperfectas, precisión y recall | PENDIENTE(exp08) |
+| Señales imperfectas, precisión y recall | §III-E y §IV (exp08, hecho): la ventaja aguanta hasta AUC ≈ 0.91–0.96 (0.84 a r = 2) y se pierde con retraso; afirmaciones corregidas (ver R1.3) |
 | Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | exp10: rango [1, 1] en 13 de las 14 familias held-out, [15, 20] con 0.1 % de raros; Spearman ≥ 0.77; §III-D (hecho). §II-C (hecho, exp09: ningún baseline externo supera a la frontera; el replay priorizado greedy queda a 0.035) |
 | Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | PENDIENTE(exp12); umbral de fusión y ganancia de fuerza: hecho (exp07, §III-D y §V) |
 | MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | §VI y §VIII (exp11, hecho): IC por rollout, 200 rollouts, 4 entornos × 4 políticas × 5 importancias × 5 señales, control nulo; efecto en aprendizaje medido en §VIII (exp13): la frontera retiene mejor la tarea que reaparece pero integra menos retorno que el FIFO, y ningún genotipo probado gana en las dos métricas |

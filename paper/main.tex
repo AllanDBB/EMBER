@@ -178,7 +178,8 @@ The main contributions of this work are:
   \result{exp01_nas_full:main_effects.3.eta2|pct}{1.4}\,\% of the variance as a
   main effect, yet conditioned on the one eviction policy that reads the
   strength signal it improves rare-event retention by a factor of
-  \result{exp01_nas_full:salience_conditional_ratio|f2}{14.41}. The frontier
+  \result{exp01_nas_full:salience_conditional_ratio|f2}{14.41} on a
+  perfectly separable surprise signal, fading as it degrades. The frontier
   architecture differs from the deployed incumbent on two axes only, and
   neither is worth installing without the other.
   \item A two-phase benchmark that admits architectures by reconstruction
@@ -769,10 +770,26 @@ non-overlapping ranges (Section \ref{sec:protocol}), so once an eviction rule
 reads strength, keeping the rare events follows almost directly from the
 construction: the number shows that the salience signal has no effect until
 something consumes it, not that selecting what matters from a realistic signal
-is solved. How much of the gain survives overlapping, noisy or misleading
-signals is a separate question.
-% TODO(exp08): retención condicional con saliencia imperfecta; reemplazar la
-% última oración por el resultado.
+is solved. Degrading it (five seeds) bounds what survives. With prediction
+error alone as the gate the factor falls from
+\result{exp08_imperfect_salience:settings.main.conditions.clean.search.salience_interaction.ratio_vs_constant.pred_error.mean|f2}{16.27}$\times$
+on the clean signal to
+\result{exp08_imperfect_salience:settings.main.conditions.auc500.search.salience_interaction.ratio_vs_constant.pred_error.mean|f2}{0.80}$\times$
+(95\,\% CI \result{exp08_imperfect_salience:settings.main.conditions.auc500.search.salience_interaction.ratio_vs_constant.pred_error.ci.0|f2}{0.17}--\result{exp08_imperfect_salience:settings.main.conditions.auc500.search.salience_interaction.ratio_vs_constant.pred_error.ci.1|f2}{2.82})
+when both ranges overlap completely; the combined gate keeps more only through
+novelty, itself a perfect classifier here, and falls to
+\result{exp08_imperfect_salience:settings.main.conditions.auc500_distr025.search.salience_interaction.ratio_vs_constant.both.mean|f2}{3.10}$\times$
+once a quarter of routine inputs are novel distractors. Against the best
+salience-free configuration, which at $r=0.25$ already retains
+\result{exp08_imperfect_salience:settings.main.conditions.clean.policies.no_salience_best.recall.mean|f2}{0.76} by merging, the
+frontier's paired advantage holds down to a surprise AUC of
+\result{exp08_imperfect_salience:settings.main.conditions.auc950.auc.mean|f2}{0.95} under overlap,
+\result{exp08_imperfect_salience:settings.main.conditions.noise030.auc.mean|f2}{0.96} under additive noise and
+\result{exp08_imperfect_salience:settings.main.conditions.mislead010.auc.mean|f2}{0.91} under 10\,\% inverted signals, is lost
+once half the surprise is credited one step late, and becomes a deficit at
+chance level (\result{exp08_imperfect_salience:settings.main.conditions.auc500.policies.frontier.recall.mean|f2}{0.60}). At
+$r=2$, where merging frees no space, it holds down to AUC
+\result{exp08_imperfect_salience:settings.selection.conditions.auc800.auc.mean|f2}{0.84}.
 
 The same interaction can be shown without statistics, on four concrete
 configurations. The frontier differs from the incumbent proxy on exactly two of
@@ -841,7 +858,8 @@ outweighs a rare event encoded once under maximum surprise. And it is
 is above or below the threshold, and always consulting the importance signal it
 behaves identically in both. That is what makes it a deployable recommendation
 rather than the winner of one cell --- a robot running this configuration need
-not know, or estimate, its own $r$.
+not know, or estimate, its own $r$, although below $r=1$ a weak surprise signal
+hands the advantage back to merging (Section \ref{sec:interaction}).
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Comparative architecture evaluation}
@@ -907,12 +925,19 @@ the gate and eviction policy, not SDM against the FIFO. The threshold grid of
 Section \ref{sec:nas} puts the rare count at half the capacity, which removes
 the exact-fit ceiling but not the separability: its prediction-error ranges are
 the same, so it measures which axis carries the variance, not how hard
-selection is.
-% TODO(exp08): versión con señales imperfectas (rangos solapados, ruido,
-% retraso, correlación débil o engañosa con la importancia), con precisión y
-% recall de retención por calidad de señal.
+selection is. Under the degraded signals of Section \ref{sec:interaction} (here
+retention precision equals recall by arithmetic), SDM falls from
+\result{exp08_imperfect_salience:settings.main.conditions.clean.architectures.SDM.recall.mean|f2}{1.00} to
+\result{exp08_imperfect_salience:settings.main.conditions.auc990.architectures.SDM.recall.mean|f2}{0.81} at surprise AUC
+\result{exp08_imperfect_salience:settings.main.conditions.auc990.auc.mean|f2}{0.99} and
+\result{exp08_imperfect_salience:settings.main.conditions.auc950.architectures.SDM.recall.mean|f2}{0.60} at
+\result{exp08_imperfect_salience:settings.main.conditions.auc950.auc.mean|f2}{0.95}, below ENN, whose merging holds
+\result{exp08_imperfect_salience:settings.main.conditions.auc950.architectures.ENN.recall.mean|f2}{0.75} regardless of the
+signal. In the $r=2$ stream, precision is capped at 0.5 by ten rare items in
+twenty slots and tracks recall; SDM beats the FIFO there down to AUC
+\result{exp08_imperfect_salience:settings.selection.conditions.auc700.auc.mean|f2}{0.74}.
 
-In phase 2, SDM achieves perfect rare-event retention
+In phase 2 with the clean signal, SDM achieves perfect rare-event retention
 (\result{exp04_arch_benchmark:architectures.SDM.battery.per_task.rare_retention}{1.000},
 $\sigma=$\result{exp04_arch_benchmark:architectures.SDM.battery.per_task_std.rare_retention|f3}{0.000}
 across the four seeds): rare events receive high initial strength from
@@ -1253,10 +1278,12 @@ tied to how capacity is defined, which across stream families holds over this
 effective ratio rather than over the nominal $K_{proto}/C$. The
 encoding-salience mechanism the literature most motivates has a negligible main
 effect, yet conditioned on the one eviction policy that reads its signal it
-recovers fourteen times the rare-event retention ---not weak, but gated. The
+recovers fourteen times the rare-event retention on a perfectly separable
+signal ---not weak, but gated, and only as good as its input. The
 benchmark adds that SDM with a prediction-error gate is the only substrate
 pairing reconstruction fidelity with perfect retention on a stream whose rare
-events are separable by construction, that the FIFO-NN proxy of the e-MDB buffer
+events are separable by construction, a lead it loses to ENN once they are not,
+that the FIFO-NN proxy of the e-MDB buffer
 reconstructs well but is the floor at retention ---its deficiency is choosing,
 not remembering, while the buffer's actual sequential read fails reconstruction
 too--- and that the pure spiking circuit does not transfer to
