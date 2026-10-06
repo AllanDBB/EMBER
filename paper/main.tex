@@ -1063,7 +1063,8 @@ floor at retaining rare events among substrates, though not at reconstruction.
 This is not a criticism of e-MDB, built for a different primary goal ---its
 buffer feeds model training, not recall--- but a specific claim: as a store of
 what to remember, the buffer as implemented is inadequate for the LOLA regime,
-with a quantified gap for its most favourable proxy.
+with a quantified gap for its most favourable proxy ---though remembering more
+does not yet make an episodic controller act better (Section~\ref{sec:limits}).
 
 The finding of Section \ref{sec:real} gives the robot a check it can run online:
 intra-prototype similarity, measured on the vectors the memory already receives
@@ -1085,6 +1086,7 @@ as consequential as any axis of the space.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Limitations and future work}
+\label{sec:limits}
 
 The real-data validation of Section \ref{sec:real} uses one extractor
 (ImageNet-pretrained ResNet-18, PCA to 32 dimensions), one dataset and one
@@ -1098,11 +1100,25 @@ besides the forward-biased one.
 Three further limits are not addressed by any experiment in this revision.
 EMBER has not been integrated into the running e-MDB: Fig.~\ref{fig:integration}
 is a design, the incumbent is a proxy rather than the deployed buffer, and
-whether better retention improves the world and utility models e-MDB trains from
-its buffer is untested. All real-data evidence comes from a single visual
+its effect on the world and utility models e-MDB trains from its buffer is
+untested. All real-data evidence comes from a single visual
 extractor. And no experiment ran on a physical robot.
-% TODO(exp13): efecto de la memoria retenida sobre aprendizaje o desempeño
-% posterior (calidad de modelos/decisiones); citar aquí.
+An e-MDB-like proxy shows that better retention is not yet better behaviour.
+An episodic controller \cite{pritzel2017} whose only experience is the memory
+faced four MiniGrid goal variants that alternate and recur; at $C=300$ the
+frontier earns more than FIFO on the first episodes of a returning task
+($+\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.reaparicion.media|f3}{0.038}$, 95\,\% CI
+$[\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.reaparicion.ci_low|f3}{0.005}, \result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.reaparicion.ci_high|f3}{0.071}]$) but integrates
+less return over the stream (area under the curve
+$\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.auc.media|f3}{-0.075}$, CI
+$[\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.auc.ci_low|f3}{-0.098}, \result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.auc.ci_high|f3}{-0.053}]$, no seed
+favouring it), with the same trade-off at $C=1000$: without decay, retention
+costs plasticity. Adding decay (0.995 or 0.98, same space) lifts the frontier's
+area to the FIFO level but erases its advantage on returning tasks, so no tested
+configuration beats FIFO on both; the frontier does beat reservoir sampling on
+integrated return, and an unbounded memory
+(\result{exp13_downstream_learning:resumen.C300.sin_limite.auc.media|f3}{0.566} against \result{exp13_downstream_learning:resumen.C300.frontera.auc.media|f3}{0.144}) marks how
+far every bounded policy remains from the ceiling.
 % TODO(exp09): comparación con el buffer real de e-MDB con recuperación
 % secuencial (ver también la Discusión).
 
@@ -1147,6 +1163,8 @@ threshold, which CIFAR-100 never reaches, turning a condition of the regime
 hypothesis into an online-measurable check; and salience needs surprise anchored in reward,
 under which retention rises from the floor to more than half with no change of
 configuration or policy. What the salience mechanism needs is the right signal.
+Retention is not yet behaviour, though: an episodic controller on the frontier
+recalls returning tasks better than on FIFO but integrates less return.
 
 \section*{Code and data availability}
 

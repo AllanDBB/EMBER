@@ -181,8 +181,22 @@ interacción cuantifican la dependencia: strength×evict 4.3 % y write×evict
 
 - Ampliamos §VIII: la integración con e-MDB no está hecha, y la Figura 1 es un
   diseño, no una implementación.
-- Queda PENDIENTE(exp13): el efecto de la memoria sobre aprendizaje y
-  desempeño.
+- Medimos el efecto sobre el desempeño (exp13, §VIII, con una frase en §VII y
+  en la Conclusión). Un agente de control episódico cuya única experiencia es
+  la memoria enfrenta cuatro variantes de MiniGrid que se alternan y
+  reaparecen (10 semillas, IC95 bootstrap pareado). Con C=300 la frontera
+  rinde más que el FIFO al reaparecer una tarea (+0.038, IC [+0.005, +0.071]),
+  pero integra menos retorno sobre todo el flujo (AUC −0.075, IC
+  [−0.098, −0.053], ninguna semilla a favor). En C=1000 pasa lo mismo
+  (reaparición +0.109, AUC −0.064). Sin decaimiento, retener cuesta
+  plasticidad. Con decaimiento 0.995 o 0.98 (del mismo espacio), la frontera
+  sube su AUC al nivel del FIFO pero pierde la ventaja al reaparecer:
+  ningún genotipo probado le gana al FIFO en las dos métricas. La frontera sí
+  supera al reservoir en AUC en ambas capacidades. La memoria sin límite
+  (AUC 0.566 contra 0.144) muestra cuánto falta. Conclusión honesta:
+  retener mejor no es todavía actuar mejor. Lo dice el paper, y matizamos en
+  §VII la afirmación sobre el buffer de e-MDB. El efecto sobre los modelos que
+  e-MDB entrena desde su buffer sigue sin probarse.
 - Agregamos en §II-C un párrafo de gestión de memoria no biológica:
   - LRU-K (O'Neil et al. 1993) y ARC (Megiddo y Modha 2003);
   - reservoir sampling (Vitter 1985);
@@ -211,7 +225,7 @@ de la versión final, y agregar su URL al paper.
 | Señales imperfectas, precisión y recall | PENDIENTE(exp08) |
 | Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | PENDIENTE(exp10), PENDIENTE(exp09) |
 | Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | PENDIENTE(exp12), PENDIENTE(exp07) |
-| MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | PENDIENTE(exp11), PENDIENTE(exp13) |
+| MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | PENDIENTE(exp11); efecto en aprendizaje medido en §VIII (exp13): la frontera retiene mejor la tarea que reaparece pero integra menos retorno que el FIFO, y ningún genotipo probado gana en las dos métricas |
 | Integración en e-MDB real frente a su buffer secuencial | Figura 1 y §VIII (hecho); PENDIENTE(exp09) para el buffer real; la integración completa queda como trabajo futuro declarado |
 
 ---
