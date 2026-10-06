@@ -187,9 +187,9 @@ The main contributions of this work are:
   plasticity, STDP) does not transfer to the continuous-vector domain
   without an intermediate encoding layer.
   \item Two preconditions that appear only on real data. Consolidation
-  requires that the merge threshold be reachable in the domain, which on
-  CIFAR-100 it is not: there is no $r$, nominal or effective, at which a
-  compression regime exists. And the salience mechanism requires surprise to
+  requires a merge threshold that separates repeated encounters from distinct
+  ones, which on CIFAR-100 none does: there is no threshold and no $r$,
+  nominal or effective, at which a compression regime exists. And the salience mechanism requires surprise to
   be anchored in the variable that decides what matters ---reward--- rather
   than in the perceptual novelty of the state; unlike the first, this one we
   identify and correct.
@@ -706,7 +706,21 @@ families with fresh seeds, the frontier (Section \ref{sec:frontier}) keeps rank
 interval [1,\,1] in all but one, [\result{exp10_law_robustness:parte_b.familias.raros_01pct.bateria.frontera_rango_optimista|int}{15},\,\result{exp10_law_robustness:parte_b.frontera_peor_rango_pesimista_bateria|int}{20}]
 at 0.1\,\% rares, with Spearman correlation to the standard ranking
 $\geq$\,\result{exp10_law_robustness:parte_b.spearman_min_bateria|f2}{0.77}.
-% TODO(exp07): sensibilidad al umbral de fusión (0.85) y dónde cae el cruce.
+The merge threshold does not place the crossover. Sweeping it from 0.30 to 0.97
+($C=20$, five seeds) leaves it at
+$r\approx\result{exp07_merge_sensitivity:umbral_fusion.synthetic.umbrales.t085.cruce_r_nominal|f2}{0.87}$
+for every threshold from 0.40 to 0.85; at 0.90 merging misses part of the
+visits and the nominal crossover drops to
+\result{exp07_merge_sensitivity:umbral_fusion.synthetic.umbrales.t090.cruce_r_nominal|f2}{0.61},
+at 0.30 merging absorbs
+\result{exp07_merge_sensitivity:umbral_fusion.synthetic.umbrales.t030.raros_absorbidos_r_min|pct}{38.0}\,\%
+of rare events, and from 0.95, above most intra-prototype similarities,
+merging fragments prototypes and eviction dominates at every $r$. Stated over $K_{effective}$ instead, the crossover stays between
+\result{exp07_merge_sensitivity:umbral_fusion.synthetic.umbrales.t040.cruce_r_efectivo|f2}{0.86}
+and
+\result{exp07_merge_sensitivity:umbral_fusion.synthetic.umbrales.t030.cruce_r_efectivo|f2}{1.02}
+for every threshold at which merging fires; a sweep of the strength-gate gain
+(0.5--8) leaves the regime pattern unchanged.
 
 Figure \ref{fig:threshold} plots attribution, not activity: $\eta^2$ is how much
 of the spread in retention across the
@@ -961,8 +975,25 @@ traces as nominal $K$ rises from 5 to 80, with capacity fixed at 20. The
 synthetic domain in the same run crosses normally
 ($r \approx \result{exp05_real_embeddings:dominios.synthetic.r_umbral|f2}{0.77}$),
 so the null result is specific to this extractor, not a failure of the grid.
-% TODO(exp07): sensibilidad del resultado de CIFAR-100 al umbral de fusión
-% (barrido por debajo de 0.85, cerca de la similitud intra-clase medida).
+Lowering the threshold does not rescue consolidation, because intra-class
+similarity (median
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.intra.p50|f2}{0.38})
+overlaps inter-class similarity (95th percentile
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.inter.p95|f2}{0.42}):
+no threshold from 0.30 to 0.97 yields merges both frequent and pure, and
+from 0.40 up eviction dominates at every $r$. At 0.30 the write axis
+regains dominance at low $r$ only because merging destroys: just
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.umbrales.t030.pureza_fusion_r_min|pct}{47.7}\,\%
+of merges join the same class,
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.umbrales.t030.raros_absorbidos_r_min|pct}{70.0}\,\%
+of rare events are absorbed on arrival, and the best merging configuration
+retains
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.umbrales.t030.celdas.r0p25.puntaje_mejor_merge.media|f2}{0.30}
+against
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.umbrales.t030.celdas.r0p25.puntaje_frontera.media|f2}{1.00}
+for the \texttt{append} frontier. The precondition is therefore separability
+---a threshold that repeated encounters clear and distinct ones do not--- not
+the calibration of 0.85.
 
 Intra-prototype similarity is not a term in $r$; what it decides is whether $r$
 is well defined at all. Where consolidation is reachable but only partial, it
@@ -1139,7 +1170,7 @@ does not yet make an episodic controller act better (Section~\ref{sec:limits}).
 
 The finding of Section \ref{sec:real} gives the robot a check it can run online:
 intra-prototype similarity, measured on the vectors the memory already receives
-and compared against the merge threshold, decides ---before the write axis
+and compared against inter-prototype similarity, decides ---before the write axis
 matters at all--- whether consolidation is worth attempting, with no external
 instrumentation.
 
@@ -1163,8 +1194,8 @@ The real-data validation of Section \ref{sec:real} uses one extractor
 (ImageNet-pretrained ResNet-18, PCA to 32 dimensions), one dataset and one
 capacity; whether the intra-class similarity of
 \result{exp05_real_embeddings:precondicion_cifar100.similitud_intra_prototipo|f3}{0.401}
-is a property of the visual domain, the extractor, or both is untested, and a
-fine-tuned extractor or a per-domain merge threshold could change it. The
+is a property of the visual domain, the extractor, or both is untested; a
+fine-tuned extractor could change it, a lower merge threshold does not. The
 MiniGrid validation, though it spans four environments and four policies, stays
 within small discrete grid worlds.
 
@@ -1230,8 +1261,8 @@ reconstructs well but is the floor at retention ---its deficiency is choosing,
 not remembering, while the buffer's actual sequential read fails reconstruction
 too--- and that the pure spiking circuit does not transfer to
 continuous vectors, marking PoC-5 as the next milestone. Real data adds two
-preconditions: consolidation needs intra-prototype similarity above the merge
-threshold, which CIFAR-100 never reaches, turning a condition of the regime
+preconditions: consolidation needs a merge threshold that repeated encounters
+clear and distinct ones do not, which no threshold achieves on CIFAR-100, turning a condition of the regime
 hypothesis into an online-measurable check; and salience needs surprise anchored in reward,
 under which retention rises from the floor to more than half with no change of
 configuration or policy. What the salience mechanism needs is the right signal.

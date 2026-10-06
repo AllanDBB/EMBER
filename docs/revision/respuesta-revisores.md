@@ -134,7 +134,16 @@ r_eff = r, así que la Figura 3 no cambia. El paper enuncia ahora la hipótesis
 sobre r_eff (abstract, contribuciones, §III-D, §VII-A, conclusión) y lo dice
 explícitamente en §III-D.
 
-Queda PENDIENTE(exp07), el umbral de fusión.
+El umbral de fusión ya no figura entre las condiciones no probadas (exp07,
+§III-D). Barrimos el umbral de 0.30 a 0.97 (C = 20, cinco semillas, los 576
+genotipos). Entre 0.40 y 0.85 el cruce queda exactamente en r ≈ 0.87 para todos
+los umbrales. A 0.90 la fusión pierde parte de las visitas y el cruce nominal
+baja a 0.61. A 0.30 la fusión absorbe el 38 % de los raros. Desde 0.95 la
+fusión fragmenta los prototipos y el desalojo domina en todo r. Medido sobre
+K_effective, el cruce queda entre 0.86 y 1.02 para todo umbral en el que la
+fusión se dispara, así que la hipótesis se enuncia mejor sobre la razón
+efectiva. Un barrido 1D de la ganancia de la compuerta de fuerza (0.5–8) no
+cambia el patrón de régimen.
 
 ### R1.5 — Sustratos con presupuestos de almacenamiento y cómputo no equivalentes
 
@@ -272,7 +281,7 @@ de la versión final, y agregar su URL al paper.
 | Hipótesis o más generadores | Reformulado como hipótesis (hecho); exp10 en 23 familias: el cruce lo ordena r_eff ([0.56, 1.28]), no r nominal ([0.16, 1.32]); §III-D (hecho) |
 | Señales imperfectas, precisión y recall | PENDIENTE(exp08) |
 | Frontera en familias held-out; reservoir, LRU/LFU, replay priorizado | exp10: rango [1, 1] en 13 de las 14 familias held-out, [15, 20] con 0.1 % de raros; Spearman ≥ 0.77; §III-D (hecho). §II-C (hecho, exp09: ningún baseline externo supera a la frontera; el replay priorizado greedy queda a 0.035) |
-| Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | PENDIENTE(exp12), PENDIENTE(exp07) |
+| Sustratos bajo restricciones equivalentes; sensibilidad de hiperparámetros | PENDIENTE(exp12); umbral de fusión y ganancia de fuerza: hecho (exp07, §III-D y §V) |
 | MiniGrid con rollout como unidad, más entornos; efecto en aprendizaje | §VI y §VIII (exp11, hecho): IC por rollout, 200 rollouts, 4 entornos × 4 políticas × 5 importancias × 5 señales, control nulo; efecto en aprendizaje medido en §VIII (exp13): la frontera retiene mejor la tarea que reaparece pero integra menos retorno que el FIFO, y ningún genotipo probado gana en las dos métricas |
 | Integración en e-MDB real frente a su buffer secuencial | Figura 1 y §VIII (hecho); buffer real con lectura secuencial en §VII-C (hecho, exp09: reprueba el gate, 0.368); la integración completa queda como trabajo futuro declarado |
 
@@ -294,9 +303,29 @@ de la versión final, y agregar su URL al paper.
 
 ### R2.2 — Dependencia del umbral de fusión 0.85
 
-- En §V dejamos un marcador para el barrido del umbral sobre CIFAR-100.
-- En §III-D, el umbral figura entre las condiciones no probadas de la hipótesis.
-- Queda PENDIENTE(exp07).
+Tenía razón en que había que probarlo. Lo barrimos de 0.30 a 0.97 en ambos
+dominios (exp07). El resultado de CIFAR-100 no depende de la calibración de
+0.85:
+
+- **CIFAR-100 (§V).** La similitud intra-clase (mediana 0.38) se solapa con la
+  inter-clase (percentil 95: 0.42). Por eso ningún umbral de la grilla da
+  fusiones a la vez frecuentes y puras: a 0.85 se fusiona el 6 % de las
+  escrituras, y desde 0.40 el desalojo domina en todo r. A 0.30 el eje de
+  escritura recupera la dominancia en r bajo, pero porque fusionar daña. Solo
+  el 48 % de las fusiones une la misma clase, el 70 % de los raros se absorbe
+  al llegar, y la mejor configuración con fusión retiene 0.30 frente a 1.00 de
+  la frontera `append`. El criterio de viabilidad que fijamos antes de correr
+  (tasa de fusión ≥ 0.25, pureza ≥ 0.9 y escritura dominante en r bajo) no lo
+  cumple ningún umbral.
+- **Corrección del paper.** La precondición deja de enunciarse como "similitud
+  intra-prototipo por encima del umbral". Ahora es de *separabilidad*: hace
+  falta un umbral que superen los encuentros repetidos y no los distintos. Lo
+  corregimos en las contribuciones, §V, §VII, la conclusión y las
+  limitaciones. Retiramos la frase de §VIII que sugería que "un umbral por
+  dominio podría cambiarlo"; un extractor ajustado sí podría.
+- **Sintético (§III-D).** El cruce es robusto al umbral entre 0.40 y 0.85
+  (r ≈ 0.87). Sobre K_effective queda entre 0.86 y 1.02 para todo umbral en
+  el que la fusión se dispara. Ver R1.4.
 
 ### R2.3 — Más baselines de gestión de memoria
 
