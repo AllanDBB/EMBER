@@ -33,11 +33,17 @@
 ## Trampa a recordar
 
 A 0.30 en CIFAR-100 reaparece un cruce (r nominal 0.61, efectivo 1.07): η²_write
-supera a η²_evict en r bajo. **No es un régimen de compresión.** η² no tiene
-signo: la escritura domina porque las fusiones destruyen información, no porque
-la consoliden. La mejor configuración con fusión retiene 0.30 y la frontera
-`append` retiene 1.00. Por eso exp07 registra el efecto con signo, la pureza y
-la absorción de raros, no solo η².
+supera a η²_evict en r bajo. **No es un régimen de compresión útil.** η² no
+tiene signo, así que hay que mirar el efecto con signo: `efecto_merge_r_min` a
+0.30 es **+0.072**, es decir que, promediado sobre el espacio, fusionar mejora
+la retención en r = 0.25. (Una versión anterior de esta nota decía que la
+escritura dominaba "porque las fusiones destruyen información"; es falso, y la
+nota del manifiesto que lo afirmaría solo se emite con efecto negativo, y no se
+emitió. Lo detectó la auditoría del 2026-10-06, hallazgo A3.) Lo que sí impide
+llamarlo compresión útil: solo el 47.7 % de las fusiones une la misma clase, el
+70 % de los raros se absorbe al llegar, y la mejor configuración con fusión
+retiene 0.30 contra 1.00 de la frontera `append`. Por eso exp07 registra el
+efecto con signo, la pureza y la absorción de raros, no solo η².
 
 ## Pendiente
 

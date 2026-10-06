@@ -41,32 +41,36 @@ engine; we evaluate every one, including a nearest-neighbour proxy of the
 e-MDB buffer. Each is
 scored on how many important-marked experiences survive a stream overrunning the
 memory many times over. The memory never sees the marks, only a surprise
-signal. We report four results. First, which mechanism matters depends on $r = K_{proto}/C$, recurring
-situations divided by capacity. Below $r=1$ the write axis explains
+signal. We report four results. First, which mechanism matters depends on how
+many traces recurring experience occupies after consolidation relative to
+capacity, $r_{eff}$; on clean streams this is $r = K_{proto}/C$, recurring
+situations divided by capacity. At $r\le0.5$ the write axis explains
 \result{exp02_threshold_grid:regimenes.compression.eta2_write|pct}{73.0}\,\% of
-the variance in retention; above it,
+the variance in retention; above $r=1$,
 \result{exp02_threshold_grid:regimenes.selection.eta2_write|pct}{1.6}\,\%, and
-eviction takes over. The switch falls at the same $r$ for three capacities, but
-across 23 stream families it is located by the effective ratio, counting the
-traces consolidation actually leaves, not by nominal $r$; we state it as a
-hypothesis, not a law. Second, the best configuration retains
+eviction takes over. The switch falls near $r=1$ for capacities 5 to 160, but
+across 23 stream families it is located by the effective ratio, not by nominal
+$r$; we state it as a hypothesis, not a law. Second, on a separable surprise
+signal the best configuration retains
 \result{exp01_nas_full:frontier.scores.rare_retention|f3}{0.983} of the marked
 experiences against
 \result{exp01_nas_full:incumbent.scores.rare_retention|f3}{0.050} for that
 proxy, differing on two axes only: surprise-weighted encoding and
-weakest-trace eviction. Neither alone changes anything. Third, a
+weakest-trace eviction. From the proxy, neither alone changes anything. Third, a
 purely spiking circuit fails the reconstruction test the others pass: it was
 built for discrete patterns, not continuous vectors. Fourth, two preconditions
-appear only on real data. Merging needs repeated encounters to look alike;
-embeddings of natural images do not
-(\result{exp05_real_embeddings:precondicion_cifar100.similitud_intra_prototipo|f3}{0.401}
-against
-\result{exp05_real_embeddings:precondicion_cifar100.umbral_de_fusion|f2}{0.85}).
-Surprise must come from reward, not perceptual novelty, raising retention
-from
-\result{exp06_minigrid:comparacion_aleatoria_prediccion.resultados.frontera.tasa|pct}{0.0}\,\%
+appear only on real data. Merging needs repeated encounters to be separable
+from distinct ones; on natural-image embeddings they are not (intra-class
+median
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.intra.p50|f2}{0.38},
+inter-class 95th percentile
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.inter.p95|f2}{0.42}).
+Surprise must be aligned with what defines importance: with reward as
+importance, reward prediction error raises retention from
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_prediccion.resultados.frontera.tasa|pct}{0.0}\,\%
 to
-\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.frontera.tasa|pct}{52.6}\,\%.
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.tasa|pct}{47.2}\,\%
+over 200 rollouts; perceptual prediction error does not.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -180,8 +184,8 @@ The main contributions of this work are:
   strength signal it improves rare-event retention by a factor of
   \result{exp01_nas_full:salience_conditional_ratio|f2}{14.41} on a
   perfectly separable surprise signal, fading as it degrades. The frontier
-  architecture differs from the deployed incumbent on two axes only, and
-  neither is worth installing without the other.
+  architecture differs from the FIFO-NN proxy on two axes only, and from the
+  proxy neither changes anything alone.
   \item A two-phase benchmark that admits architectures by reconstruction
   before exposing them to capacity pressure, revealing that a pure spiking
   circuit (leaky integrate-and-fire neurons, LIF, with spike-timing-dependent
@@ -190,10 +194,11 @@ The main contributions of this work are:
   \item Two preconditions that appear only on real data. Consolidation
   requires a merge threshold that separates repeated encounters from distinct
   ones, which on CIFAR-100 none does: there is no threshold and no $r$,
-  nominal or effective, at which a compression regime exists. And the salience mechanism requires surprise to
-  be anchored in the variable that decides what matters ---reward--- rather
-  than in the perceptual novelty of the state; unlike the first, this one we
-  identify and correct.
+  nominal or effective, at which a compression regime exists. And the salience
+  mechanism requires surprise to be aligned with the variable that defines
+  importance ---reward prediction error when importance is reward--- rather
+  than perceptual prediction error; this one we identify, and correct when
+  importance is immediate.
 \end{itemize}
 
 % ═══════════════════════════════════════════════════════════════════════
@@ -576,7 +581,8 @@ T3, each averaged over seeds.
 configuration; the threshold grid, 3 capacities $\times$ 8 ratios $\times$ 5
 seeds on T1 alone, with 20 visits per prototype and $\max(5, C/2)$ rare
 experiences; the substrate benchmark, 4 seeds; CIFAR-100, 5 ratios $\times$ 3
-seeds at $C=20$. For an axis, $\eta^2 = SS_{between}/SS_{total}$ over the 576
+seeds at $C=20$; MiniGrid, 40 rollouts per condition (200 in five seed blocks
+in the extended run). For an axis, $\eta^2 = SS_{between}/SS_{total}$ over the 576
 configuration scores (the seed-averaged aggregate score in the search; T1 per
 seed in the grid; seed-averaged T1 on CIFAR-100): a one-way, marginal decomposition that
 averages over every other axis. The design is a full balanced factorial, so main
@@ -595,8 +601,9 @@ independent, and the factorial decomposition does not assume they are. Trace
 strength is consumed only by \texttt{min\_strength} eviction, so the
 \texttt{strength} and \texttt{reinforce} axes are inert in the three quarters of
 the space whose eviction never reads strength; \texttt{merge} acts only when the
-merge threshold is reached; and under a constant gate without reinforcement
-\texttt{min\_strength} reduces exactly to \texttt{fifo} (Section
+merge threshold is reached; and under a constant gate with \texttt{append}
+writes and no reinforcement \texttt{min\_strength} reduces exactly to
+\texttt{fifo} (Section
 \ref{sec:interaction}). A main effect therefore averages a mechanism over
 configurations where it cannot act, and a small $\eta^2$ is not evidence that
 the mechanism is weak. We read main effects only as attribution over the whole
@@ -646,8 +653,7 @@ reinforce: 0.0\}}--- scores
 floor of the space: below its pessimistic rank of
 \result{exp01_nas_full:incumbent.rank_pessimistic|int}{469}\ there are
 configurations that score strictly worse, almost all combining criterion-free
-\texttt{append} writing with minimum-utility eviction or \texttt{topk3} reads
-over compressed memory. The frontier of the space scores
+\texttt{append} writing with minimum-utility eviction or \texttt{topk3} reads. The frontier of the space scores
 \result{exp01_nas_full:frontier.score|f3}{0.818}: a factor of almost eight over
 the incumbent.
 
@@ -683,8 +689,12 @@ That mechanism also shows why the transition is expected where it falls: it is
 close to a restatement of what capacity means. When the prototypes fit,
 consolidation can hold them without displacing anything; when they do not, some
 form of selection is unavoidable. What the grid adds is that the switch in
-attribution is abrupt and lands at the same $r$ for three capacities, not that a
-switch exists. Repeated on 23 stream families (Section \ref{sec:protocol};
+attribution is abrupt and falls in the same grid interval for $C=10$--40, not
+that a switch exists. Over $C=5$--160 the nominal crossover
+drifts from
+\result{exp10_law_robustness:parte_a.colapso.r_nom.cruces.C005|f2}{0.71} to
+\result{exp10_law_robustness:parte_a.colapso.r_nom.cruces.C160|f2}{0.98}.
+Repeated on 23 stream families (Section \ref{sec:protocol};
 merge threshold 0.85), the sweep shows that nominal $r$ is not the governing
 variable: its crossover ranges from
 \result{exp10_law_robustness:parte_a.colapso.r_nom.cruce_min|f2}{0.16} to
@@ -720,7 +730,7 @@ merging fragments prototypes and eviction dominates at every $r$. Stated over $K
 \result{exp07_merge_sensitivity:umbral_fusion.synthetic.umbrales.t040.cruce_r_efectivo|f2}{0.86}
 and
 \result{exp07_merge_sensitivity:umbral_fusion.synthetic.umbrales.t030.cruce_r_efectivo|f2}{1.02}
-for every threshold at which merging fires; a sweep of the strength-gate gain
+for every threshold from 0.30 to 0.90; a sweep of the strength-gate gain
 (0.5--8) leaves the regime pattern unchanged.
 
 Figure \ref{fig:threshold} plots attribution, not activity: $\eta^2$ is how much
@@ -742,7 +752,7 @@ gate, decay and their interaction with eviction, which Section
   test that could have failed rather than a performance plot: if absolute capacity
   governed the transition the three curves would cross at three different
   points, and if stream redundancy governed it, holding visits per prototype
-  fixed would have flattened the effect. Neither happens. Note that $\eta^2$ is
+  fixed would have flattened the effect. Neither happens at this resolution. Note that $\eta^2$ is
   direction-blind --- it identifies which axis moves the outcome, not which
   setting is preferable: the frontier architecture uses \texttt{append}, not
   \texttt{merge}. Bands: 95\,\% percentile bootstrap over the five seed-level
@@ -779,13 +789,14 @@ on the clean signal to
 when both ranges overlap completely; the combined gate keeps more only through
 novelty, itself a perfect classifier here, and falls to
 \result{exp08_imperfect_salience:settings.main.conditions.auc500_distr025.search.salience_interaction.ratio_vs_constant.both.mean|f2}{3.10}$\times$
-once a quarter of routine inputs are novel distractors. Against the best
+when a quarter of routine inputs are novel distractors \emph{and} prediction
+error is at chance. Against the best
 salience-free configuration, which at $r=0.25$ already retains
 \result{exp08_imperfect_salience:settings.main.conditions.clean.policies.no_salience_best.recall.mean|f2}{0.76} by merging, the
 frontier's paired advantage holds down to a surprise AUC of
 \result{exp08_imperfect_salience:settings.main.conditions.auc950.auc.mean|f2}{0.95} under overlap,
 \result{exp08_imperfect_salience:settings.main.conditions.noise030.auc.mean|f2}{0.96} under additive noise and
-\result{exp08_imperfect_salience:settings.main.conditions.mislead010.auc.mean|f2}{0.91} under 10\,\% inverted signals, is lost
+\result{exp08_imperfect_salience:settings.main.conditions.mislead010.auc.mean|f2}{0.91} under 10\,\% inverted signals, is reversed
 once half the surprise is credited one step late, and becomes a deficit at
 chance level (\result{exp08_imperfect_salience:settings.main.conditions.auc500.policies.frontier.recall.mean|f2}{0.60}). At
 $r=2$, where merging frees no space, it holds down to AUC
@@ -795,10 +806,11 @@ The same interaction can be shown without statistics, on four concrete
 configurations. The frontier differs from the incumbent proxy on exactly two of
 the six axes: the strength gate (\texttt{constant} $\to$ \texttt{both}) and the
 eviction policy (\texttt{fifo} $\to$ \texttt{min\_strength}). Changing either
-alone leaves the architecture \emph{bit-identical} to the incumbent, in every
-combination of the remaining axes (Table \ref{tab:two-knobs}). The reason is
-exact rather than statistical: under a constant gate with no read reinforcement
-every trace carries strength $1.0$, so selecting the minimum always returns the
+alone leaves the incumbent \emph{bit-identical} (Table \ref{tab:two-knobs});
+the salience gate alone is inert in every combination of the other axes. The
+reason is exact rather than statistical: under a constant gate with
+\texttt{append} writes and no read reinforcement every trace carries strength
+$1.0$, so selecting the minimum always returns the
 oldest surviving trace --- \texttt{min\_strength} does not approximate FIFO, it
 \emph{is} FIFO. Symmetrically, a salience gate feeding a policy that never reads
 strength computes a weight nothing consumes.
@@ -892,23 +904,28 @@ times the FIFO's bytes at $C=20$ (Table \ref{tab:benchmark}, KiB) and spend
 \result{exp12_substrate_cost:tiempos.C20_d32.FIFO.read_us|int}{12}\,$\mu$s per
 read. At SDM's budget (144\,KiB) a FIFO holds
 \result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.FIFO.capacity|int}{921}
-traces and outscores it on T1--T3
+traces ---more than the T1 stream writes, so no capacity pressure is left---
+and outscores it on T1--T3
 (\result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.FIFO.battery_mean|f3}{0.924}
 vs.\
 \result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.SDM.battery_mean|f3}{0.745}).
-An ablation locates SDM's retention in its trace list, not its counters: the
-list alone, read by nearest neighbour, keeps every rare event and scores
+An ablation shows that retention needs gated eviction with exact erasure, not
+superposition: the trace list alone, read by nearest neighbour, keeps every rare
+event and scores
 \result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-b.battery_mean|f3}{0.788}
 against
 \result{exp12_substrate_cost:ablacion_sdm.variantes.SDM.battery_mean|f3}{0.741}
-for the full SDM, whereas counters that cannot subtract an evicted trace retain
-\result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-a.battery.rare_retention.mean|f3}{0.005}
-of the rare events. SDM is otherwise stable in its own hyperparameters: the T1--T3
+for the full SDM; counters alone keep them only if an evicted trace is
+subtracted exactly
+(\result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-a+.battery.rare_retention.mean|f3}{1.000},
+else
+\result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-a.battery.rare_retention.mean|f3}{0.005}). SDM is otherwise stable in its own hyperparameters: the T1--T3
 mean moves
 \result{exp12_substrate_cost:sensibilidad_sdm.rango_battery_n_hard|f3}{0.091}
 from 64 to 2048 hard locations, rare retention stays perfect for activation
-fractions 0.005--0.2, and only a 0.5 fraction, or an admission threshold above
-0.5, drops it below the gate.
+fractions 0.005--0.2, and only a 0.5 fraction lowers rare retention
+(\result{exp12_substrate_cost:sensibilidad_sdm.activation_frac.f0p5.battery.rare_retention.mean|f3}{0.395});
+it, or an admission threshold above 0.5, fails the gate.
 
 Every architecture except the pure spiking circuit clears the admission
 threshold of 0.50
@@ -949,8 +966,8 @@ retention precision equals recall by arithmetic), SDM falls from
 \result{exp08_imperfect_salience:settings.main.conditions.auc990.auc.mean|f2}{0.99} and
 \result{exp08_imperfect_salience:settings.main.conditions.auc950.architectures.SDM.recall.mean|f2}{0.60} at
 \result{exp08_imperfect_salience:settings.main.conditions.auc950.auc.mean|f2}{0.95}, below ENN, whose merging holds
-\result{exp08_imperfect_salience:settings.main.conditions.auc950.architectures.ENN.recall.mean|f2}{0.75} regardless of the
-signal. In the $r=2$ stream, precision is capped at 0.5 by ten rare items in
+\result{exp08_imperfect_salience:settings.main.conditions.auc950.architectures.ENN.recall.mean|f2}{0.75} under every
+prediction-error degradation. In the $r=2$ stream, precision is capped at 0.5 by ten rare items in
 twenty slots and tracks recall; SDM beats the FIFO there down to AUC
 \result{exp08_imperfect_salience:settings.selection.conditions.auc700.auc.mean|f2}{0.74}.
 
@@ -1001,10 +1018,10 @@ and
 \result{exp05_real_embeddings:dominios.cifar100.celdas.1.eta2_write|pct}{0.4}\,\%
 of the variance regardless of the ratio. The deciding quantity is \emph{intra-prototype similarity}: how alike two
 encounters with the same kind of thing look to the memory, as a cosine.
-Consolidation is possible only when it clears the merge threshold, since merging
-is triggered by exactly that comparison --- if two photographs of one class do
-not look alike enough, the memory cannot recognize them as the same situation
-and stores both. The measured median is
+Consolidation is possible only when a threshold separates repeated encounters
+from distinct ones, since merging is triggered by exactly that comparison --- if
+two photographs of one class do not look more alike than photographs of
+different classes, the memory cannot recognize them as the same situation. The measured median is
 \result{exp05_real_embeddings:precondicion_cifar100.similitud_intra_prototipo|f3}{0.401},
 well below the merge threshold
 (\result{exp05_real_embeddings:precondicion_cifar100.umbral_de_fusion|f2}{0.85}),
@@ -1015,7 +1032,7 @@ $K_{proto}$: from
 to \result{exp05_real_embeddings:dominios.cifar100.celdas.4.k_efectivo|int}{1435}\
 traces as nominal $K$ rises from 5 to 80, with capacity fixed at 20. The
 synthetic domain in the same run crosses normally
-($r \approx \result{exp05_real_embeddings:dominios.synthetic.r_umbral|f2}{0.77}$),
+($\hat r \approx \result{exp05_real_embeddings:dominios.synthetic.r_umbral|f2}{0.77}$),
 so the null result is specific to this extractor, not a failure of the grid.
 Lowering the threshold does not rescue consolidation, because intra-class
 similarity (median
@@ -1023,8 +1040,8 @@ similarity (median
 overlaps inter-class similarity (95th percentile
 \result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.inter.p95|f2}{0.42}):
 no threshold from 0.30 to 0.97 yields merges both frequent and pure, and
-from 0.40 up eviction dominates at every $r$. At 0.30 the write axis
-regains dominance at low $r$ only because merging destroys: just
+from 0.40 up eviction dominates on average. At 0.30 the write axis
+regains dominance at low $r$, but not as useful compression: only
 \result{exp07_merge_sensitivity:umbral_fusion.cifar100.umbrales.t030.pureza_fusion_r_min|pct}{47.7}\,\%
 of merges join the same class,
 \result{exp07_merge_sensitivity:umbral_fusion.cifar100.umbrales.t030.raros_absorbidos_r_min|pct}{70.0}\,\%
@@ -1061,7 +1078,7 @@ bootstrap interval rather than a point integer.
 On CIFAR-100 that estimation becomes uninformative: the intervals reach the
 ceiling of the search in several cells, consistent with the absence of compact
 cluster structure in this domain. This is a further reason to treat merge
-reachability ---measured directly as a similarity comparison, with no clustering
+separability ---measured directly as a similarity comparison, with no clustering
 involved--- as the robust diagnostic, rather than a derived $\hat K$.
 
 % ═══════════════════════════════════════════════════════════════════════
@@ -1145,16 +1162,23 @@ $\geq 0.97$ and \result{exp11_minigrid_extended:resumen.por_auc.t1.ganancia_vs_a
 Count-based novelty transfers when importance is itself novelty (it beats the
 null control in \result{exp11_minigrid_extended:resumen.novedad_estado.count_novelty.gana_vs_azar|int}{16} of
 \result{exp11_minigrid_extended:resumen.novedad_estado.count_novelty.n_celdas|int}{16} cells), but no causal
-signal retains the steps that precede a reward: reward-prediction error beats
+signal reliably retains the steps that precede a reward: reward-prediction error beats
 the null control in \result{exp11_minigrid_extended:resumen.previa_k.reward_pe.gana_vs_azar|int}{0} of
-\result{exp11_minigrid_extended:resumen.previa_k.reward_pe.n_celdas|int}{15} cells and TD error in
-\result{exp11_minigrid_extended:resumen.previa_k.td_error.gana_vs_azar|int}{2}, while only the non-causal
-discounted return does (\result{exp11_minigrid_extended:resumen.previa_k.retorno.gana_vs_azar|int}{15}).
+\result{exp11_minigrid_extended:resumen.previa_k.reward_pe.n_celdas|int}{15} cells, TD error in
+\result{exp11_minigrid_extended:resumen.previa_k.td_error.gana_vs_azar|int}{2} and count novelty in
+\result{exp11_minigrid_extended:resumen.previa_k.count_novelty.gana_vs_azar|int}{6}, with a mean gain of
+\result{exp11_minigrid_extended:resumen.previa_k.count_novelty.ganancia_vs_azar_media|pct}{1.8} points,
+while only the non-causal discounted return does
+(\result{exp11_minigrid_extended:resumen.previa_k.retorno.gana_vs_azar|int}{15}). When importance is a
+key event of the environment, not even the return beats the null control
+(\result{exp11_minigrid_extended:resumen.evento_clave.retorno.gana_vs_azar|int}{0} of
+\result{exp11_minigrid_extended:resumen.evento_clave.retorno.n_celdas|int}{8} cells).
 
 The salience mechanism does transfer to a real environment under partial
-observability ---not automatically, but under an identifiable and correctable
-precondition: surprise must be anchored in the variable that decides what
-matters ---reward when importance is reward, visitation counts when it is novelty.
+observability ---not automatically, but when surprise is anchored in the
+variable that defines importance (reward, or visitation counts when importance
+is novelty); for delayed or key-event importance no causal signal we tried
+does.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Discussion}
@@ -1168,9 +1192,9 @@ grows above 1 and selective eviction by relevance dominates. The count that
 matters is $r_{eff}$ (Section \ref{sec:regime}): drift or noisy encounters
 fragment one recurring situation into several traces and push a robot into
 selection earlier than counting kinds of situation suggests. The recommendation
-is not to pick a regime: the frontier architecture works in both, never
-depending on merging (which fails above $r=1$) and always exploiting the
-importance signal.
+is not to pick a regime: the frontier works in both given a surprise AUC of
+about 0.95 or better, never depending on merging (which fails above $r=1$);
+below $r=1$ a weaker signal favours merging.
 
 \subsection{The spiking circuit and the motivation for PoC-5}
 
@@ -1206,15 +1230,16 @@ the score (\result{exp09_external_baselines:emdb_threshold_sensitivity.tau_050.b
 so the proxy's rank is an upper bound for the deployed buffer.
 This is not a criticism of e-MDB, built for a different primary goal ---its
 buffer feeds model training, not recall--- but a specific claim: as a store of
-what to remember, the buffer as implemented is inadequate for the LOLA regime,
-with a quantified gap even for its most favourable proxy ---though remembering more
+what to remember, the buffer as implemented is the floor at rare-event
+retention under capacity pressure, with a quantified gap even for its most
+favourable proxy ---though remembering more
 does not yet make an episodic controller act better (Section~\ref{sec:limits}).
 
-The finding of Section \ref{sec:real} gives the robot a check it can run online:
-intra-prototype similarity, measured on the vectors the memory already receives
-and compared against inter-prototype similarity, decides ---before the write axis
-matters at all--- whether consolidation is worth attempting, with no external
-instrumentation.
+The finding of Section \ref{sec:real} gives a diagnostic: whether
+intra-prototype similarity separates from inter-prototype similarity decides
+---before the write axis matters at all--- whether consolidation is worth
+attempting. Here it is measured with class labels; a label-free online estimate
+is untested.
 
 \subsection{The source of surprise matters as much as its existence}
 
@@ -1248,7 +1273,7 @@ is a design, the deployed buffer's read was re-implemented rather than run
 whether better retention improves the world and utility models e-MDB trains from
 its buffer is untested. All real-data evidence comes from a single visual
 extractor. And no experiment ran on a physical robot.
-An e-MDB-like proxy shows that better retention is not yet better behaviour.
+An episodic-control proxy shows that better retention is not yet better behaviour.
 An episodic controller \cite{pritzel2017} whose only experience is the memory
 faced four MiniGrid goal variants that alternate and recur; at $C=300$ the
 frontier earns more than FIFO on the first episodes of a returning task
@@ -1259,8 +1284,9 @@ $\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_me
 $[\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.auc.ci_low|f3}{-0.098}, \result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.auc.ci_high|f3}{-0.053}]$, no seed
 favouring it), with the same trade-off at $C=1000$: without decay, retention
 costs plasticity. Adding decay (0.995 or 0.98, same space) lifts the frontier's
-area to the FIFO level but erases its advantage on returning tasks, so no tested
-configuration beats FIFO on both; the frontier does beat reservoir sampling on
+area to the FIFO level, and its return-task advantage shrinks to within noise of
+FIFO (lost at $C=1000$): no tested configuration is significantly better than
+FIFO on both; the frontier does beat reservoir sampling on
 integrated return, and an unbounded memory
 (\result{exp13_downstream_learning:resumen.C300.sin_limite.auc.media|f3}{0.566} against \result{exp13_downstream_learning:resumen.C300.frontera.auc.media|f3}{0.144}) marks how
 far every bounded policy remains from the ceiling.
@@ -1270,7 +1296,7 @@ and the setting that motivates the work. Section \ref{sec:minigrid} resolves the
 salience precondition by anchoring surprise in reward ---but LOLA is defined by
 the \emph{absence} of predefined goals, and an open-ended robot may face long
 stretches with no reward to predict. The available signal then falls back to
-perceptual novelty, which is precisely where we measured retention at the floor.
+perceptual prediction error, which is precisely where we measured retention at the floor.
 The fix is valid where a reward exists and unproven where it does not, which is
 the regime e-MDB is ultimately built for. Count-based novelty helps only when
 importance is itself novelty; learning progress, or the needs and drives of
@@ -1299,18 +1325,21 @@ recovers fourteen times the rare-event retention on a perfectly separable
 signal ---not weak, but gated, and only as good as its input. The
 benchmark adds that SDM with a prediction-error gate pairs reconstruction
 fidelity with perfect retention on a stream whose rare events are separable by
-construction (a lead it loses to ENN once they are not), but that the retention
-comes from its gated trace list, not from its distributed counters, which
-dominate its footprint; that the FIFO-NN proxy of the e-MDB buffer
-reconstructs well but is the floor at retention ---its deficiency is choosing,
-not remembering, while the buffer's actual sequential read fails reconstruction
-too--- and that the pure spiking circuit does not transfer to
+construction (a lead it loses to ENN at $r=0.25$ once surprise AUC falls to
+0.95), but that the retention comes from gated eviction with exact erasure,
+which its trace list provides at 1/42 of the bytes; that the FIFO-NN proxy of
+the e-MDB buffer reconstructs well but is the floor at retention ---its
+deficiency is choosing, not remembering, while the buffer's sequential read,
+under our assumed match rule, scores lower still
+(\result{exp09_external_baselines:exp01_cell.emdb_sequential.battery_mean.mean|f3}{0.010}--\result{exp09_external_baselines:emdb_threshold_sensitivity.tau_050.battery_mean.mean|f3}{0.067})---
+and that the pure spiking circuit does not transfer to
 continuous vectors, marking PoC-5 as the next milestone. Real data adds two
 preconditions: consolidation needs a merge threshold that repeated encounters
 clear and distinct ones do not, which no threshold achieves on CIFAR-100, turning a condition of the regime
-hypothesis into an online-measurable check; and salience needs surprise anchored in reward,
-under which retention rises from the floor to more than half with no change of
-configuration or policy. What the salience mechanism needs is the right signal.
+hypothesis into a measurable check; and salience needs surprise anchored in reward,
+under which retention rises from the floor to about half
+(\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.tasa|pct}{47.2}\,\%
+over 200 rollouts) with no change of configuration or policy. What the salience mechanism needs is the right signal.
 Retention is not yet behaviour, though: an episodic controller on the frontier
 recalls returning tasks better than on FIFO but integrates less return.
 

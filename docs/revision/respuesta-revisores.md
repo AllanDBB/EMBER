@@ -114,19 +114,23 @@ corregimos donde aparece (contribuciones, §III-E, §III-F, §IV y conclusión):
 - **El 14.41× depende de la señal.** Con solo error de predicción como
   compuerta, el cociente condicional cae de 16.27× (señal limpia) a 0.80×
   (IC 95 % 0.17–2.82) con rangos totalmente solapados. La compuerta combinada
-  conserva más solo por la novedad; con un 25 % de distractores novedosos cae a
-  3.10×.
+  conserva más solo por la novedad; con un 25 % de distractores novedosos *y*
+  error de predicción al azar cae a 3.10× (con distractores y señal limpia
+  queda en 11.80×).
 - **La ventaja de la frontera tiene un umbral de calidad de señal.** Contra la
   mejor configuración sin saliencia (que a r = 0.25 ya retiene 0.76
   fusionando), la diferencia pareada excluye el 0 hasta un AUC empírico de la
   sorpresa de 0.95 (solapamiento), 0.96 (ruido) y 0.91 (10 % de señal
-  invertida); se pierde cuando la mitad de la sorpresa llega un paso tarde, y
+  invertida); se invierte cuando la mitad de la sorpresa llega un paso tarde, y
   en AUC ≈ 0.5 se vuelve desventaja (0.60 contra 0.76). En el régimen r = 2,
   donde fusionar no libera espacio, la ventaja aguanta hasta AUC 0.84. Contra
   el FIFO gana en todas las condiciones de r = 0.25.
 - **La retención perfecta de SDM en §IV es de señal limpia.** SDM baja a 0.81
   con AUC 0.99 y a 0.60 con AUC 0.95, por debajo de ENN, que se queda en 0.75
-  porque su retención viene de la fusión y no de la señal.
+  bajo toda degradación del error de predicción porque su retención viene de
+  la fusión. Eso vale solo en el flujo r = 0.25: en r = 2 la ENN cae a
+  0.04–0.10 y la SDM la iguala o supera, y con un 25 % de distractores
+  novedosos la ENN cae a 0.16–0.17.
 - **Precisión y recall.** En el flujo de §IV (20 raros en 20 ranuras, memoria
   llena) la precisión de retención es igual al recall por aritmética; en el
   flujo r = 2 (10 raros en 20 ranuras) la precisión está acotada en 0.5 y
@@ -145,8 +149,10 @@ contribuciones, §III-D, §VII-A y la conclusión, como una **regime hypothesis*
 sostenida bajo las condiciones evaluadas. §III-D agrega dos cosas:
 
 - que la transición es casi una reformulación de la definición de capacidad;
-  lo nuevo es que el cambio sea abrupto y caiga en el mismo r para tres
-  capacidades, no que exista;
+  lo nuevo es que el cambio sea abrupto, no que exista. En la grilla original
+  los tres cruces caen en la misma celda (C = 10–40), pero esa igualdad está
+  cuantizada por la resolución de la grilla: en exp10 el cruce nominal se
+  desplaza de 0.71 (C = 5) a 0.98 (C = 160), y la recurrencia también lo mueve;
 - la prueba de robustez que pedía (exp10), cuyo resultado cambia el
   enunciado.
 
@@ -171,8 +177,9 @@ genotipos). Entre 0.40 y 0.85 el cruce queda exactamente en r ≈ 0.87 para todo
 los umbrales. A 0.90 la fusión pierde parte de las visitas y el cruce nominal
 baja a 0.61. A 0.30 la fusión absorbe el 38 % de los raros. Desde 0.95 la
 fusión fragmenta los prototipos y el desalojo domina en todo r. Medido sobre
-K_effective, el cruce queda entre 0.86 y 1.02 para todo umbral en el que la
-fusión se dispara, así que la hipótesis se enuncia mejor sobre la razón
+K_effective, el cruce queda entre 0.86 y 1.02 para todo umbral entre 0.30 y
+0.90 (a 0.95 la fusión se dispara en el 36 % de las escrituras, pero no hay
+cruce), así que la hipótesis se enuncia mejor sobre la razón
 efectiva. Un barrido 1D de la ganancia de la compuerta de fuerza (0.5–8) no
 cambia el patrón de régimen.
 
@@ -188,22 +195,30 @@ Lo medimos (exp12, 10 semillas, IC bootstrap) y el resultado matiza el paper:
   y del ENN (×41.96); Spiking-SDM 133.0 y Spiking 105.1. La contabilidad real
   (`nbytes`) coincide con la fórmula analítica en todas las configuraciones.
   Agregamos la columna **KiB** a la Tabla III (generada desde `results/`).
-- **Complejidad y tiempo.** Lectura y escritura son O(C·d) en FIFO/ENN y
-  O(M·d + C·d) en SDM; medido a C = 20, la lectura cuesta 28 µs en SDM contra
-  12 µs en FIFO (escritura 57 contra 31 µs). §IV.
+- **Complejidad y tiempo.** Medido a C = 20, la lectura cuesta 28 µs en SDM
+  contra 12 µs en FIFO; el paper (§IV) da este número. Por espacio, el resto
+  queda en esta respuesta y en `results/exp12_substrate_cost/`: lectura y
+  escritura son O(C·d) en FIFO/ENN y O(M·d + C·d) en SDM, y la escritura cuesta
+  57 contra 31 µs.
 - **Igual presupuesto.** Con los 144 KiB que ocupa la SDM, un FIFO guarda 921
-  trazas y la supera en la batería T1–T3 (0.924 contra 0.745). Escalar las hard
-  locations de la SDM al presupuesto tampoco lo revierte: de 16 KiB a 512 KiB
-  queda por debajo del FIFO, y a 4 KiB lo supera solo sin pasar el gate. §IV.
-- **Contadores frente a lista de trazas.** La lista sola, leída por vecino más
-  cercano, retiene todos los raros y da 0.788 en la batería contra 0.741 de la
-  SDM completa (diferencia pareada −0.047, IC [−0.053, −0.041]); los contadores
-  solos, que no pueden restar una traza desalojada, retienen 0.005 de los raros
-  (1.000 si se les da borrado exacto). La retención de raros de la SDM la
-  sostiene su lista de trazas con compuerta, no la superposición distribuida.
-  Corregimos en consecuencia la frase de §IV que atribuía la recuperación a la
-  superposición y la afirmación de la conclusión (§IX) de que la SDM era "el
-  único sustrato" que combina reconstrucción y retención.
+  trazas y la supera en la batería T1–T3 (0.924 contra 0.745); el paper (§IV)
+  aclara que a ese presupuesto el flujo de T1 entra entero y ya no hay presión
+  de capacidad. Escalar las hard locations de la SDM al presupuesto tampoco lo
+  revierte: de 16 KiB a 512 KiB queda por debajo del FIFO, y a 4 KiB lo supera
+  solo sin pasar el gate. Este barrido está en `results/exp12_substrate_cost/`
+  (`igual_presupuesto.sustrato_escalado`) y, por espacio, no en el paper.
+- **Contadores frente a lista de trazas.** La ablación tiene cuatro variantes.
+  La lista sola, leída por vecino más cercano, retiene todos los raros y da
+  0.788 en la batería contra 0.741 de la SDM completa (diferencia pareada
+  −0.047, IC [−0.053, −0.041]). Los contadores solos retienen 0.005 de los raros
+  si no pueden restar una traza desalojada, pero **1.000 si se les da borrado
+  exacto** (batería 0.735, empatada con la SDM completa: +0.006, IC
+  [−0.001, 0.013]). La SDM real resta exactamente, así que lo que sostiene la
+  retención no es "lista frente a contadores": es el desalojo con compuerta más
+  un borrado exacto, que la lista sola provee con 1/42 de los bytes. Corregimos
+  en consecuencia la frase de §IV que atribuía la recuperación a la
+  superposición y la afirmación de la conclusión de que la SDM era "el único
+  sustrato" que combina reconstrucción y retención.
 - **Sensibilidad.** La media de la batería varía 0.091 entre 64 y 2048 hard
   locations; la retención de raros es perfecta para fracciones de activación
   entre 0.005 y 0.2 y solo cae a fracción 0.5 (que además no pasa el gate). Un
@@ -226,8 +241,9 @@ mismo desalojo retiene exactamente las mismas trazas que el proxy, pero
 agregado es 0.010 y queda último entre 577. Con un umbral de coincidencia de 0.5
 el gate se recupera (0.826), pero el puntaje no (0.067). El ranking del proxy es,
 entonces, una cota superior para el buffer desplegado. Esto quedó en §VII-C,
-§VIII y la conclusión, que ahora aclara que el buffer real falla también en
-reconstrucción, no solo en elegir.
+§VIII y la conclusión. Que el buffer real repruebe también la reconstrucción
+depende del criterio de coincidencia supuesto; lo que no depende de él es el
+puntaje (0.010–0.067), y así lo dice la conclusión.
 
 ### R1.7 — MiniGrid limitado; importancia definida por la tarea; Wilson sobre eventos
 
@@ -243,7 +259,9 @@ Lo resolvimos con un experimento nuevo (exp11), reportado en §VI (párrafo
   reporta los intervalos por rollout en lugar de los de Wilson.
 - **Más rollouts y semillas.** Con 200 rollouts en 5 bloques de semillas
   independientes, la frontera retiene 47.2 % [39.0 %, 56.3 %] contra 0.7 % del
-  FIFO (diferencia 46.5 puntos, IC [38.3, 55.7]).
+  FIFO (diferencia 46.5 puntos, IC [38.3, 55.7]). Es la estimación más
+  precisa, y la que usan ahora el abstract y la conclusión: "alrededor de la
+  mitad", no "más de la mitad", porque ningún IC excluye el 50 %.
 - **Control con señal nula.** Ganarle al FIFO no basta, porque el FIFO desaloja
   por edad. La misma frontera alimentada con una señal uniforme al azar retiene
   0.7 % en esa condición: la ganancia sale de la señal, no del desalojo por
@@ -260,8 +278,11 @@ Lo resolvimos con un experimento nuevo (exp11), reportado en §VI (párrafo
   16 de 16 celdas cuando lo importante es el estado novedoso.
 - **Recompensa demorada.** Ninguna señal causal retiene los pasos que preceden
   a una recompensa: el error de predicción de recompensa le gana al control
-  nulo en 0 de 15 celdas y el error TD en 2 de 15; solo lo logra el retorno
-  descontado, que no es causal (15 de 15). §VIII lo declara como el problema
+  nulo en 0 de 15 celdas, el error TD en 2 de 15 y la novedad por conteo en 6
+  de 15, con una ganancia media de solo 1.8 puntos; solo lo logra de forma
+  consistente el retorno descontado, que no es causal (15 de 15). Con
+  importancia de evento clave ninguna señal le gana al control nulo, ni
+  siquiera el retorno (0 de 8). §VIII lo declara como el problema
   abierto, ahora con evidencia.
 
 ### R1.8 — Estadística insuficientemente explicada
@@ -299,8 +320,10 @@ interacción cuantifican la dependencia: strength×evict 4.3 % y write×evict
   [−0.098, −0.053], ninguna semilla a favor). En C=1000 pasa lo mismo
   (reaparición +0.109, AUC −0.064). Sin decaimiento, retener cuesta
   plasticidad. Con decaimiento 0.995 o 0.98 (del mismo espacio), la frontera
-  sube su AUC al nivel del FIFO pero pierde la ventaja al reaparecer:
-  ningún genotipo probado le gana al FIFO en las dos métricas. La frontera sí
+  sube su AUC al nivel del FIFO y su ventaja al reaparecer queda dentro del
+  ruido (a C=300, con decaimiento 0.98: +0.024, IC [−0.011, +0.060]); se pierde
+  de forma significativa a C=1000. Ningún genotipo probado es
+  significativamente mejor que el FIFO en las dos métricas. La frontera sí
   supera al reservoir en AUC en ambas capacidades. La memoria sin límite
   (AUC 0.566 contra 0.144) muestra cuánto falta. Conclusión honesta:
   retener mejor no es todavía actuar mejor. Lo dice el paper, y matizamos en
@@ -366,21 +389,25 @@ dominios (exp07). El resultado de CIFAR-100 no depende de la calibración de
   inter-clase (percentil 95: 0.42). Por eso ningún umbral de la grilla da
   fusiones a la vez frecuentes y puras: a 0.85 se fusiona el 6 % de las
   escrituras, y desde 0.40 el desalojo domina en todo r. A 0.30 el eje de
-  escritura recupera la dominancia en r bajo, pero porque fusionar daña. Solo
-  el 48 % de las fusiones une la misma clase, el 70 % de los raros se absorbe
-  al llegar, y la mejor configuración con fusión retiene 0.30 frente a 1.00 de
-  la frontera `append`. El criterio de viabilidad que fijamos antes de correr
+  escritura recupera la dominancia en r bajo, pero no como compresión útil
+  (el efecto medio de fusionar es incluso positivo, +0.072): solo el 48 % de
+  las fusiones une la misma clase, el 70 % de los raros se absorbe al llegar, y
+  la mejor configuración con fusión retiene 0.30 frente a 1.00 de la frontera
+  `append`. El criterio de viabilidad que fijamos antes de correr
   (tasa de fusión ≥ 0.25, pureza ≥ 0.9 y escritura dominante en r bajo) no lo
   cumple ningún umbral.
 - **Corrección del paper.** La precondición deja de enunciarse como "similitud
   intra-prototipo por encima del umbral". Ahora es de *separabilidad*: hace
   falta un umbral que superen los encuentros repetidos y no los distintos. Lo
-  corregimos en las contribuciones, §V, §VII, la conclusión y las
-  limitaciones. Retiramos la frase de §VIII que sugería que "un umbral por
+  corregimos en el abstract, las contribuciones, §V, §VII, la conclusión y las
+  limitaciones. El abstract ya no compara la mediana 0.401 con 0.85, sino la
+  mediana intra-clase (0.38) con el percentil 95 inter-clase (0.42). La
+  separabilidad se midió con las etiquetas de clase; un estimador en línea, sin
+  etiquetas, queda sin probar y el paper lo dice. Retiramos la frase de §VIII que sugería que "un umbral por
   dominio podría cambiarlo"; un extractor ajustado sí podría.
 - **Sintético (§III-D).** El cruce es robusto al umbral entre 0.40 y 0.85
-  (r ≈ 0.87). Sobre K_effective queda entre 0.86 y 1.02 para todo umbral en
-  el que la fusión se dispara. Ver R1.4.
+  (r ≈ 0.87). Sobre K_effective queda entre 0.86 y 1.02 para todo umbral
+  entre 0.30 y 0.90. Ver R1.4.
 
 ### R2.3 — Más baselines de gestión de memoria
 
