@@ -23,6 +23,30 @@ Experimentos de la revisión:
 
 ---
 
+## Correcciones que encontramos nosotros
+
+Al integrar los resultados nuevos corrimos una auditoría independiente de cada
+afirmación empírica contra los JSON (`docs/revision/auditoria-2026-10-06.md`).
+Además de lo que pidieron los revisores, encontró afirmaciones más fuertes que
+los datos. Todas están corregidas, y las declaramos en la carta formal
+(`paper/response.tex`, "Corrections we found ourselves"):
+
+- **Las dos perillas (§IV-B), hallazgo A1.** La versión enviada decía que
+  cambiar sola cualquiera de las dos perillas que separan la frontera del proxy
+  deja la arquitectura idéntica bit a bit al proxy *en toda combinación de los
+  demás ejes*. Para la compuerta de saliencia es cierto. Para el desalojo
+  `min_strength` es cierto solo en el contexto del proxy (escritura `append`,
+  sin refuerzo de lectura): con refuerzo o con fusión, el desalojo solo sí
+  cambia el puntaje (20 de 36 combinaciones en `exp01`). El texto revisado lo
+  acota. La conclusión no cambia: frente al proxy, ninguna perilla hace nada
+  sola. Como la afirmación estaba en la versión que leyeron los revisores, la
+  declaramos nosotros.
+- **"El mismo r para tres capacidades".** Era la misma celda de la grilla; el
+  cruce se mueve de 0.71 (C = 5) a 0.98 (C = 160).
+- **MiniGrid, "more than half"** → 47.2 % [39.0, 56.3].
+- **La precondición de CIFAR-100**, enunciada ahora una sola vez como
+  separabilidad.
+
 ## Revisor 1
 
 ### R1.1 — Referencias [1] y [5] no localizables; [6] no sostiene la afirmación; [8] con título inexacto

@@ -1,0 +1,570 @@
+% Respuesta a los revisores de BIP2026. Todo número medido va con \result{},
+% igual que en main.tex, y verify_paper lo controla:
+%   uv run python -c "from ember.paper_sync import verify_paper; print(verify_paper('paper/response.tex') or 'ok')"
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\input{tables/result_macro}
+
+\setlist{itemsep=2pt,topsep=3pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\newcommand{\comment}[1]{\par\medskip\noindent\textbf{#1}\par}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries Response to the reviewers}\\[4pt]
+{\large EMBER: Emergent Memory-Based Encoding and Reactivation}\\[2pt]
+BIP2026 --- revised submission
+\end{center}
+
+We thank the three reviewers for careful and constructive reports. They
+prompted seven new experiments, a rewrite of the bibliography, and a
+substantially more precise paper. Several of our claims changed as a result,
+and we say so explicitly below rather than only where a reviewer asked.
+
+Section numbers refer to the revised manuscript, which keeps the 8-page limit
+including references: I Introduction; II Background and related work; III
+Method (A design space, B experimental protocol); IV The e-MDB proxy and the
+frontier (A where the proxy lands, B two axes, C how far the advantage holds);
+V The regime transition; VI Memory substrates; VII Real data (A CIFAR-100, B
+MiniGrid); VIII Discussion and limitations; IX Conclusion. Every measured
+number in the paper and in this letter is bound to the result file of the
+experiment that produced it and checked automatically before compilation.
+
+\section*{Summary of changes}
+
+\textbf{New experiments.}
+\begin{itemize}
+\item \textbf{Merge-threshold sensitivity} (R1.4, R2.2): a sweep from 0.30 to 0.97 on synthetic data and CIFAR-100.
+\item \textbf{Imperfect salience} (R1.3): overlapping, noisy, delayed and misleading surprise, and novel distractors.
+\item \textbf{External baselines and the real e-MDB buffer} (R1.6, R2.3): reservoir sampling, LRU, LFU, a utility cache, coverage selection and prioritized replay, plus the buffer's actual sequential read.
+\item \textbf{Robustness of the regime hypothesis} (R1.4, R3.1): 23 stream families, plus 14 held-out families with fresh seeds.
+\item \textbf{Extended MiniGrid} (R1.7, R2.1): the rollout as the statistical unit, 200 rollouts, four environments, four policies, five definitions of importance, and a null-signal control.
+\item \textbf{Substrate cost} (R1.5): bytes, time, an equal-budget comparison, a counter/trace-list ablation, and SDM sensitivity.
+\item \textbf{Downstream behaviour} (R1.9): an episodic controller fed only by the memory.
+\end{itemize}
+
+\textbf{What survives.} The central comparison holds:
+\begin{itemize}
+\item On the synthetic battery, the frontier configuration beats the
+nearest-neighbour proxy of the e-MDB buffer:
+\result{exp01_nas_full:frontier.score|f3}{0.818} against
+\result{exp01_nas_full:incumbent.score|f3}{0.106} aggregate, and
+\result{exp01_nas_full:frontier.scores.rare_retention|f3}{0.983} against
+\result{exp01_nas_full:incumbent.scores.rare_retention|f3}{0.050} rare-event retention.
+\item It keeps the top rank in 13 of 14 held-out stream families.
+\item No external replacement rule beats it.
+\item The buffer's actual sequential read scores below the proxy.
+\item In MiniGrid it retains
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.tasa|pct}{47.2}\,\%
+of rewarded events against
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.FIFO.tasa|pct}{0.7}\,\%.
+\end{itemize}
+
+\textbf{What changed.} Four results now bound the claims, and each is stated in the abstract or in §VIII:
+\begin{enumerate}
+\item The regime transition is governed by the \emph{effective} ratio of
+consolidated traces to capacity, not by the nominal $K/C$ (R1.4).
+\item The conditional salience effect requires a separable surprise signal and
+fades as the signal degrades (R1.3).
+\item SDM's retention comes from gated eviction with exact erasure, not from
+superposition, and at an equal byte budget a FIFO store outperforms it (R1.5).
+\item Better retention does not yet translate into better behaviour (R1.9).
+\end{enumerate}
+
+\textbf{Corrections we found ourselves.} Integrating the new results, we ran an
+independent audit of every empirical claim against the result files. Besides
+the points raised by the reviewers, it found the following statements to be
+stronger than our data support. All are corrected.
+\begin{itemize}
+\item \textbf{The two-axes claim (§IV-B).} The submitted version stated that
+changing either axis that separates the frontier from the proxy, alone, leaves
+the architecture bit-identical to the proxy \emph{in every combination of the
+remaining axes}. This is true for the salience gate. It is also true for the
+eviction rule in the proxy's own context (append writing, no read
+reinforcement), but not in general: once read reinforcement or merge writing
+is enabled, weakest-trace eviction alone does change the score. The revised
+text restricts the claim to what holds. The conclusion drawn from it is
+unaffected: relative to the proxy, neither axis does anything alone.
+\item \textbf{The capacity invariance of the crossover.} The three capacities
+of the original grid placed the crossover in the same grid cell, which we had
+described as ``the same $r$''. The finer sweep shows it moves from
+\result{exp10_law_robustness:parte_a.colapso.r_nom.cruces.C005|f2}{0.71} at
+$C=5$ to \result{exp10_law_robustness:parte_a.colapso.r_nom.cruces.C160|f2}{0.98}
+at $C=160$.
+\item \textbf{The MiniGrid retention.} We now report it as
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.tasa|pct}{47.2}\,\%
+(95\,\% CI
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.cluster_low|pct}{39.0}--\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.cluster_high|pct}{56.3}\,\%)
+instead of ``more than half''.
+\item \textbf{The CIFAR-100 precondition.} It is now stated once and
+consistently, as separability rather than as a reachable threshold (see R2.2).
+\end{itemize}
+
+%======================================================================
+\section*{Reviewer 1}
+
+\comment{R1.1 --- References [1] and [5] cannot be located; [6] does not support the claim; [8] has an inaccurate title.}
+The reviewer is right, and we are grateful this was caught. References [1] and
+[5] were our error: they did not correspond to existing publications. They were
+not anonymized self-citations; the authors do not belong to the group that
+develops e-MDB. We rebuilt the bibliography and verified every entry against a
+primary source (DOI via Crossref, PubMed, the publisher's page or the official
+proceedings), and checked that each citation supports what it is cited for.
+\begin{itemize}
+\item \textbf{[1] removed.} e-MDB is now cited through its actual sources from
+the Integrated Group for Engineering Research (GII), Universidade da Coruña:
+\begin{itemize}
+\item Romero's doctoral thesis (UDC, 2022), which presents e-MDB;
+\item Romero, Meden, Bellas and Duro, \emph{ICAE} 30(3), 2023, on e-MDB, P-nodes and LOLA;
+\item Romero, Bellas and Duro, \emph{Sensors} 23(3), 2023, which defines LOLA;
+\item Becerra et al., \emph{Neurocomputing} 452, 2021, on the motivational engine;
+\item Duro et al., \emph{IJNS} 29(6), 2019, on the long-term memory;
+\item Bellas et al., \emph{IEEE TAMD} 2(4), 2010, on MDB, the predecessor of e-MDB.
+\end{itemize}
+The description of the episodic buffer as a bounded deque, read by index or by
+training batch, appears in no publication. It comes from GII's public
+repository (\texttt{episodic\_buffer.py}), which we now cite as software and
+identify as such in §II.
+\item \textbf{[5] removed.} The prediction-error gate is now supported by
+primary literature:
+\begin{itemize}
+\item Lisman and Grace (2005) and Shohamy and Adcock (2010), on dopaminergic modulation of hippocampal encoding;
+\item Rouhani, Norman and Niv (2018), where larger reward prediction errors improve episodic memory;
+\item Schultz, Dayan and Montague (1997), for the reward-prediction-error account used in §VII-B.
+\end{itemize}
+\item \textbf{[6] removed.} It concerned the serial-position effect. The
+sentence in §I is rewritten and now rests on Anderson and Schooler (1991),
+memory availability tracking need probability, and Richards and Frankland
+(2017), forgetting as a regulated process in the service of decision making.
+\item \textbf{[8] corrected} to the exact NeurIPS 2023 Datasets and Benchmarks
+entry, with the full author list.
+\item \textbf{All other entries} now have full authors, exact titles, venues,
+volumes, pages and DOIs where they exist. Semon (1904) carries its full title,
+and Chaudhry et al.\ (2019) is listed as arXiv/workshop.
+\end{itemize}
+
+\comment{R1.2 --- The experimental protocol is not self-contained.}
+We added §III-B, ``Experimental protocol'', before any result, with every
+detail taken from the code that produced the results:
+\begin{itemize}
+\item the stream generator: centres, noise, recurrence, and the position and
+independence of rare events;
+\item the prediction-error distributions of common and rare events;
+\item novelty and the gate formulas;
+\item the importance tag, which is used only for scoring;
+\item the reconstruction gate R1--R4 and its threshold;
+\item the battery T1--T3, with query generation and hit criterion;
+\item the aggregate score;
+\item the number of seeds or rollouts per experiment;
+\item the computation of $\eta^2$, interactions and bootstrap intervals (see R1.8).
+\end{itemize}
+
+\comment{R1.3 --- Results follow from the construction of the benchmark.}
+We agree. The paper now states that, with non-overlapping surprise ranges,
+retaining rare events follows almost by construction. We then ran the missing
+test: retention under imperfect salience (five seeds). Surprise is degraded by
+overlapping ranges, additive noise, delayed credit and partial inversion, and,
+on a separate axis, by novel distractors, since novelty also separates rare
+events perfectly by construction. The result qualifies our claims, and we
+corrected them wherever they appear (abstract, contributions, §IV-B, §IV-C, §VI,
+§VIII and §IX).
+\begin{itemize}
+\item \textbf{The conditional salience ratio depends on the signal.} With the
+prediction-error gate alone, it falls from
+\result{exp08_imperfect_salience:settings.main.conditions.clean.search.salience_interaction.ratio_vs_constant.pred_error.mean|f2}{16.27}$\times$
+on the clean signal to
+\result{exp08_imperfect_salience:settings.main.conditions.auc500.search.salience_interaction.ratio_vs_constant.pred_error.mean|f2}{0.80}$\times$
+(95\,\% CI
+\result{exp08_imperfect_salience:settings.main.conditions.auc500.search.salience_interaction.ratio_vs_constant.pred_error.ci.0|f2}{0.17}--\result{exp08_imperfect_salience:settings.main.conditions.auc500.search.salience_interaction.ratio_vs_constant.pred_error.ci.1|f2}{2.82})
+under full overlap. The combined gate keeps more only through novelty. With
+25\,\% novel distractors it stays at
+\result{exp08_imperfect_salience:settings.main.conditions.distr025.search.salience_interaction.ratio_vs_constant.both.mean|f2}{11.80}$\times$,
+and adding chance-level prediction error brings it to
+\result{exp08_imperfect_salience:settings.main.conditions.auc500_distr025.search.salience_interaction.ratio_vs_constant.both.mean|f2}{3.10}$\times$.
+The paper now attributes the
+\result{exp01_nas_full:salience_conditional_ratio|f2}{14.41}$\times$ explicitly
+to a perfectly separable signal.
+\item \textbf{Against the proxy, the advantage survives every degradation at
+$r=0.25$.} Even with surprise at chance, the frontier retains
+\result{exp08_imperfect_salience:settings.main.conditions.auc500.policies.frontier.recall.mean|f2}{0.60}
+against the proxy's
+\result{exp08_imperfect_salience:settings.main.conditions.auc500.policies.fifo.recall.mean|f2}{0.03}.
+\item \textbf{Against the best configuration without salience, the advantage
+has a signal-quality threshold.} That configuration already retains
+\result{exp08_imperfect_salience:settings.main.conditions.clean.policies.no_salience_best.recall.mean|f2}{0.76}
+by merging at $r=0.25$. The paired difference excludes zero down to an
+empirical AUC of
+\result{exp08_imperfect_salience:settings.main.conditions.auc950.auc.mean|f2}{0.95}
+with overlap,
+\result{exp08_imperfect_salience:settings.main.conditions.noise030.auc.mean|f2}{0.96}
+with noise and
+\result{exp08_imperfect_salience:settings.main.conditions.mislead010.auc.mean|f2}{0.91}
+with 10\,\% inverted signal. It holds to
+\result{exp08_imperfect_salience:settings.selection.conditions.auc800.auc.mean|f2}{0.84}
+at $r=2$, where merging frees no room. Delay is the most damaging degradation:
+shifted by one step, the frontier retains
+\result{exp08_imperfect_salience:settings.main.conditions.delay1.policies.frontier.recall.mean|f2}{0.21}.
+\item \textbf{SDM's clean-signal retention is qualified.} SDM drops to
+\result{exp08_imperfect_salience:settings.main.conditions.auc990.architectures.SDM.recall.mean|f2}{0.81}
+at AUC
+\result{exp08_imperfect_salience:settings.main.conditions.auc990.auc.mean|f2}{0.99},
+and to
+\result{exp08_imperfect_salience:settings.main.conditions.auc950.architectures.SDM.recall.mean|f2}{0.60}
+at AUC 0.95, below ENN
+(\result{exp08_imperfect_salience:settings.main.conditions.auc950.architectures.ENN.recall.mean|f2}{0.75})
+in that stream.
+\item \textbf{Precision and recall.} With memory full and as many rare events
+as slots, precision equals recall arithmetically. In the $r=2$ stream,
+precision is bounded at 0.5 and tracks recall. The paper says so in §III-B
+rather than reporting a redundant metric.
+\end{itemize}
+
+\comment{R1.4 --- Calling it a ``threshold law'' is premature.}
+We agree, and the paper now states it as a \emph{regime hypothesis} supported
+under the evaluated conditions. §V notes that the existence of a transition is
+close to a restatement of what capacity means; what the grid adds is that the
+switch is abrupt. We then ran the robustness test the reviewer asked for, and
+it changed the statement.
+\begin{itemize}
+\item \textbf{Nominal $r$ is not the governing variable.} We repeated the
+sweep on 23 stream families, each moving one knob: Zipf frequencies, drift,
+intra-prototype noise, centre similarity, rare-event prevalence, recurrence,
+and $C$ from 5 to 160. The nominal crossover ranges from
+\result{exp10_law_robustness:parte_a.colapso.r_nom.cruce_min|f2}{0.16} to
+\result{exp10_law_robustness:parte_a.colapso.r_nom.cruce_max|f2}{1.32}
+(s.d.\ of its log
+\result{exp10_law_robustness:parte_a.colapso.r_nom.sd_log|f2}{0.46}): drift
+and noise pull it far below 1.
+\item \textbf{The effective ratio is.} Over $r_{eff}=K_{effective}/C$, the
+traces left after consolidation, crossovers collapse to
+[\result{exp10_law_robustness:parte_a.colapso.r_eff.cruce_min|f2}{0.56},
+\result{exp10_law_robustness:parte_a.colapso.r_eff.cruce_max|f2}{1.28}]
+(s.d.\ \result{exp10_law_robustness:parte_a.colapso.r_eff.sd_log|f2}{0.17}).
+That is tighter than nominal $r$ in
+\result{exp10_law_robustness:parte_a.colapso.r_eff.frac_bootstrap_mas_colapsada|pct}{99.8}\,\%
+of bootstrap replicates, and tighter than four other pressure measures fixed
+in advance. In the original generator $r_{eff}=r$, so the main figure is
+unchanged. The hypothesis is now stated over $r_{eff}$ throughout.
+\item \textbf{The merge threshold does not place the crossover.} Sweeping it
+from 0.30 to 0.97 leaves the crossover at
+$r\approx\result{exp07_merge_sensitivity:umbral_fusion.synthetic.umbrales.t085.cruce_r_nominal|f2}{0.87}$
+for every threshold from 0.40 to 0.85. Over $K_{effective}$ it stays between
+\result{exp07_merge_sensitivity:umbral_fusion.synthetic.umbrales.t040.cruce_r_efectivo|f2}{0.86}
+and
+\result{exp07_merge_sensitivity:umbral_fusion.synthetic.umbrales.t030.cruce_r_efectivo|f2}{1.02}
+from 0.30 to 0.90. A sweep of the gate's gain leaves the pattern unchanged.
+\end{itemize}
+
+\comment{R1.5 --- Substrates compared under non-equivalent storage and compute budgets.}
+We measured this, with ten seeds and bootstrap intervals, and the result
+qualifies the paper (§VI, Table III).
+\begin{itemize}
+\item \textbf{Cost.} At $C=20$, SDM occupies
+\result{exp12_substrate_cost:contabilidad.razon_vs_FIFO_C20.SDM|f2}{41.96}$\times$
+the bytes of FIFO and ENN. A read takes
+\result{exp12_substrate_cost:tiempos.C20_d32.SDM.read_us|int}{28}\,$\mu$s
+against \result{exp12_substrate_cost:tiempos.C20_d32.FIFO.read_us|int}{12}\,$\mu$s.
+Table III now has a KiB column.
+\item \textbf{Equal budget.} With SDM's footprint, a FIFO store holds
+\result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.FIFO.capacity|int}{921}
+traces and outperforms it on the battery,
+\result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.FIFO.battery_mean|f3}{0.924}
+against
+\result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.SDM.battery_mean|f3}{0.745}.
+At that budget the stream no longer pressures capacity, and the paper says so.
+\item \textbf{Counters versus trace list.} The trace list alone, read by
+nearest neighbour, keeps every rare event and scores
+\result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-b.battery_mean|f3}{0.788}
+against \result{exp12_substrate_cost:ablacion_sdm.variantes.SDM.battery_mean|f3}{0.741}
+for the full SDM. Counters alone keep
+\result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-a.battery.rare_retention.mean|f3}{0.005}
+of rare events if they cannot subtract an evicted trace, but
+\result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-a+.battery.rare_retention.mean|f3}{1.000}
+with exact erasure. Retention therefore needs gated eviction with exact
+erasure, not superposition. We corrected the sentence that attributed
+retrieval to superposition, and the claim that SDM was the only substrate
+combining reconstruction and retention.
+\item \textbf{Sensitivity.} The battery mean moves
+\result{exp12_substrate_cost:sensibilidad_sdm.rango_battery_n_hard|f3}{0.091}
+between 64 and 2048 hard locations. Rare-event retention is perfect for
+activation fractions from 0.005 to 0.2 and drops to
+\result{exp12_substrate_cost:sensibilidad_sdm.activation_frac.f0p5.battery.rare_retention.mean|f3}{0.395}
+only at 0.5, a setting that also fails the reconstruction gate.
+\end{itemize}
+Write times, asymptotic complexity and the scaling of hard locations to each
+budget are in the released results; they are not in the paper for space.
+
+\comment{R1.6 --- The ``e-MDB FIFO'' is an optimistic proxy.}
+We renamed the baseline the \emph{FIFO-NN proxy of the e-MDB buffer}
+throughout. The paper states that the deployed buffer retrieves by position or
+batch, not by content, and that we chose nearest-neighbour retrieval to isolate
+eviction and weighting.
+
+We also evaluated the real buffer (§IV-C). We re-implemented its read as in
+GII's public code: a scan in insertion order that returns the first episode
+with cosine $\geq 0.85$. This translation of a query is an assumption, since
+the buffer answers no queries. With the same eviction it keeps exactly the
+same traces as the proxy, but it fails the reconstruction gate,
+\result{exp09_external_baselines:exp01_cell.emdb_sequential.gate_mean.mean|f3}{0.368}
+against \result{exp09_external_baselines:exp01_cell.fifo_nn_proxy.gate_mean.mean|f3}{0.903}.
+It scores
+\result{exp09_external_baselines:exp01_cell.emdb_sequential.battery_mean.mean|f3}{0.010}
+and ranks last of
+\result{exp09_external_baselines:rank_in_space.emdb_sequential.rank_optimistic|int}{577}.
+The gate failure depends on the assumed match criterion: at 0.5 the gate
+recovers
+(\result{exp09_external_baselines:emdb_threshold_sensitivity.tau_050.gate_mean.mean|f3}{0.826}).
+The score does not
+(\result{exp09_external_baselines:emdb_threshold_sensitivity.tau_050.battery_mean.mean|f3}{0.067}),
+and the paper states only the latter as robust. The proxy's rank is therefore
+an upper bound for the deployed buffer.
+
+\comment{R1.7 --- MiniGrid is limited; importance is defined by the task; Wilson intervals treat events as independent.}
+We addressed this with a new experiment (§VII-B, and §VIII for delayed
+importance).
+\begin{itemize}
+\item \textbf{Statistical unit.} With the rollout as the unit (cluster
+bootstrap) on the original 40 rollouts, the frontier retains
+\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.frontera.tasa|pct}{52.6}\,\%,
+CI
+[\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.frontera.cluster_low|pct}{37.9},
+\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.frontera.cluster_high|pct}{69.0}]\,\%,
+and FIFO
+\result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.FIFO.tasa|pct}{2.6}\,\%,
+CI
+[\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.FIFO.cluster_low|pct}{0.0},
+\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.FIFO.cluster_high|pct}{8.6}]\,\%.
+The design effect is
+\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.frontera.deff|f2}{0.92},
+so the conclusion does not change. The paper now reports rollout-level
+intervals.
+\item \textbf{More rollouts.} With 200 rollouts in five independent seed
+blocks, the frontier retains
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.tasa|pct}{47.2}\,\%
+[\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.cluster_low|pct}{39.0},
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.cluster_high|pct}{56.3}]\,\%
+against
+\result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.FIFO.tasa|pct}{0.7}\,\%
+for FIFO.
+\item \textbf{Null-signal control.} The same frontier fed a uniform random
+signal retains
+\result{exp11_minigrid_extended:matriz.MemoryS13.aleatoria.recompensa.senales.azar.frontera.tasa|pct}{0.7}\,\%.
+The gain comes from the signal, not from strength-based eviction.
+\item \textbf{Importance not defined by the task.} We crossed four
+environments (MemoryS13, DoorKey-6x6, FourRooms, KeyCorridorS3R2), four
+policies (uniform, forward-biased, noisy BFS planner, tabular Q-learning), five
+definitions of importance and five candidate signals, for
+\result{exp11_minigrid_extended:resumen.n_celdas_total|int}{350} cells. The
+gain over the null control tracks the signal's AUC (Spearman
+\result{exp11_minigrid_extended:resumen.spearman_auc_ganancia|f2}{0.67}):
+\result{exp11_minigrid_extended:resumen.por_auc.t5.ganancia_vs_azar_media|pct}{37.3}
+points where AUC $\geq 0.97$, and
+\result{exp11_minigrid_extended:resumen.por_auc.t1.ganancia_vs_azar_media|pct}{1.8}
+near chance. Count-based novelty beats the null control in
+\result{exp11_minigrid_extended:resumen.novedad_estado.count_novelty.gana_vs_azar|int}{16}
+of \result{exp11_minigrid_extended:resumen.novedad_estado.count_novelty.n_celdas|int}{16}
+cells when the important states are the novel ones.
+\item \textbf{Delayed importance remains open.} No causal signal retains the
+steps preceding a reward. Reward prediction error beats the null control in
+\result{exp11_minigrid_extended:resumen.previa_k.reward_pe.gana_vs_azar|int}{0}
+of \result{exp11_minigrid_extended:resumen.previa_k.reward_pe.n_celdas|int}{15}
+cells and TD error in
+\result{exp11_minigrid_extended:resumen.previa_k.td_error.gana_vs_azar|int}{2}.
+Only the discounted return, which is not causal, succeeds consistently
+(\result{exp11_minigrid_extended:resumen.previa_k.retorno.gana_vs_azar|int}{15}
+of 15). §VIII now states this as the open problem, with evidence.
+\end{itemize}
+
+\comment{R1.8 --- Statistics are insufficiently explained.}
+§III-B now defines the statistics we use.
+\begin{itemize}
+\item \textbf{$\eta^2$} is SS$_{between}$/SS$_{total}$ over the 576
+configurations, a one-way marginal decomposition. In a full balanced factorial
+the main effects are orthogonal.
+\item \textbf{Interactions} are two-way cell-mean residuals, reported
+separately and never added to an axis's $\eta^2$.
+\item \textbf{There is no error term or significance test,} because results
+are deterministic given the seed.
+\item \textbf{Bootstrap intervals} use 2000 percentile replicates with the
+seed as the unit.
+\end{itemize}
+A paragraph on structural dependence explains that strength and reinforcement
+are inert under three of the four eviction rules. Main effects are therefore
+read as attribution over the whole space, and conditional effects are reported
+where the dependence is known. The interaction shares quantify it:
+strength$\times$evict
+\result{exp01_nas_full:variance_share.strength×evict|pct}{4.3}\,\% and
+write$\times$evict
+\result{exp01_nas_full:variance_share.write×evict|pct}{7.8}\,\%, against
+\result{exp01_nas_full:main_effects.3.eta2|pct}{1.4}\,\% for the main effect of
+strength.
+
+\comment{R1.9 --- Retention is not an effect on learning; no integration into e-MDB; non-biological literature is missing.}
+\begin{itemize}
+\item \textbf{Effect on behaviour} (§VIII, abstract and conclusion). An
+episodic controller whose only experience is the memory faces four MiniGrid
+goal variants that alternate and recur (ten seeds, paired bootstrap).
+\begin{itemize}
+\item \textbf{At $C=300$:} the frontier earns more than FIFO on the first
+episodes of a returning task
+(+\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.reaparicion.media|f3}{0.038},
+CI
+[\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.reaparicion.ci_low|f3}{0.005},
+\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.reaparicion.ci_high|f3}{0.071}]),
+but it integrates less return over the stream: area under the curve
+\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.auc.media|f3}{-0.075},
+CI
+[\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.auc.ci_low|f3}{-0.098},
+\result{exp13_downstream_learning:resumen.C300.diferencias_pareadas.frontera_menos_FIFO.auc.ci_high|f3}{-0.053}].
+\item \textbf{At $C=1000$:} the pattern repeats
+(+\result{exp13_downstream_learning:resumen.C1000.diferencias_pareadas.frontera_menos_FIFO.reaparicion.media|f3}{0.109}
+and
+\result{exp13_downstream_learning:resumen.C1000.diferencias_pareadas.frontera_menos_FIFO.auc.media|f3}{-0.064}).
+\item \textbf{With decay:} adding it, from the same space, brings the area to
+the FIFO level, but the returning-task advantage then shrinks to within noise
+at $C=300$ and is lost at $C=1000$.
+\end{itemize}
+No tested configuration is significantly better than FIFO on both measures.
+The frontier does beat reservoir sampling on integrated return. We state this
+plainly: better retention is not yet better behaviour. Its effect on the
+models e-MDB trains from its buffer remains untested.
+\item \textbf{Integration.} §VIII states that EMBER is not integrated into
+the running e-MDB, and that Fig.~1 is a design, not an implementation.
+\item \textbf{Non-biological memory management} (§II):
+\begin{itemize}
+\item LRU-K and ARC;
+\item reservoir sampling;
+\item Chaudhry et al.;
+\item iCaRL and GSS;
+\item selective experience replay;
+\item experience replay for continual learning.
+\end{itemize}
+These methods are now also compared empirically (see R2.3).
+\end{itemize}
+
+\comment{R1.10 --- Release code and configurations during review.}
+The ``Code and data availability'' section states that the code,
+configurations, results and provenance manifests will be released in a public
+repository under an open licence. Every number in the paper is generated from
+those results by the released code.
+
+\comment{R1.11 --- Recommended improvements.}
+Each recommendation is addressed above:
+\begin{itemize}
+\item consolidated protocol (R1.2);
+\item hypothesis framing and more generators (R1.4);
+\item imperfect signals, with precision and recall (R1.3);
+\item held-out families and external baselines (R1.4, R2.3);
+\item equivalent substrate budgets and hyperparameter sensitivity (R1.5, R2.2);
+\item rollout-level MiniGrid statistics, more environments, and the effect on learning (R1.7, R1.9);
+\item comparison against the real sequential buffer (R1.6).
+\end{itemize}
+Full integration into a running e-MDB is declared as future work.
+
+%======================================================================
+\section*{Reviewer 2}
+
+\comment{R2.1 --- Scope of validation: one dataset, one extractor, one environment, no physical robot.}
+MiniGrid now spans four environments and four policies, two of them directed
+(a noisy BFS planner and tabular Q-learning). It uses 200 rollouts with the
+rollout as the unit (§VII-B; details in R1.7). Salience transfers when the
+signal is aligned with what matters and fails for delayed importance. §VIII
+states the limits no experiment here resolves: discrete grid worlds, a single
+visual extractor, no physical robot, and no integration into the running
+e-MDB.
+
+\comment{R2.2 --- Dependence on the 0.85 merge threshold.}
+The reviewer was right that this needed testing. We swept the threshold from
+0.30 to 0.97 in both domains. The CIFAR-100 result does not depend on the 0.85
+calibration.
+\begin{itemize}
+\item \textbf{CIFAR-100} (§VII-A). Intra-class similarity (median
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.intra.p50|f2}{0.38})
+overlaps inter-class similarity (95th percentile
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.inter.p95|f2}{0.42}),
+so no threshold yields merges that are both frequent and pure. At 0.30 the
+write axis regains dominance at low $r$, but not as useful compression:
+\begin{itemize}
+\item only \result{exp07_merge_sensitivity:umbral_fusion.cifar100.umbrales.t030.pureza_fusion_r_min|pct}{47.7}\,\%
+of merges join the same class;
+\item \result{exp07_merge_sensitivity:umbral_fusion.cifar100.umbrales.t030.raros_absorbidos_r_min|pct}{70.0}\,\%
+of rare events are absorbed on arrival;
+\item the best merging configuration retains
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.umbrales.t030.celdas.r0p25.puntaje_mejor_merge.media|f2}{0.30}
+against
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.umbrales.t030.celdas.r0p25.puntaje_frontera.media|f2}{1.00}
+for the append frontier.
+\end{itemize}
+The viability criterion we fixed before running is met by no threshold: merge
+rate $\geq 0.25$, purity $\geq 0.9$, and a dominant write axis at low $r$.
+\item \textbf{Correction.} The precondition is no longer ``intra-prototype
+similarity above the merge threshold'' but \emph{separability}: a threshold
+that repeated encounters clear and distinct ones do not. Separability was
+measured with class labels. An online, label-free estimator is untested, and
+the paper says so. We withdrew the sentence suggesting that a per-domain
+threshold could change the outcome; a fine-tuned extractor might.
+\item \textbf{Synthetic} (§V). The crossover is robust to the threshold (see
+R1.4).
+\end{itemize}
+
+\comment{R2.3 --- More memory-management baselines.}
+§II now covers the non-biological literature: caching, reservoir sampling and
+replay selection. §IV-C compares against it empirically. Seven external rules
+each replace only the proxy's eviction, on T1--T3 with five seeds:
+\begin{itemize}
+\item the frontier scores
+\result{exp09_external_baselines:exp01_cell.frontier.battery_mean.mean|f3}{0.824};
+\item LRU, LFU and a utility cache stay at the proxy's level
+(\result{exp09_external_baselines:exp01_cell.lru.battery_mean.mean|f3}{0.106},
+\result{exp09_external_baselines:exp01_cell.lfu.battery_mean.mean|f3}{0.096},
+\result{exp09_external_baselines:exp01_cell.utility_cache.battery_mean.mean|f3}{0.106});
+\item reservoir sampling reaches
+\result{exp09_external_baselines:exp01_cell.reservoir.battery_mean.mean|f3}{0.306};
+\item coverage selection reaches
+\result{exp09_external_baselines:exp01_cell.coverage.battery_mean.mean|f3}{0.439};
+\item stochastic prioritized replay reaches
+\result{exp09_external_baselines:exp01_cell.per_stoch.battery_mean.mean|f3}{0.500};
+\item greedy surprise-prioritized eviction reaches
+\result{exp09_external_baselines:exp01_cell.per_min.battery_mean.mean|f3}{0.789}
+(rank \result{exp09_external_baselines:rank_in_space.per_min.rank_optimistic|int}{4}--\result{exp09_external_baselines:rank_in_space.per_min.rank_pessimistic|int}{5}).
+\end{itemize}
+Greedy surprise-prioritized eviction coincides exactly with a configuration
+already in the space. The frontier beats it by
+\result{exp09_external_baselines:advantage_of_frontier.per_min.battery_mean.mean|f3}{0.035}
+[\result{exp09_external_baselines:advantage_of_frontier.per_min.battery_mean.ci.0|f3}{0.028},
+\result{exp09_external_baselines:advantage_of_frontier.per_min.battery_mean.ci.1|f3}{0.043}].
+The paper says this plainly: the frontier's advantage comes from reading
+surprise at eviction, a principle prioritized replay already uses, not from a
+mechanism unique to bioinspired memory.
+
+%======================================================================
+\section*{Reviewer 3}
+
+\comment{R3.1 --- Scope of validation and generalization to robots.}
+See R2.1 for the environments and the stated limits, and R1.4 for the regime
+hypothesis, which is no longer stated as a law. On generalization beyond the
+generator: the frontier selected on the standard stream, re-scored on 14
+held-out families with fresh seeds, keeps rank interval [1,\,1] in all but
+one, and
+[\result{exp10_law_robustness:parte_b.familias.raros_01pct.bateria.frontera_rango_optimista|int}{15},\,\result{exp10_law_robustness:parte_b.frontera_peor_rango_pesimista_bateria|int}{20}]
+with 0.1\,\% rare events. The ranking of all 576 configurations correlates
+with the standard one at Spearman
+$\geq$\,\result{exp10_law_robustness:parte_b.spearman_min_bateria|f2}{0.77}.
+
+\comment{R3.2 --- A diagram of the EMBER/e-MDB integration.}
+We added Fig.~1 (§II). It shows:
+\begin{itemize}
+\item e-MDB's long-term memory and its cognitive nodes, and the motivational engine;
+\item the path of each episode into EMBER, in place of the FIFO episodic buffer;
+\item the write path, with the gate fed by the surprise of e-MDB's own models and weakest-trace eviction;
+\item the content-based read path that serves model training and deliberation.
+\end{itemize}
+The caption states that it is a design, not an implemented integration.
+
+\end{document}
