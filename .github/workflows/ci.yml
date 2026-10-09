@@ -51,7 +51,8 @@ jobs:
           if not tex.exists():
               print('todavía no hay paper'); sys.exit(0)
 
-          d = verify_paper(tex)
+          # La carta a los revisores cita los mismos números: se verifica igual.
+          d = [x for t in (tex, Path('paper/response.tex')) if t.exists() for x in verify_paper(t)]
           # Un experimento que no se corrió en CI no es una desincronización:
           # los resultados se versionan, pero puede faltar alguno mientras se
           # produce la evidencia.

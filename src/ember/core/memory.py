@@ -73,9 +73,13 @@ class PolicyMemory:
             store.strength[objetivo] += np.float32(s)
             store.utility[objetivo] += 1.0
             store.age[objetivo] = 0.0
+            # Contabilidad que solo leen las políticas externas (LRU, repetición
+            # priorizada); ninguna política del espacio de 576 la consulta.
+            store.last_use[objetivo] = np.float32(store.t)
+            store.priority[objetivo] = max(store.priority[objetivo], np.float32(pred_error))
             return
 
-        store.append(k, value, strength=s)
+        store.append(k, value, strength=s, priority=pred_error)
         self._evict_until_fits()
 
     def _evict_until_fits(self) -> None:
@@ -95,6 +99,12 @@ class PolicyMemory:
         q = unit(query)
         sims = store.similarities(q)
         sel = g.read.select(sims)
+        if sel.size == 0:
+            # Solo una lectura sin recuperación por contenido (el barrido
+            # secuencial del `EpisodicBuffer` real) puede no encontrar nada: es
+            # un fallo de recuperación, no una memoria vacía. Ninguna lectura
+            # del espacio de 576 devuelve una selección vacía.
+            return ReadResult(value=None, similarity=0.0, index=None)
 
         # LTP por reactivación: consultar una traza la fortalece, lo que la
         # protege de desalojos posteriores. Solo es observable si la tarea

@@ -247,8 +247,14 @@ def tabla_regimenes(datos: dict[str, Any]) -> str:
     )
 
 
-def tabla_benchmark(datos: dict[str, Any]) -> str:
-    """Gate de reconstrucción y batería, por arquitectura."""
+def tabla_benchmark(datos: dict[str, Any], costo: dict[str, Any] | None = None) -> str:
+    """Gate de reconstrucción y batería, por arquitectura.
+
+    Con `costo` (el `data.json` de `exp12_substrate_cost`) agrega una columna con
+    los bytes de estado a C = 20: comparar sustratos a igual número de trazas
+    esconde que no cuestan lo mismo, y la columna lo deja a la vista sin texto.
+    """
+    bytes_c20 = (costo or {}).get("contabilidad", {}).get("C20", {})
     filas = []
     for nombre, d in datos["architectures"].items():
         g = d["gate"]["per_task"]
@@ -270,17 +276,22 @@ def tabla_benchmark(datos: dict[str, Any]) -> str:
             ]
         else:
             fila += ["--", "--", "--"]
+        if bytes_c20:
+            total = bytes_c20.get(nombre, {}).get("total")
+            fila.append("--" if total is None else f"{total / 1024:.1f}")
         filas.append(fila)
 
-    return _tabular(
-        ["Arch.", "R1", "R2", "R3", "R4", "Mean", "Gate", "T1", "T2", "T3"],
-        filas,
-        "lrrrrrcrrr",
+    encabezados = ["Arch.", "R1", "R2", "R3", "R4", "Mean", "Gate", "T1", "T2", "T3"]
+    alineacion = "lrrrrrcrrr"
+    caption = (
         "Two-phase evaluation. R1--R4 measure reconstruction with no capacity "
-        "pressure and decide admission; T1--T3 measure retention under pressure.",
-        "tab:benchmark",
-        ancho_completo=True,
+        "pressure and decide admission; T1--T3 measure retention under pressure."
     )
+    if bytes_c20:
+        encabezados.append("KiB")
+        alineacion += "r"
+        caption += " KiB: state held at $C=20$, $d=32$."
+    return _tabular(encabezados, filas, alineacion, caption, "tab:benchmark", ancho_completo=True)
 
 
 def tabla_precondicion_dominios(datos: dict[str, Any]) -> str:
@@ -349,6 +360,12 @@ GENERADORES = {
     "exp06_minigrid": [("tab_minigrid", tabla_minigrid)],
 }
 
+COMPLEMENTOS = {"tab_benchmark": ("costo", "exp12_substrate_cost")}
+"""Tablas que, además de su experimento, toman datos de otro si ya fue corrido.
+
+`tab_benchmark` sale de `exp04`, pero la columna de bytes viene de `exp12`.
+"""
+
 
 def render_tables(
     results_dir: Path | str = "results", out_dir: Path | str = "paper/tables"
@@ -369,8 +386,14 @@ def render_tables(
             continue
         datos = json.loads(archivo.read_text(encoding="utf-8"))
         for nombre, generador in tablas:
+            extra: dict[str, Any] = {}
+            if nombre in COMPLEMENTOS:
+                argumento, otro = COMPLEMENTOS[nombre]
+                archivo_otro = results_dir / otro / "data.json"
+                if archivo_otro.exists():
+                    extra[argumento] = json.loads(archivo_otro.read_text(encoding="utf-8"))
             destino = out_dir / f"{nombre}.tex"
-            destino.write_text(generador(datos), encoding="utf-8")
+            destino.write_text(generador(datos, **extra), encoding="utf-8")
             generadas.append(destino)
 
     return generadas

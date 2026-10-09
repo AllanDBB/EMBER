@@ -27,9 +27,9 @@ from ember.core.types import EPS, unit
 class TraceStore:
     """Contenedor vectorizado de trazas de memoria.
 
-    Los cinco arreglos paralelos (`keys`, `strength`, `age`, `utility`,
-    `contribution`) y la lista `values` se mantienen siempre alineados por
-    índice: `remove(i)` los compacta a todos.
+    Los arreglos paralelos (`keys`, `strength`, `age`, `utility`,
+    `contribution`, `last_use`, `priority`) y la lista `values` se mantienen
+    siempre alineados por índice: `remove(i)` los compacta a todos.
     """
 
     __slots__ = (
@@ -41,6 +41,8 @@ class TraceStore:
         "age",
         "utility",
         "contribution",
+        "last_use",
+        "priority",
         "t",
     )
 
@@ -58,6 +60,20 @@ class TraceStore:
         self.age: NDArray[np.float32] = np.zeros(0, dtype=np.float32)
         self.utility: NDArray[np.float32] = np.zeros(0, dtype=np.float32)
         self.contribution: NDArray[np.float32] = np.zeros(0, dtype=np.float32)
+        self.last_use: NDArray[np.float32] = np.zeros(0, dtype=np.float32)
+        """Reloj (`t`) del último uso de cada traza: escritura, fusión o lectura.
+
+        Lo consumen solo las políticas externas de caché (LRU, LFU con desempate
+        LRU, caché de utilidad). Ninguna política del espacio de 576 lo lee.
+        """
+        self.priority: NDArray[np.float32] = np.zeros(0, dtype=np.float32)
+        """Prioridad cruda de la traza: el error de predicción con que se escribió.
+
+        A diferencia de `strength`, no la tocan el decaimiento, el refuerzo por
+        lectura ni la compuerta de fuerza: es la señal de sorpresa tal cual, que
+        es lo que usa la repetición priorizada. Solo la leen las políticas
+        externas; ninguna del espacio de 576.
+        """
         self.t = 0
 
     # ---------------------------------------------------------------- consulta
@@ -89,7 +105,14 @@ class TraceStore:
 
     # ------------------------------------------------------------- mutaciones
 
-    def append(self, key: NDArray, value: Any, strength: float, contribution: float = 0.0) -> int:
+    def append(
+        self,
+        key: NDArray,
+        value: Any,
+        strength: float,
+        contribution: float = 0.0,
+        priority: float = 0.0,
+    ) -> int:
         """Agrega una traza nueva y devuelve su índice."""
         k = unit(key)
         if k.shape != (self.dim,):
@@ -101,16 +124,20 @@ class TraceStore:
         self.age = np.append(self.age, np.float32(0.0))
         self.utility = np.append(self.utility, np.float32(0.0))
         self.contribution = np.append(self.contribution, np.float32(contribution))
+        self.last_use = np.append(self.last_use, np.float32(self.t))
+        self.priority = np.append(self.priority, np.float32(priority))
         return len(self.values) - 1
 
     def remove(self, idx: int) -> None:
-        """Elimina la traza `idx`, compactando los seis contenedores a la vez."""
+        """Elimina la traza `idx`, compactando todos los contenedores a la vez."""
         self.keys = np.delete(self.keys, idx, axis=0)
         self.values.pop(idx)
         self.strength = np.delete(self.strength, idx)
         self.age = np.delete(self.age, idx)
         self.utility = np.delete(self.utility, idx)
         self.contribution = np.delete(self.contribution, idx)
+        self.last_use = np.delete(self.last_use, idx)
+        self.priority = np.delete(self.priority, idx)
 
     def tick(self) -> None:
         """Avanza el reloj: envejece todas las trazas en un paso."""
@@ -123,5 +150,11 @@ class TraceStore:
             self.strength[idx] += np.float32(amount)
 
     def touch(self, idx: NDArray | int) -> None:
-        """Registra un acceso: incrementa utilidad y rejuvenece."""
+        """Registra un acceso: incrementa utilidad y anota el reloj del uso.
+
+        `age` no se toca (el FIFO del espacio desaloja por edad de escritura, no
+        por uso); el reloj del uso va a `last_use`, que solo leen las políticas
+        externas.
+        """
         self.utility[idx] += 1.0
+        self.last_use[idx] = np.float32(self.t)

@@ -110,6 +110,39 @@ class TestGeneracionDeTablas:
         salidas = render_tables(resultados, tmp_path / "tex")
         assert not any("benchmark" in p.name for p in salidas)
 
+    def test_la_tabla_de_benchmark_toma_los_bytes_de_exp12_si_existe(self, resultados, tmp_path):
+        """Igual C no es igual presupuesto: la columna de bytes sale de exp12."""
+        arquitectura = {
+            "gate": {
+                "per_task": dict.fromkeys(
+                    (
+                        "pattern_completion",
+                        "noise_robustness",
+                        "ab_interference",
+                        "capacity_profile",
+                    ),
+                    1.0,
+                ),
+                "mean": 1.0,
+                "passes": True,
+            }
+        }
+        d4 = resultados / "exp04_arch_benchmark"
+        d4.mkdir()
+        (d4 / "data.json").write_text(json.dumps({"architectures": {"SDM": arquitectura}}))
+
+        render_tables(resultados, tmp_path / "tex")
+        assert "KiB" not in (tmp_path / "tex" / "tab_benchmark.tex").read_text()
+
+        d12 = resultados / "exp12_substrate_cost"
+        d12.mkdir()
+        (d12 / "data.json").write_text(
+            json.dumps({"contabilidad": {"C20": {"SDM": {"total": 134272}}}})
+        )
+        render_tables(resultados, tmp_path / "tex")
+        tabla = (tmp_path / "tex" / "tab_benchmark.tex").read_text()
+        assert "KiB" in tabla and "131.1" in tabla
+
     def test_el_macro_renderiza_el_valor_publicado(self, resultados, tmp_path):
         render_tables(resultados, tmp_path / "tex")
         macro = (tmp_path / "tex" / "result_macro.tex").read_text()

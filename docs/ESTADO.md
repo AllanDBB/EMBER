@@ -1,12 +1,47 @@
 # Estado del trabajo — EMBER
 
-**Última actualización:** 2026-08-20
-**Rama:** `feat/ember-foundation` (aún no mergeada a `main`)
+**Última actualización:** 2026-10-08
+**Rama:** `revision/bip2026-overleaf` (sobre `revision/bip2026-reviews`)
 
 Retomar leyendo, en este orden:
 1. `docs/superpowers/specs/2026-08-11-ember-repo-design.md` — el diseño y por qué.
 2. `docs/superpowers/plans/2026-08-11-ember-foundation.md` — las 23 tareas.
 3. `docs/notas/2026-08-11-numeros-movidos.md` — **qué resultados del draft no sobrevivieron.**
+4. `docs/revision/respuesta-revisores.md` y las notas `docs/notas/2026-10-06-*` — la revisión de BIP2026.
+
+## El paper, hoy
+
+El paper está en inglés (traducido el 27 ago, commit `aea0fa1`), 8 páginas,
+`verify_paper` limpio. Dos pases editoriales encima de esa traducción:
+
+- `a9e5b2f` — contribuciones alineadas a cuatro ítems, conexión con repetición
+  priorizada y Neural Episodic Control, sección de disponibilidad de código.
+- `d8ac51b` (28 ago, Nick Florez) — dos afirmaciones sin sustento corregidas
+  (el 14.41× era del régimen de compresión, no de selección; el FIFO no está
+  "en el piso en toda condición", su reconstrucción es 0.907), abstract a 248
+  palabras, nueva §III-E (arquitectura de frontera), `tab:two-knobs`,
+  `fig:write`.
+- **2026-09-01** — pase sobre comentarios de una revisión anotada
+  (`paper/BIP2026_EMBER_revised.pdf`, con highlights y 2 comentarios de texto,
+  no versionada — es material de revisión, no un artefacto del repo). El
+  comentario central: siglas usadas antes de definirse. Corregido en
+  `main.tex`: `e-MDB`, `FIFO`, `LIF`, `STDP`, `ENN` (Engram Neural Network),
+  `PoC`, `LTP`, `PCA` ahora se expanden en su primer uso real, no donde
+  aparecían por casualidad más definidos que usados. También se glosó
+  `incumbent`/`frontier` en la pregunta falsificable de la intro, antes de su
+  definición formal en §III-B/§III-E. Sigue en 8 páginas, `verify_paper`
+  limpio, 256 tests pasan. `paper/EMBER-overleaf.zip` (export de Overleaf, no
+  versionado) se comparó contra el repo: es idéntico, no traía cambios.
+- **2026-10-08** — la revisión de BIP2026 se había hecho sobre el proyecto de
+  Overleaf equivocado. El correcto (el de envío) era `main` más el pase de
+  siglas del 09-01 y un título nuevo; la rama de revisión ya contenía ese pase,
+  así que de ahí solo se portaron el título (sin el punto final y con
+  "bioinspired", como en el resto del texto), la lectura de $r<1$ / $r>1$ y de
+  $K_{proto}$ conocido o estimado en la intro, CIFAR-100 descrito como
+  benchmark de imágenes naturales, y la lista de los cuatro sustratos al abrir
+  Related work. El abstract de la revisión tenía 287 palabras; recortado a 249
+  (límite de BIP: 250) sin tocar ninguna afirmación acotada por la auditoría.
+  `verify_paper` limpio. El conteo de páginas se confirma en Overleaf.
 
 ## Hecho
 
@@ -188,11 +223,51 @@ Esto pasó de ser un párrafo de "trabajo futuro" en Limitaciones a su propia
 sección del paper (§VI, con tabla y subsección de Discusión propia), porque
 ya no es una limitación: es un resultado positivo completo.
 
+## La revisión de BIP2026 (2026-10-06)
+
+Los siete experimentos de la revisión (exp07–exp13) están corridos, fusionados
+en `revision/bip2026-reviews` e integrados al paper. No queda ningún
+`TODO(expNN)` en `main.tex` ni ningún `PENDIENTE` en la respuesta a los
+revisores. `verify_paper` está limpio, pasan 404 tests y `ruff` está limpio.
+Una auditoría independiente (`docs/revision/auditoria-2026-10-06.md`) encontró
+3 afirmaciones falsas, 14 de alcance mal enunciado y 11 menores; todas están
+corregidas. Después el paper se reestructuró de 12 a **8 páginas** con
+referencias (~7 300 palabras en el PDF): Discusión y Limitaciones fusionadas
+(§VIII), la comparación contra e-MDB como eje (§IV), Related Work comprimido y
+la tabla de MiniGrid eliminada (sus números están en el texto).
+
+Afirmaciones que cambiaron (cada una con su nota en `docs/notas/`):
+
+- **exp07**: el umbral de fusión no mueve el cruce (r ≈ 0.87 entre 0.40 y
+  0.85). La precondición de CIFAR-100 pasa a ser *separabilidad*, no alcanzar
+  0.85: ningún umbral da fusiones frecuentes y puras.
+- **exp08**: el 14.41× vale con una señal perfectamente separable y se
+  desvanece al degradarla. La ventaja aguanta hasta un AUC de ≈ 0.91–0.96 y se
+  pierde con retraso. SDM baja a 0.60 con AUC 0.95, por debajo de ENN.
+- **exp09**: ningún baseline externo supera a la frontera, pero el desalojo
+  voraz por sorpresa queda a 0.035. El buffer real de e-MDB, leído en forma
+  secuencial, no pasa el gate (0.368). Ese resultado depende del criterio de
+  acierto asumido (coseno ≥ 0.85).
+- **exp10**: **r nominal no gobierna la transición; r_eff = K_efectivo/C sí**
+  (23 familias). La hipótesis se enuncia ahora sobre r_eff.
+- **exp11**: con el rollout como unidad, los intervalos de exp06 no cambian. La
+  saliencia transfiere en 4 entornos cuando la señal está alineada con lo
+  importante. La importancia demorada sigue abierta.
+- **exp12**: la retención de SDM la decide el desalojo con compuerta y borrado
+  exacto, no la superposición: la lista sola retiene todo, y los contadores
+  también si restan exactamente lo desalojado (41.96× más bytes). A igual
+  presupuesto, sin presión de capacidad, el FIFO le gana. Tabla III tiene una
+  columna nueva de KiB.
+- **exp13**: retener mejor no es actuar mejor. La frontera gana al reaparecer
+  una tarea, pero pierde en el retorno acumulado frente al FIFO.
+
 ## Lo siguiente
 
-1. **Revisión editorial del texto**: tono, longitud por sección (el paper
-   quedó en 8 páginas con cuatro contribuciones).
-2. Trabajo futuro ya explícito en el paper, no pendiente de esta sesión:
+1. Revisión de los autores del texto recortado a 8 páginas. Ninguna figura
+   nueva entró al cuerpo (las de exp07, exp08, exp10 y exp13 quedan en
+   `paper/figures/`).
+2. **Pendiente de los autores (R1.10)**: el repositorio público y su URL en el paper.
+3. Trabajo futuro ya explícito en el paper, no pendiente de esta sesión:
    barrer `exp05` en más capacidades y con otro extractor de embeddings;
    extender `exp06` a POPGym y a políticas entrenadas.
 

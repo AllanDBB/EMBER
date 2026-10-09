@@ -136,6 +136,51 @@ class Merge:
         return None
 
 
+# ════════════════════════════════════════════════════════ compuerta de admisión
+
+
+@runtime_checkable
+class AdmissionPolicy(Protocol):
+    """Decide si una experiencia entra a la memoria o se descarta sin escribirse.
+
+    No es un eje del espacio de búsqueda: ninguna de las 576 configuraciones la
+    usa, y ninguna arquitectura registrada la aplica. Existe para el análisis de
+    sensibilidad de `exp12_substrate_cost`, que barre un umbral de admisión
+    sobre la SDM a través de `ember.memories.sdm_ablation.AdmissionGated`.
+    """
+
+    label: str
+
+    def admit(self, pred_error: float) -> bool: ...
+
+
+@dataclass(frozen=True, slots=True)
+class AdmitAll:
+    """Toda experiencia se escribe. Es lo que hacen todas las memorias hoy."""
+
+    label: str = "all"
+
+    def admit(self, pred_error: float) -> bool:
+        return True
+
+
+@dataclass(frozen=True, slots=True)
+class PredErrorAdmission:
+    """Solo se escribe lo que llega con error de predicción `>= threshold`.
+
+    Con `threshold=0` equivale a `AdmitAll`.
+    """
+
+    threshold: float = 0.0
+
+    @property
+    def label(self) -> str:
+        return f"pe>={self.threshold:g}"
+
+    def admit(self, pred_error: float) -> bool:
+        return pred_error >= self.threshold
+
+
 # ═════════════════════════════════════════════════════════════ modo de lectura
 
 
@@ -299,3 +344,226 @@ class ExponentialDecay:
 
     def step(self, strength: NDArray) -> None:
         strength *= np.float32(self.rate)
+
+
+# ═══════════════════════════════════════ políticas externas (fuera del espacio)
+#
+# Todo lo que sigue son baselines de gestión de memoria NO bioinspirados, tomados
+# de la literatura de cachés, de muestreo en flujo y de aprendizaje continuo. Se
+# implementan acá —y no en otro módulo— por el invariante de un solo motor: una
+# política externa se compone con `PolicyMemory` igual que cualquier otra, así
+# que la comparación contra la frontera no tiene diferencias de código
+# accidentales.
+#
+# **Ninguna de estas entra a `ember.nas.space.SEARCH_SPACE`.** Las 576
+# configuraciones y los resultados de exp01–exp06 no cambian. Las lecturas y
+# desalojos de esta sección consumen `TraceStore.last_use` y
+# `TraceStore.priority`, que ninguna política del espacio lee.
+#
+# Qué cuenta como "uso" para las políticas de caché (LRU, LFU, utilidad): la
+# escritura que crea la traza, una fusión que la consolida, y toda lectura que
+# la selecciona (`TraceStore.touch`). Es la definición estándar de acceso en una
+# caché: lectura o escritura de la entrada.
+#
+# Admisión: en una caché el ítem entrante siempre entra y se desaloja entre los
+# residentes. `PolicyMemory` agrega antes de desalojar, así que las políticas de
+# caché excluyen la traza recién agregada (`_residentes`). Las de muestreo y
+# selección (reservorio, prioridad, cobertura) sí la dejan competir, como en sus
+# fuentes: el reservorio puede rechazar el ítem nuevo, y la repetición
+# priorizada selectiva se queda con el conjunto de mayor sorpresa.
+
+
+def _residentes(store: TraceStore) -> int:
+    """Cuántas trazas compiten en un desalojo de caché (todas menos la entrante)."""
+    return len(store) - 1 if len(store) > store.capacity else len(store)
+
+
+@dataclass(frozen=True, slots=True)
+class SequentialScan:
+    """Lectura del `EpisodicBuffer` real de e-MDB: barrido secuencial, sin similitud.
+
+    Fuente: GII (Universidade da Coruña), repositorio
+    https://github.com/GII/emdb_cognitive_nodes_gii, archivo
+    `cognitive_nodes/cognitive_nodes/episodic_buffer.py` (commit `d15f96a`,
+    feb. 2026). Ahí el buffer principal es `deque(maxlen=main_size)`;
+    `add_episode` hace `append` (desalojo FIFO implícito del `deque`), y la
+    única forma de recuperar es por posición (`get_sample(index)`) o volcando el
+    buffer entero en orden de inserción (`get_dataset`, `get_train_samples`,
+    con barajado opcional). No hay ninguna consulta por contenido.
+
+    Para poder evaluarlo con las mismas tareas hay que traducir "consulta" a
+    ese modelo de acceso. La traducción más fiel —y es un **supuesto**, porque
+    e-MDB nunca responde consultas— es recorrer el buffer en orden de inserción
+    (el orden de `get_dataset(shuffle=False)`) y devolver el **primer** episodio
+    que coincide con la consulta, donde "coincidir" es el mismo criterio de
+    acierto que usa toda la evaluación (`HIT_SIMILARITY = 0.85`). Si nada
+    coincide, la lectura falla: devuelve una selección vacía y `PolicyMemory`
+    responde `ReadResult(None, 0.0, None)`.
+
+    Diferencia con el proxy `FIFO_GENOTYPE` (`read=nn`): el proxy le regala al
+    buffer una búsqueda por vecino más cercano que no tiene. Con el mismo
+    desalojo, las dos retienen exactamente las mismas trazas; lo que cambia es
+    si una clave degradada todavía encuentra la suya.
+
+    `TraceStore` agrega al final y compacta al desalojar, así que el índice
+    creciente es el orden de inserción: el mismo orden que el `deque`.
+    """
+
+    threshold: float = 0.85
+    label: str = "seq"
+
+    def select(self, sims: NDArray) -> NDArray[np.intp]:
+        return np.flatnonzero(sims >= self.threshold)[:1].astype(np.intp)
+
+
+@dataclass(frozen=True, slots=True)
+class Reservoir:
+    """Muestreo de reservorio, algoritmo R de Vitter (1985).
+
+    Vitter, J. S. "Random sampling with a reservoir". ACM TOMS 11(1):37–57.
+    Mantiene una muestra uniforme de todo el flujo visto. Al llegar el ítem
+    `n > C`, se sortea `j ~ U{0, …, n-1}`: si `j < C` el ítem nuevo reemplaza la
+    ranura `j`; si no, el ítem nuevo se descarta. Es el baseline de memoria de
+    repetición estándar en aprendizaje continuo (Chaudhry et al. 2019, "On tiny
+    episodic memories in continual learning"; Isele y Cosgun 2018 lo llaman
+    "distribution matching").
+
+    `n` es `store.t`, el número de escrituras vistas. Con escritura `append`
+    cada escritura es un ítem del flujo. `PolicyMemory` agrega antes de
+    desalojar, así que el ítem nuevo está en el último índice.
+    """
+
+    label: str = "reservoir"
+
+    def victim(self, store: TraceStore, rng: np.random.Generator) -> int:
+        nuevo = len(store) - 1
+        n = max(int(store.t), len(store))
+        j = int(rng.integers(n))
+        return j if j < nuevo else nuevo
+
+
+@dataclass(frozen=True, slots=True)
+class LRU:
+    """Desaloja la traza usada hace más tiempo (Least Recently Used).
+
+    La política de reemplazo de caché clásica (Belady 1966; Mattson et al.
+    1970, "Evaluation techniques for storage hierarchies"). "Uso" es escritura,
+    fusión o lectura que la selecciona (ver encabezado de la sección). Empates:
+    la de inserción más vieja.
+    """
+
+    label: str = "lru"
+
+    def victim(self, store: TraceStore, rng: np.random.Generator) -> int:
+        return int(np.argmin(store.last_use))
+
+
+@dataclass(frozen=True, slots=True)
+class LFU:
+    """Desaloja la traza con menos usos (Least Frequently Used), desempate LRU.
+
+    LFU clásico con el desempate por recencia de la implementación O(1) de
+    Shah, Mitra y Matani (2010), "An O(1) algorithm for implementing the LFU
+    cache eviction scheme". La frecuencia es `TraceStore.utility` (lecturas que
+    la seleccionan más fusiones).
+
+    Se parece a `MinUtility` del espacio, que usa el mismo contador pero
+    desempata por posición de inserción y deja competir a la traza entrante.
+    Bajo empates masivos (casi toda traza tiene cero lecturas) el desempate y
+    la admisión son lo que decide, y por eso son políticas distintas.
+    """
+
+    label: str = "lfu"
+
+    def victim(self, store: TraceStore, rng: np.random.Generator) -> int:
+        n = _residentes(store)
+        return int(np.lexsort((store.last_use[:n], store.utility[:n]))[0])
+
+
+@dataclass(frozen=True, slots=True)
+class PrioritySurprise:
+    """Desaloja la traza de menor prioridad, con prioridad = sorpresa.
+
+    Adaptación al desalojo de la repetición priorizada de Schaul et al. (2016),
+    "Prioritized experience replay", ICLR, donde la prioridad es el error de
+    TD. Es la variante "surprise" de Isele y Cosgun (2018), "Selective
+    experience replay for lifelong learning", AAAI, que conserva en el buffer
+    las experiencias de mayor error y descarta la de menor. Usa la **misma
+    señal** que la compuerta de fuerza de EMBER, pero cruda
+    (`TraceStore.priority`, el `pred_error` de escritura): sin novedad, sin
+    decaimiento y sin refuerzo por lectura. Empates: la más vieja.
+    """
+
+    label: str = "per_min"
+
+    def victim(self, store: TraceStore, rng: np.random.Generator) -> int:
+        return int(np.argmin(store.priority))
+
+
+@dataclass(frozen=True, slots=True)
+class StochasticPriority:
+    """Desalojo estocástico con probabilidad inversa a la prioridad.
+
+    La versión estocástica de Schaul et al. (2016): allí se *muestrea* para
+    repetir con `P(i) ∝ p_i^α`, `p_i = |δ_i| + ε`. Acá se *desaloja* con
+    `P(i) ∝ (p_i + ε)^(-α)`, que protege lo sorpresivo sin volver imposible
+    desalojarlo — la razón por la que Schaul et al. prefieren la versión
+    estocástica a la greedy. `α = 1` y `ε = 0.01` fijos, sin ajustar.
+    """
+
+    alpha: float = 1.0
+    eps: float = 0.01
+    label: str = "per_stoch"
+
+    def victim(self, store: TraceStore, rng: np.random.Generator) -> int:
+        w = (store.priority.astype(np.float64) + self.eps) ** (-self.alpha)
+        return int(rng.choice(len(store), p=w / w.sum()))
+
+
+@dataclass(frozen=True, slots=True)
+class UtilityCache:
+    """Caché por utilidad: frecuencia de uso con decaimiento por recencia.
+
+    Puntaje `u_i = (1 + usos_i) · 2^(-(t - último_uso_i) / h)`; se desaloja el
+    menor. Combina frecuencia y recencia como la familia LRFU de Lee et al.
+    (2001), "LRFU: a spectrum of policies that subsumes the LRU and LFU
+    policies", IEEE Trans. Computers 50(12), que decae exponencialmente el
+    aporte de cada uso. Esta es una aproximación: decae la cuenta total desde
+    el último uso, en vez de cada uso por separado. La vida media `h` es la
+    capacidad de la memoria (en escrituras), para que la escala sea relativa al
+    dominio y no un número absoluto. Empates: la más vieja.
+    """
+
+    label: str = "utility_cache"
+
+    def victim(self, store: TraceStore, rng: np.random.Generator) -> int:
+        n = _residentes(store)
+        h = float(store.capacity)
+        edad_uso = float(store.t) - store.last_use[:n].astype(np.float64)
+        u = (1.0 + store.utility[:n].astype(np.float64)) * np.exp2(-edad_uso / h)
+        return int(np.argmin(u))
+
+
+@dataclass(frozen=True, slots=True)
+class CoverageMax:
+    """Maximización de cobertura del espacio de claves: desaloja lo más redundante.
+
+    La estrategia "coverage maximization" de Isele y Cosgun (2018), "Selective
+    experience replay for lifelong learning", AAAI: descartar experiencias de
+    las regiones más densas del espacio de estados para que el buffer lo cubra
+    lo más parejo posible. Isele y Cosgun cuentan vecinos dentro de un radio
+    fijo; acá se usa la forma sin umbral —un radio absoluto no es transportable
+    entre dominios, ver `Radius`—: se desaloja la traza cuyo vecino más cercano
+    está más cerca (máxima similitud coseno con otra traza guardada). Es el paso
+    greedy de la cobertura max–min (k-centro, Gonzalez 1985). Del par más
+    parecido sale el de inserción más vieja.
+
+    No lee ni la sorpresa ni el uso: solo la geometría de las claves.
+    """
+
+    label: str = "coverage"
+
+    def victim(self, store: TraceStore, rng: np.random.Generator) -> int:
+        sims = store.keys @ store.keys.T
+        np.fill_diagonal(sims, -np.inf)
+        return int(np.argmax(sims.max(axis=1)))
