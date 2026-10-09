@@ -19,7 +19,20 @@ uv run python -m experiments.exp02_threshold_grid  # la ley del umbral (~12 min)
 uv run python -m experiments.exp03_axis_liveness   # auditoría de ejes (~15 s)
 uv run python -m experiments.exp04_arch_benchmark  # benchmark de arquitecturas
 uv run python -m experiments.exp05_real_embeddings # CIFAR-100 (baja el dataset)
-uv run python -m experiments.exp06_minigrid        # MiniGrid, entorno real (~8 s)
+uv run python -m experiments.exp06_minigrid        # MiniGrid, entorno real (~30 s)
+
+# Revisión de BIP2026 (tiempos de la última corrida)
+uv run python -m experiments.exp07_merge_sensitivity     # umbral de fusión (~30 min)
+uv run python -m experiments.exp08_imperfect_salience    # saliencia imperfecta (~28 min)
+uv run python -m experiments.exp09_external_baselines    # baselines externos y buffer real (~10 min)
+uv run python -m experiments.exp10_law_robustness        # robustez de la hipótesis de régimen (~1.6 h)
+uv run python -m experiments.exp11_minigrid_extended     # MiniGrid ampliado (~20 min)
+uv run python -m experiments.exp12_substrate_cost        # costo de sustratos (~3 min)
+uv run python -m experiments.exp13_downstream_learning   # efecto en el aprendizaje (~4 min)
+
+# Paquete para Overleaf (dist/ no se versiona)
+mkdir -p dist && cd paper && zip -X ../dist/EMBER-overleaf-final.zip main.tex refs.bib response.tex \
+  tables/result_macro.tex tables/tab_benchmark.tex figures/fig1_threshold.pdf
 ```
 
 Extras: `uv pip install -e ".[dev]"` para trabajar, `".[lab]"` para experimentos
@@ -40,7 +53,9 @@ src/ember/
   experiment.py  ExperimentRun: manifiesto de procedencia
   figures.py     figuras del paper
 experiments/  expNN_*.py → results/expNN_*/
-docs/         ESTADO.md, notas/, superpowers/{specs,plans}, borradores/
+paper/        main.tex (paper), response.tex (carta a los revisores), refs.bib,
+              tables/ (generadas por render_tables), figures/
+docs/         ESTADO.md, notas/, revision/, superpowers/{specs,plans}, borradores/
 ```
 
 ## Invariantes
