@@ -58,6 +58,19 @@ El paper está en inglés (traducido el 27 ago, commit `aea0fa1`), 8 páginas,
 3. R1.10 (repositorio durante la revisión) queda como está: la carta promete
    publicarlo después.
 
+**2026-10-09 — pase de pulido** (rama `revision/bip2026-pulido`): autores y
+afiliaciones del TEC; tres números que parecían contradecirse eran corridas
+distintas y ahora el texto lo dice (media de SDM: 0.747 exp04 con 4 semillas,
+0.741 exp12 con 10, 0.745 exp12 a igual presupuesto con 102 trazas; frontera
+0.818 vs 0.824 y proxy 0.050 vs 0.038 por juegos de semillas distintos); la
+mediana intra-clase de CIFAR es una sola (0.38, todos los pares de exp07; el
+0.401 de exp05 era mediana de medianas por celda y sale del paper); el cruce
+en 0.88 ya no lleva intervalo, porque es la media geométrica entre los puntos
+de rejilla 0.75 (0.8 en C=10) y 1.0; "chance-level surprise" pasa a
+"prediction error", porque la novedad sigue separando perfecto; se definen el
+evento recompensado y el design effect de MiniGrid; sale la jerga interna
+(PoC-3, PoC-5, liveness audit). Abstract: 250 palabras.
+
 ## Hecho
 
 | Tarea del plan | Estado |
