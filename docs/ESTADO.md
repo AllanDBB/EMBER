@@ -42,6 +42,21 @@ El paper está en inglés (traducido el 27 ago, commit `aea0fa1`), 8 páginas,
   Related work. El abstract de la revisión tenía 287 palabras; recortado a 249
   (límite de BIP: 250) sin tocar ninguna afirmación acotada por la auditoría.
   `verify_paper` limpio. El conteo de páginas se confirma en Overleaf.
+  Aclaración posterior: el texto pegado es **la versión que se envió a la
+  revista y leyeron los revisores**. La carta ya estaba escrita contra ella
+  (su numeración de referencias, con [8] = MiniGrid, y las cuatro frases que
+  declara corregidas aparecen literalmente en ese texto), así que no hubo que
+  rehacerla. PR: AllanDBB/EMBER#2.
+
+**Para reenviar** (al 2026-10-08):
+1. Subir `dist/EMBER-overleaf-final.zip` (lo arma el comando de `CLAUDE.md`) al
+   proyecto de Overleaf de envío, compilar `main.tex` y confirmar 8 páginas con
+   referencias. `paper/main.pdf` en el repo es anterior al título y al abstract
+   nuevos: reemplazarlo por el PDF de Overleaf.
+2. El CI de GitHub no corre: la cuenta está bloqueada por facturación. Los
+   checks en rojo de la PR no son fallas del código.
+3. R1.10 (repositorio durante la revisión) queda como está: la carta promete
+   publicarlo después.
 
 ## Hecho
 
