@@ -1,7 +1,7 @@
 # Estado del trabajo — EMBER
 
-**Última actualización:** 2026-10-06
-**Rama:** `revision/bip2026-reviews`
+**Última actualización:** 2026-10-08
+**Rama:** `revision/bip2026-overleaf` (sobre `revision/bip2026-reviews`)
 
 Retomar leyendo, en este orden:
 1. `docs/superpowers/specs/2026-08-11-ember-repo-design.md` — el diseño y por qué.
@@ -32,6 +32,16 @@ El paper está en inglés (traducido el 27 ago, commit `aea0fa1`), 8 páginas,
   definición formal en §III-B/§III-E. Sigue en 8 páginas, `verify_paper`
   limpio, 256 tests pasan. `paper/EMBER-overleaf.zip` (export de Overleaf, no
   versionado) se comparó contra el repo: es idéntico, no traía cambios.
+- **2026-10-08** — la revisión de BIP2026 se había hecho sobre el proyecto de
+  Overleaf equivocado. El correcto (el de envío) era `main` más el pase de
+  siglas del 09-01 y un título nuevo; la rama de revisión ya contenía ese pase,
+  así que de ahí solo se portaron el título (sin el punto final y con
+  "bioinspired", como en el resto del texto), la lectura de $r<1$ / $r>1$ y de
+  $K_{proto}$ conocido o estimado en la intro, CIFAR-100 descrito como
+  benchmark de imágenes naturales, y la lista de los cuatro sustratos al abrir
+  Related work. El abstract de la revisión tenía 287 palabras; recortado a 249
+  (límite de BIP: 250) sin tocar ninguna afirmación acotada por la auditoría.
+  `verify_paper` limpio. El conteo de páginas se confirma en Overleaf.
 
 ## Hecho
 

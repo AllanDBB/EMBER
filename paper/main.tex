@@ -23,50 +23,48 @@
 
 \input{tables/result_macro}
 
-\title{Two regimes of bioinspired memory:\\an architecture-search perspective}
+\title{EMBER: Emergent Memory-Based Encoding and Reactivation, a bioinspired memory for autonomous robots under the e-MDB cognitive architecture}
 \author{\IEEEauthorblockN{Anonymous --- double-blind review}}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-A robot learning over its service life must decide what to keep in a
+A robot learning over its service life must decide what to keep in
 fixed-size memory. The episodic buffer of e-MDB, a cognitive architecture for
-lifelong open-ended robot learning, keeps the most recent episodes whatever
+lifelong open-ended robot learning, keeps the latest episodes whatever
 their value. We present EMBER (Emergent Memory-Based Encoding and
-Reactivation), which casts such a memory as a six-axis design space ---how a
-trace is read, written, weighted by surprise, decayed, evicted and
-reinforced--- and evaluates all
+Reactivation), which casts such a memory as a six-axis design space ---read, write,
+surprise weighting, decay, eviction and reinforcement--- and evaluates all
 \result{exp03_axis_liveness:n_genotipos|int}{576} configurations of one engine,
 among them a nearest-neighbour proxy of the e-MDB buffer, on how many
-importance-tagged experiences survive a stream that overruns capacity. The
+importance-tagged experiences survive a stream overrunning capacity. The
 memory never sees the tags, only a surprise signal. The best configuration
 differs from that proxy on two axes, surprise-weighted encoding and
 weakest-trace eviction, and from the proxy neither changes anything alone. On a
-separable surprise signal it scores \result{exp01_nas_full:frontier.score|f3}{0.818}
-against \result{exp01_nas_full:incumbent.score|f3}{0.106} and retains
-\result{exp01_nas_full:frontier.scores.rare_retention|f3}{0.983} of the tagged
+separable surprise signal it retains
+\result{exp01_nas_full:frontier.scores.rare_retention|f3}{0.983} of tagged
 experiences against \result{exp01_nas_full:incumbent.scores.rare_retention|f3}{0.050}.
 It keeps the top rank in 13 of 14 held-out stream families; when recurring
-experience fits in memory it still retains
+experience fits in memory it retains
 \result{exp08_imperfect_salience:settings.main.conditions.auc500.policies.frontier.recall.mean|f2}{0.60}
-against the proxy's
+against
 \result{exp08_imperfect_salience:settings.main.conditions.auc500.policies.fifo.recall.mean|f2}{0.03}
-with surprise no better than chance; no external replacement rule beats it;
-and the buffer's actual sequential read scores below the proxy. In MiniGrid,
-with surprise taken from reward prediction, it retains
+at chance-level surprise; no external replacement rule beats it. In
+MiniGrid, with surprise from reward prediction, it retains
 \result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.tasa|pct}{47.2}\,\%
 of rewarded events against
 \result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.FIFO.tasa|pct}{0.7}\,\%.
-Which mechanism matters depends on the traces recurring experience occupies
-after consolidation relative to capacity: at ratios of 0.5 or less the write
-axis explains \result{exp02_threshold_grid:regimenes.compression.eta2_write|pct}{73.0}\,\%
+We hypothesize that which mechanism matters depends on the traces recurring
+experience occupies after consolidation relative to capacity: at ratios $\le 0.5$
+the write axis explains
+\result{exp02_threshold_grid:regimenes.compression.eta2_write|pct}{73.0}\,\%
 of the variance, above one
-\result{exp02_threshold_grid:regimenes.selection.eta2_write|pct}{1.6}\,\%; we
-state this as a hypothesis. On real data, merging needs repeated encounters to
-be separable from distinct ones, which CIFAR-100 embeddings are not. Better
-retention is not yet better behaviour: an episodic controller on the frontier
-integrates less return than on FIFO.
+\result{exp02_threshold_grid:regimenes.selection.eta2_write|pct}{1.6}\,\%.
+Merging needs repeated encounters separable from distinct ones, which
+embeddings of natural images (CIFAR-100) are not. Better retention is not yet
+better behaviour: an episodic controller on the frontier integrates less return
+than on FIFO.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -119,7 +117,9 @@ after a stream many times longer than the capacity; the tag is used only for
 scoring, never shown to the memory. We relate the results to
 $r = K_{proto}/C$: the number of \emph{prototypes} (distinct recurring kinds of
 experience) over the \emph{capacity}, the number of traces held before a write
-forces an eviction.
+forces an eviction. Thus $r<1$ means recurring experience fits with slots to
+spare and $r>1$ that it does not; $K_{proto}$ is known on synthetic streams and
+estimated on real ones.
 
 Our contributions are:
 \begin{itemize}
@@ -140,8 +140,8 @@ Our contributions are:
   circuit fails on continuous vectors, and SDM's retention comes from gated
   eviction with exact erasure, not from superposition.
   \item Two preconditions that appear only on real data: consolidation needs
-  repeated encounters separable from distinct ones, which CIFAR-100
-  \cite{krizhevsky2009} embeddings are not; and in MiniGrid \cite{minigrid}
+  repeated encounters separable from distinct ones, which embeddings of
+  CIFAR-100 \cite{krizhevsky2009}, a 100-class natural-image benchmark, are not; and in MiniGrid \cite{minigrid}
   surprise must be aligned with what defines importance, which, when importance
   is reward, raises the frontier's retention from the floor to about half.
 \end{itemize}
@@ -152,7 +152,9 @@ not show.
 \section{Background and related work}
 \label{sec:related}
 
-\emph{Memory substrates.} SDM \cite{kanerva1988} distributes each pattern
+\emph{Memory substrates.} EMBER compares four (Section~\ref{sec:benchmark}):
+SDM, the Engram Neural Network (ENN), a pure spiking circuit and a hybrid
+Spiking-SDM. SDM \cite{kanerva1988} distributes each pattern
 over many overlapping \emph{hard locations} with fixed random addresses, so a
 noisy query still activates enough of the same ones to reconstruct the
 original, and accuracy degrades gradually. Our instantiation draws 512 hard
@@ -164,8 +166,8 @@ adapts to local density (cf.\ \cite{kanerva2009}), and the memory keeps an
 explicit trace list alongside the counters, returning the stored trace most
 similar to the reconstruction. The \emph{engram}, the physical trace of a
 memory \cite{semon1904,liu2012}, rests on long-term potentiation (LTP): neurons
-that fire together strengthen their synapse \cite{hebb1949}. The
-\emph{Engram Neural Network} (ENN) is our name ---not a prior architecture---
+that fire together strengthen their synapse \cite{hebb1949}. ENN is our
+name ---not a prior architecture---
 for the minimal online memory built on that rule: fast Hebbian weights updated
 without backpropagation, where each write creates a trace or reinforces one
 above a cosine threshold. Spike-timing-dependent plasticity (STDP)
