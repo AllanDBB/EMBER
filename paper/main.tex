@@ -24,7 +24,25 @@
 \input{tables/result_macro}
 
 \title{EMBER: Emergent Memory-Based Encoding and Reactivation, a bioinspired memory for autonomous robots under the e-MDB cognitive architecture}
-\author{\IEEEauthorblockN{Anonymous --- double-blind review}}
+\author{
+\IEEEauthorblockN{Esteban Arias-M\'endez}
+\IEEEauthorblockA{\textit{Escuela de Computaci\'on}\\
+\textit{Instituto Tecnol\'ogico de Costa Rica}\\
+Costa Rica\\
+esteban.arias@tec.ac.cr}
+\and
+\IEEEauthorblockN{Allan Bola\~nos}
+\IEEEauthorblockA{\textit{Escuela de Computaci\'on}\\
+\textit{Instituto Tecnol\'ogico de Costa Rica}\\
+Costa Rica\\
+adbyb.es@gmail.com}
+\and
+\IEEEauthorblockN{Juan Luis Crespo Mari\~no}
+\IEEEauthorblockA{\textit{Escuela de Ingenier\'ia Mecatr\'onica}\\
+\textit{Instituto Tecnol\'ogico de Costa Rica}\\
+Costa Rica\\
+jcrespo@itcr.ac.cr}
+}
 
 \begin{document}
 \maketitle
@@ -50,7 +68,7 @@ experience fits in memory it retains
 \result{exp08_imperfect_salience:settings.main.conditions.auc500.policies.frontier.recall.mean|f2}{0.60}
 against
 \result{exp08_imperfect_salience:settings.main.conditions.auc500.policies.fifo.recall.mean|f2}{0.03}
-at chance-level surprise; no external replacement rule beats it. In
+at chance-level prediction error; no external replacement rule beats it. In
 MiniGrid, with surprise from reward prediction, it retains
 \result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.tasa|pct}{47.2}\,\%
 of rewarded events against
@@ -61,8 +79,8 @@ the write axis explains
 \result{exp02_threshold_grid:regimenes.compression.eta2_write|pct}{73.0}\,\%
 of the variance, above one
 \result{exp02_threshold_grid:regimenes.selection.eta2_write|pct}{1.6}\,\%.
-Merging needs repeated encounters separable from distinct ones, which
-embeddings of natural images (CIFAR-100) are not. Better retention is not yet
+Merging needs repeated encounters separable from distinct ones, which the
+CIFAR-100 embeddings we tested are not. Better retention is not yet
 better behaviour: an episodic controller on the frontier integrates less return
 than on FIFO.
 \end{abstract}
@@ -172,9 +190,9 @@ for the minimal online memory built on that rule: fast Hebbian weights updated
 without backpropagation, where each write creates a trace or reinforces one
 above a cosine threshold. Spike-timing-dependent plasticity (STDP)
 \cite{bipoo1998} applies the rule to individual spikes and groups neurons into
-assemblies; the project's third proof of concept (PoC-3) verified on leaky
-integrate-and-fire (LIF) neurons that a partial cue recruits the rest of its
-assembly.
+assemblies; in an earlier prototype of ours, a circuit of leaky
+integrate-and-fire (LIF) neurons trained this way completed an assembly from a
+partial cue.
 
 \emph{Search, replay and memory management.} Neural architecture search
 \cite{elsken2019} optimizes architectural decisions; memory-augmented networks
@@ -406,8 +424,18 @@ unweighted mean of T1--T3, each averaged over seeds.
 \emph{Seeds and statistics.} The search uses 3 seeds per configuration; the
 threshold grid, 3 capacities $\times$ 8 ratios $\times$ 5 seeds on T1, with 20
 visits per prototype and $\max(5,C/2)$ rare experiences; the substrate
-benchmark, 4 seeds; CIFAR-100, 5 ratios $\times$ 3 seeds at $C=20$; MiniGrid,
-40 rollouts per condition (200 in five seed blocks in the extended run). For
+benchmark, 4 seeds; the external rules of Section~\ref{sec:holds}, 5 seeds;
+CIFAR-100, 5 ratios $\times$ 3 seeds at $C=20$; MiniGrid, 40 rollouts per
+condition (200 in five seed blocks in the extended run). Each experiment draws
+its own seeds, so one configuration can score slightly differently across
+experiments: the frontier scores
+\result{exp01_nas_full:frontier.score|f3}{0.818} over the search's three seeds
+and \result{exp09_external_baselines:exp01_cell.frontier.battery_mean.mean|f3}{0.824}
+over the five of Section~\ref{sec:holds}, and the proxy retains
+\result{exp01_nas_full:incumbent.scores.rare_retention|f3}{0.050} of rare events
+in the search and
+\result{exp04_arch_benchmark:architectures.FIFO.battery.per_task.rare_retention|f3}{0.038}
+over the benchmark's four. For
 an axis, $\eta^2 = SS_{between}/SS_{total}$ over the 576 configuration scores:
 a one-way, marginal decomposition. The factorial is full and balanced, so main
 effects are orthogonal; two-way interactions are cell-mean residuals
@@ -436,9 +464,9 @@ variance and \texttt{write}$\times$\texttt{evict}
 
 \subsection{Where the proxy lands}
 
-Every axis is observable: a liveness audit, run in continuous integration,
-measures the largest score change between configurations differing only in
-that axis, and all six clear it. Write mode is the strongest main effect
+Every axis is observable: its \emph{observability}, the largest score change
+between configurations that differ only in that axis, is positive for all six,
+and an automated check recomputes it whenever the code changes. Write mode is the strongest main effect
 (\result{exp01_nas_full:main_effects.0.eta2|pct}{56.6}\,\%), followed by
 eviction (\result{exp01_nas_full:main_effects.1.eta2|pct}{17.0}\,\%), decay
 (\result{exp01_nas_full:main_effects.2.eta2|pct}{1.8}\,\%) and strength
@@ -503,7 +531,10 @@ The same dependence explains why the gate's
 Within \texttt{\{evict: min\_strength, write: append\}}, a constant gate retains
 \result{exp01_nas_full:salience_conditional.constant|pct}{3.6}\,\% of rare
 events and novelty plus prediction error
-\result{exp01_nas_full:salience_conditional.both|pct}{52.0}\,\%, a factor of
+\result{exp01_nas_full:salience_conditional.both|pct}{52.0}\,\%, both averaged
+over the 18 combinations of read, decay and reinforcement (the frontier, one of
+them, retains
+\result{exp01_nas_full:frontier.scores.rare_retention|f3}{0.983}), a factor of
 \result{exp01_nas_full:salience_conditional_ratio|f2}{14.41}. Because routine
 and rare prediction errors do not overlap here, keeping the rare events follows
 almost directly from the construction once eviction reads strength: the factor
@@ -614,12 +645,12 @@ The \result{exp01_nas_full:main_effects.0.eta2|pct}{56.6}\,\% of the write axis
 is less a property of merging than of $r$. We sweep the space over capacities
 and ratios, holding visits per prototype fixed so that $r$ is not confounded
 with recurrence. The attribution switches abruptly from the write axis to
-eviction near $r=1$ (Fig.~\ref{fig:threshold}): the crossover, averaged over
-$C=10$, 20 and 40, is \result{exp02_threshold_grid:r_umbral_medio|f2}{0.88}
-(descriptive interval
-[\result{exp02_threshold_grid:r_umbral_ci.0|f2}{0.87},
-\result{exp02_threshold_grid:r_umbral_ci.1|f2}{0.89}]), and the three
-capacities fall in the same grid interval. The mechanism is close to a
+eviction near $r=1$ (Fig.~\ref{fig:threshold}): at $C=10$, 20 and 40 the
+write axis still dominates at $r=0.75$ (0.8 at $C=10$, where $K_{proto}$ must
+be an integer) and eviction dominates from $r=1$, so all three crossovers lie
+between those two grid points. Their geometric mean,
+\result{exp02_threshold_grid:r_umbral_medio|f2}{0.88}, locates the switch
+only to that resolution. The mechanism is close to a
 restatement of what capacity means: eviction runs only when a write would
 exceed capacity, so below $r=1$ recurring experience fits, merging compresses
 it and frees slots for the rare (the \emph{compression} regime), while above it
@@ -688,8 +719,8 @@ forms distinct assemblies (perfect $A\to B$ interference) but fails
 reconstruction and noise robustness: it was built for discrete activation
 patterns, and over a continuous vector inner-product neuron selection is
 sensitive to small perturbations, so a noisy cue activates a different set.
-This motivates EMBER's PoC-5, pairing SDM for the continuous-to-distributed
-mapping with ENN for the trace lifecycle. ENN and FIFO tie at the gate: with no
+This motivates a hybrid that we have not built: SDM for the
+continuous-to-distributed mapping, with ENN for the trace lifecycle. ENN and FIFO tie at the gate: with no
 pressure the 0.85 merge threshold is rarely exceeded between near-orthogonal
 vectors, so both reduce to nearest-neighbour search.
 
@@ -736,7 +767,9 @@ not superposition: the trace list alone, read by nearest neighbour, keeps every
 rare event and scores
 \result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-b.battery_mean|f3}{0.788}
 against \result{exp12_substrate_cost:ablacion_sdm.variantes.SDM.battery_mean|f3}{0.741}
-for the full SDM; counters alone keep them only if an evicted trace is
+for the full SDM (both over ten seeds; Table~\ref{tab:benchmark} averages the
+first four, giving
+\result{exp04_arch_benchmark:architectures.SDM.battery.mean|f3}{0.747}); counters alone keep them only if an evicted trace is
 subtracted exactly
 (\result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-a+.battery.rare_retention.mean|f3}{1.000},
 else \result{exp12_substrate_cost:ablacion_sdm.variantes.SDM-a.battery.rare_retention.mean|f3}{0.005}).
@@ -763,18 +796,17 @@ of the variance whatever the ratio, while the synthetic domain in the same run
 crosses normally
 ($\hat r \approx \result{exp05_real_embeddings:dominios.synthetic.r_umbral|f2}{0.77}$
 over the estimated $\hat K/C$). The deciding quantity is \emph{intra-prototype
-similarity}, how alike two encounters with one class look. Its median,
-\result{exp05_real_embeddings:precondicion_cifar100.similitud_intra_prototipo|f3}{0.401},
-is far below the 0.85 threshold, so merging almost never fires and
+similarity}, how alike two encounters with one class look. Over all
+same-class pairs its median is
+\result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.intra.p50|f2}{0.38},
+far below the 0.85 threshold, so merging almost never fires and
 $K_{effective}$ grows from
 \result{exp05_real_embeddings:dominios.cifar100.celdas.0.k_efectivo|int}{84} to
 \result{exp05_real_embeddings:dominios.cifar100.celdas.4.k_efectivo|int}{1435}
 traces as nominal $K$ rises from 5 to 80 at $C=20$, instead of converging to
-$K_{proto}$. Lowering the threshold does not help, because intra-class
-similarity (median
-\result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.intra.p50|f2}{0.38})
-overlaps inter-class similarity (95th percentile
-\result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.inter.p95|f2}{0.42}):
+$K_{proto}$. Lowering the threshold does not help, because that median
+already lies below the 95th percentile of different-class pairs
+(\result{exp07_merge_sensitivity:umbral_fusion.cifar100.similitudes.inter.p95|f2}{0.42}):
 no threshold from 0.30 to 0.97 yields merges both frequent and pure, and from
 0.40 up eviction dominates on average. At 0.30 the write axis regains dominance
 at low $r$, but not as useful compression: only
@@ -807,8 +839,11 @@ A robot does not receive a stream: it receives the consequences of its own
 actions, under partial observation. On \texttt{MiniGrid-MemoryS13-v0}
 \cite{minigrid}, where the agent must remember an object seen at the start to
 choose correctly at the end, we compare the frontier and the FIFO on rare-event
-retention, with rewarded steps as the important events (40 rollouts per
-condition). Under a random policy, with surprise from the one-step prediction
+retention (40 rollouts per condition). The important events are the
+\emph{rewarded} steps, those on which the environment returns a positive
+reward ---here, reaching the matching object, which ends the episode--- and
+one counts as retained if, at the end of the rollout, querying its key returns
+it, as in T1. Under a random policy, with surprise from the one-step prediction
 error of an online linear transition model, both sit at the floor
 (\result{exp06_minigrid:comparacion_aleatoria_prediccion.resultados.frontera.tasa|pct}{0.0}\,\%
 and
@@ -831,7 +866,9 @@ and lifts the frontier to
 [\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.frontera.cluster_low|pct}{37.9},
 \result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.frontera.cluster_high|pct}{69.0}]\,\%;
 design effect
-\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.frontera.deff|f2}{0.92}),
+\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.frontera.deff|f2}{0.92},
+the ratio of this variance to the binomial one, so events within a rollout are
+not positively correlated),
 while the FIFO, which never reads strength, stays at
 \result{exp06_minigrid:comparacion_aleatoria_recompensa.resultados.FIFO.tasa|pct}{2.6}\,\%
 ([\result{exp11_minigrid_extended:exp06_original.aleatoria_recompensa.resultados.FIFO.cluster_low|pct}{0.0},
@@ -907,8 +944,11 @@ equal bytes the FIFO wins}: at SDM's budget (144\,KiB) a FIFO holds
 \result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.FIFO.capacity|int}{921}
 traces, more than T1 writes, so no capacity pressure is left, and scores
 \result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.FIFO.battery_mean|f3}{0.924}
-against SDM's
-\result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.SDM.battery_mean|f3}{0.745}:
+against
+\result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.SDM.battery_mean|f3}{0.745}
+for SDM holding the
+\result{exp12_substrate_cost:igual_presupuesto.defaults.B147456.filas.SDM.capacity|int}{102}
+traces that budget allows it (ten seeds each):
 SDM's footprint buys nothing a FIFO of equal bytes cannot match, and the
 advantage measured here is one of selection under capacity pressure. Third, \emph{the advantage depends on the quality of the
 surprise signal}: the factor of
@@ -970,7 +1010,7 @@ from \result{exp01_nas_full:incumbent.score|f3}{0.106} to
 \result{exp01_nas_full:incumbent.scores.rare_retention|f3}{0.050} to
 \result{exp01_nas_full:frontier.scores.rare_retention|f3}{0.983} on a separable
 signal; the lead over the proxy holds on held-out stream families and, when
-recurring experience fits in memory, even at chance-level surprise; no external
+recurring experience fits in memory, even at chance-level prediction error; no external
 rule beats it; the buffer's real read scores
 lower still, and in MiniGrid the frontier retains
 \result{exp11_minigrid_extended:exp06_ampliado.aleatoria_recompensa.resultados.frontera.tasa|pct}{47.2}\,\%
